@@ -1,0 +1,27 @@
+# config.yaml
+sections:
+  - key: property_info
+    title: Property Information
+  - key: assessed_market_values
+    title: Assessed & Market Values (Latest 3 Years)
+  - key: sales
+    title: Sales Information
+  - key: permits
+    title: Permits
+  - key: nearby
+    title: Nearby Properties
+  - key: links
+    title: External Links
+
+ui:
+  container_max_width_px: 794   # ~A4 width on desktop
+
+caching:
+  allow_fresh_param: true
+  defaults:
+    bor_hours: 6
+    cv_hours: 12
+    sales_hours: 12
+    permits_hours: 24
+    assessor_values_hours: 12
+    assessor_mail_hours: 24

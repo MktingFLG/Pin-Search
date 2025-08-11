@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PIN Tool</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <main class="mx-auto p-4 md:p-6">
+    <div id="app" class="mx-auto bg-white shadow rounded-2xl p-4 md:p-6" style="max-width: 794px;">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-xl md:text-2xl font-semibold">PIN Overview</h1>
+        <input id="pinInput" type="text" placeholder="Enter PIN"
+               class="border rounded-lg px-3 py-2 text-sm w-48 md:w-64" />
+      </div>
+
+      <div class="flex gap-2 mb-4">
+        <button id="loadBtn" class="px-3 py-2 rounded-lg border">Load</button>
+        <button id="freshBtn" class="px-3 py-2 rounded-lg border">Load (Fresh)</button>
+      </div>
+
+      <div id="meta" class="text-xs text-gray-500 mb-2"></div>
+      <div id="sections" class="space-y-3"></div>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    const $ = sel => document.querySelector(sel);
+
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || "";
+    }
+
+    async function fetchPin(pin, fresh=false) {
+      const url = `${API_BASE}/api/pin/${encodeURIComponent(pin)}${fresh ? "?fresh=1" : ""}`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error("API error");
+      return await r.json();
+    }
+
+    function renderSection(key, title, content) {
+      const details = document.createElement("details");
+      details.className = "border rounded-xl";
+      const sum = document.createElement("summary");
+      sum.className = "cursor-pointer list-none px-4 py-2 font-medium bg-gray-100 rounded-t-xl";
+      sum.textContent = title;
+      const body = document.createElement("div");
+      body.className = "px-4 py-3 text-sm";
+
+      // naive key-value renderer
+      if (Array.isArray(content)) {
+        const table = document.createElement("table");
+        table.className = "w-full text-sm";
+        content.forEach(row => {
+          const tr = document.createElement("tr");
+          Object.values(row).forEach(v => {
+            const td = document.createElement("td");
+            td.className = "border-b px-2 py-1 align-top";
+            td.textContent = v ?? "";
+            tr.appendChild(td);
+          });
+          table.appendChild(tr);
+        });
+        body.appendChild(table);
+      } else if (typeof content === "object" && content !== null) {
+        const dl = document.createElement("dl");
+        for (const [k, v] of Object.entries(content)) {
+          const dt = document.createElement("dt");
+          dt.className = "font-semibold mt-2";
+          dt.textContent = k;
+          const dd = document.createElement("dd");
+          dd.className = "text-gray-700";
+          dd.textContent = v ?? "";
+          dl.appendChild(dt); dl.appendChild(dd);
+        }
+        body.appendChild(dl);
+      } else {
+        body.textContent = content ?? "";
+      }
+
+      details.appendChild(sum);
+      details.appendChild(body);
+      return details;
+    }
+
+    async function load(pin, fresh=false) {
+      if (!pin) return;
+      $("#meta").textContent = "Loading…";
+      $("#sections").innerHTML = "";
+      try {
+        const data = await fetchPin(pin, fresh);
+        $("#meta").textContent = `PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
+
+        // Order is defined by backend; if you want, fetch config from backend later
+        const sections = data.sections || {};
+        for (const [key, content] of Object.entries(sections)) {
+          const title = ({
+            property_info: "Property Information",
+            assessed_market_values: "Assessed & Market Values (Latest 3 Years)",
+            sales: "Sales Information",
+            permits: "Permits",
+            nearby: "Nearby Properties",
+            links: "External Links",
+          })[key] || key;
+          $("#sections").appendChild(renderSection(key, title, content));
+        }
+        // Auto-expand first section for usability
+        const first = $("#sections details");
+        if (first) first.open = true;
+      } catch (e) {
+        $("#meta").textContent = "Failed to load data.";
+        console.error(e);
+      }
+    }
+
+    // Wire UI
+    const initialPin = getParam("pin") || "";
+    $("#pinInput").value = initialPin;
+    if (initialPin) load(initialPin);
+
+    $("#loadBtn").addEventListener("click", () => load($("#pinInput").value, false));
+    $("#freshBtn").addEventListener("click", () => load($("#pinInput").value, true));
+  </script>
+</body>
+</html>
