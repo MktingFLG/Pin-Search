@@ -140,11 +140,11 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "appeals_coes": appeals.get("normalized", {}),
             "permits": _shape_permits(permits),
             "hie_additions": assr_hie.get("normalized", {}),
-            "PTAX_MAIN": ptax_main.get("_status", "ok"),
-            "PTAX_ADDL_BUYERS": ptax_buyers.get("_status", "ok"),
-            "PTAX_ADDL_SELLERS": ptax_sellers.get("_status", "ok"),
-            "PTAX_ADDL_PINS": ptax_pins.get("_status", "ok"),
-            "PTAX_PERS": ptax_personal.get("_status", "ok"),
+            "ptax_main": ptax_main.get("normalized", {}),
+            "ptax_buyers": ptax_buyers.get("normalized", {}),
+            "ptax_sellers": ptax_sellers.get("normalized", {}),
+            "ptax_additional_pins": ptax_pins.get("normalized", {}),
+            "ptax_personal_property": ptax_personal.get("normalized", {}),
             "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_norm),
             
@@ -172,6 +172,11 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "ASSR_NOTICE_SUMMARY": notice_sum.get("_status", "ok"),
             "ASSR_APPEALS": appeals.get("_status", "ok"),
             "ASSR_HIE_ADDN": assr_hie.get("_status", "ok"),
+            "PTAX_MAIN": ptax_main.get("_status", "ok"),
+            "PTAX_ADDL_BUYERS": ptax_buyers.get("_status", "ok"),
+            "PTAX_ADDL_SELLERS": ptax_sellers.get("_status", "ok"),
+            "PTAX_ADDL_PINS": ptax_pins.get("_status", "ok"),
+            "PTAX_PERS": ptax_personal.get("_status", "ok"),
         }
 
     }

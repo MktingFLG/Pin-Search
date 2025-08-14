@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from orchestrator import get_pin_summary
 import os
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 print("ILLINOIS_APP_TOKEN set:", bool(os.getenv("ILLINOIS_APP_TOKEN")))
 
 
@@ -17,10 +19,10 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
-
+APP_VERSION = "2025-08-14-01"
 @app.get("/api/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": APP_VERSION}
 
 @app.get("/api/pin/{pin}")
 def pin_summary(pin: str, fresh: int = Query(0, ge=0, le=1)):
@@ -30,3 +32,9 @@ def pin_summary(pin: str, fresh: int = Query(0, ge=0, le=1)):
     """
     data = get_pin_summary(pin, fresh=bool(fresh))
     return JSONResponse(data)
+
+# Serve files from ./public and make index.html respond at "/"
+STATIC_DIR = Path(__file__).parent / "docs"
+print("Serving docs from:", STATIC_DIR.resolve(), "exists:", STATIC_DIR.exists())
+
+app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")

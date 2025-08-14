@@ -1602,15 +1602,14 @@ def _pin_for_socrata(pin: str) -> str:
 def fetch_ptax_main(pin: str, dataset_id: str = "it54-y4c6") -> dict:
     dashed = _pin_for_socrata(pin)
     rows = _socrata_get(dataset_id, {
-        # match both versions of the PIN
-        "$where": "pin = @p OR replace(pin,'-','') = @p_nodash",
+        "$where": "line_1_primary_pin = @p OR replace(line_1_primary_pin,'-','') = @p_nodash",
         "$order": "date_recorded DESC",
         "$limit": "5000",
         "@p": dashed,
         "@p_nodash": dashed.replace("-", ""),
-        # You can also add a $select with your exact columns if you want to trim
     })
     return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+
 
 
 def fetch_ptax_additional_buyers(pin: str, dataset_id: str = "dwt7-rycp") -> dict:
