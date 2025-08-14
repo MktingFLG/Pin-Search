@@ -1,0 +1,2634 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="format-detection" content="telephone=no">
+    <title>Property Records Search | Clerk's Recordings System</title>
+    <noscript>
+
+        <meta http-equiv="refresh" content="0;URL=http://crs.cookcountyclerkil.gov/Home/EnableJavascript" />
+        
+    </noscript>
+
+    <script src="/Scripts/popper.js"></script>
+    <script src="/bundles/modernizr?v=inCVuEFe6J4Q07A0AcRsbJic_UE5MwpRMNGcOtk94TE1"></script>
+
+    <script src="/bundles/jquery?v=8Oos0avDZyPg-cbyVzvkIfERIE1DGSe3sRQdCSYrgEQ1"></script>
+
+
+    <script src="/Scripts/bootstrap.js"></script>
+
+    
+
+    <link href="/Content/css?v=rsU2Eji0u9P2WvZEOnL1IuAZ4thNyibej24hJDWdkAY1" rel="stylesheet"/>
+
+
+    
+
+
+    <link href="/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+    <script src="/bundles/maskedinput?v=IndHTEQMh70Ra3yP5TZNrwDp50M1KbiN0kpoXmd4k_01"></script>
+
+
+    
+
+    
+    <script src="/Scripts/jquery.maskedinput-1.4.1.js"></script>
+
+
+
+    <link href="/Content/jquery-ui.css" rel="stylesheet" />
+    <link rel="icon" href="https://www.cookcountyclerkil.gov/themes/custom/clerk/cookcountyclerk.ico" />
+
+    <link href="/Content/Site.css?v=1" rel="stylesheet" />
+    <script type="text/javascript" src="/Scripts/jquery-ui.js"></script>
+
+    
+    
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.date').mask("99/99/9999");
+            //$('.phone_with_ddd').mask('000-000-0000');
+            $('.zip').mask('99999');
+
+
+        });
+        function clearForm(form) {
+            var $f = $(form);
+            var $f = $f.find(':input').not(':button, :submit, :reset, :hidden');
+            $f.val('').attr('value', '').removeAttr('checked').removeAttr('selected');
+
+        }
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!--<script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>-->
+    
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+</head>
+<body>
+    
+
+    <div class="bg-light container">
+        <div class="mRow">
+            <div class="Column" style="width:8%;">
+                <div class="nav-clerk-logo-link">
+                    <a href="/Search">
+                        <img src="/Images/seal.png" />
+                    </a>
+                </div>
+            </div>
+            <div class="Column p-0 m-0 pt-3" style="vertical-align:top;">
+                <div class="text-end" id="cartDisplay">
+                    <div class="shoppingCart ms-2">
+    <a href="/Cart" class="no-textdecoration" id="lnkCart">
+0    </a>
+</div>
+
+                </div>
+                <div class="font-weight-boldOld text-uppercase float-left" style="font-size:12px;">Recordings</div>
+
+                <div class="smallFont text-uppercase float-left">
+                    Cook County Clerk's Office
+                </div>
+
+                <hr class="w-100 float-left p-0 mt-0 mb-0" />
+
+                <div class="float-left">
+                    <span class="appTitle small"><small></small></span>
+
+                    <div class="text-end">
+
+                        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                            <div class="container-fluid ps-0">
+                                <div class="ms-auto">
+                                    <button class="navbar-toggler btn btn-primary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                        <span class="navbar-toggler-icon1"><i class="fa fa-bars fa-lg" style="background-color:#337AB7;color:white; "></i></span>
+                                    </button>
+                                </div>
+                                <div class="collapse navbar-collapse collapse w-100 order-3 dual-collapse2 text-end" id="navbarSupportedContent">
+                                    <ul class="navbar-nav ms-auto" style="font-size :15px;">
+                                        <li class="nav-item text-start">
+
+                                            <a href="/Search" class="nav-link menuActiveLink"><i class="fa fa-search"></i> Search</a>
+                                            
+                                        </li>
+                                        
+                                        <li class="nav-item text-start">
+                                            <a href="/Public" class="nav-link "><i class="fa fa-commenting-o"></i> Property Fraud Alert</a>
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/MailTracking?returnUrl=%2FSearch%2FResult%3Fid1%3D15201100490000" class="nav-link "><i class="fa fa-envelope-o"></i> Mail Tracking</a>
+
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/ChangeRequest" class="nav-link "><i class="fa fa-table"></i> Indexing Corrections</a>
+                                        </li>
+                                            <li class="nav-item text-start">
+                                                <a href="/Order/Search?column=OrderDate&amp;direction=desc" class="nav-link "><i class="fa fa-table"></i> Orders</a>
+                                            </li>
+                                                                                    <li class="nav-item text-start">
+                                                <a href="/Account/Login?returnUrl=%2FSearch%2FResult%3Fid1%3D15201100490000" class="nav-link "><i class="fa fa-sign-in"></i> Account</a>
+
+                                            </li>
+
+
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </nav>
+                        
+
+                    </div>
+
+
+
+                </div>
+            </div>
+
+            
+        </div>
+
+        
+
+
+    </div>
+
+
+
+
+
+    <div class="container">
+        <div class="row ">
+            <div class="breadcrumb container m-0 p-0">
+                <p class="float-right m-0">
+
+                    
+    <text>Search Results - Documents</text>
+
+                </p>
+            </div>
+            <div class="bg-white">
+                
+                
+
+
+                
+            </div>
+            
+            <div class="container mt-1">
+                
+                <div class="row container-box" style="padding:5px 20px;">
+                    
+
+
+
+
+<script src="/Scripts/Custom.js"></script>
+<input id="inputStr" name="inputStr" type="hidden" value="15201100490000" />
+<div class="row mt-2">
+    <div class="col-md-6">
+        
+        
+        <a href="/Search">Start a new Search</a>
+        
+    </div>
+</div>
+<form action="/Search?strAction=Result" method="post"><input name="__RequestVerificationToken" type="hidden" value="IhJofsOqWWKvkkZFcQMv8quIUHm_ROUI9dKQttxgw1pbEbwEQAHp44SL60z7QFl2q0Djoeqg_HLvcLQzKZo7Y5TI8vw1" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div class="row pt-2">
+        <div class="col-md-8 mx-auto">
+            <div class="form-group input-group">
+
+                <input type="search" id="inputField" name="inputField"  placeholder="Enter Search Criteria Here" class="form-control fs-5" value="15201100490000" style="padding: 0.175rem 0.15rem;" />
+                <button type="submit" id="btnSearch" name="submitButton" value="FullSearch" class="btn btn-primary">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                </button>
+
+            </div>
+            
+        <div class="text-center small mt-1">
+            Documents Indexed Through: 07-29-2025
+                <span> | </span>
+            <a data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                <i class="fa fa-info-circle me-1" aria-hidden="true"></i>Search Tips
+            </a>
+            
+        </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="collapse small text-center" id="collapseExample">
+                <strong>
+                    Search by PIN:
+                </strong>  30-31-220-032-0000 or 30312200320000 <br />
+                <strong>
+                    Search by First Name, Last Name, and Street Address:
+                </strong>  John Smith 18058 Burnham <br />
+                <strong>
+                    Search by FirstName, Last Name, and House Number:
+                </strong>  John Smith 18058 <br />
+                <strong>
+                    Search by FirstName, Last Name, and Street Name:
+                </strong>  John Smith Burnham <br />
+                <strong>  Search by Document Number: </strong> 2222113250
+            </div>
+            
+        </div>
+    </div>
+</form><form action="/Cart/AddItem" id="__AjaxAntiForgeryForm" method="post"><input name="__RequestVerificationToken" type="hidden" value="zSL6DXmYN0GjKhZedGDnwsC6t4DkQ6U3MT-6aRUhXdwZstPnXAoQTQ1mRzpULljlnDisYG5foonLnMfcK6rYdb19lSw1" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="hfd"></div>
+<div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="result">
+
+
+
+
+    <div class="row mb-2 mt-2">
+
+        <div class="col-md-6">
+            Total Documents : <span class="text-big-and-bold">54</span>         </div>
+    </div>
+
+<div>
+    <span class="fw-bold">Click the boxes to select your documents before adding to the cart.</span><br />
+        <span class="small">You may remove documents from your cart by clicking the “Shopping Cart”, which is located on the upper right corner of the page.</span>
+</div>
+<div class="row mb-1">
+            <div class="col-md-2 pt-2 productlist">
+                <a href="1" id="btnAddDoc" class="1 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Documents</a>
+            </div>
+            <div class="col-md-3 pt-2 productlist">
+                <a href="2" id="btnAddData" class="3 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Certified Documents</a>
+            </div>
+            <div class="col-md-3 pt-2 productlist">
+                <a href="3" id="btnAddData" class="3 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Search Result (No Images)</a>
+            </div>
+    
+    
+
+    
+    
+</div>
+
+
+<div class="table-responsive">
+        <div id="totalSelected"></div>
+            <table id="tblData" class="table table-hover table-responsive tblfmt">
+                <thead>
+                    <tr>
+                        <td scope="col" class="align-middle"><input id="selectAll" name="selectAll" title="Select All" type="checkbox" value="true" /><input name="selectAll" type="hidden" value="false" /></td>
+                        <th scope="col" class="align-middle text-center">
+                            <span >View Doc</span>
+                        </th>
+                        <th scope="col"><a href='/Search/sortresult?id1=15201100490000&column=AlphaDocNumber&direction=asc&page=1' class='searchresult'> Doc Number</a></th>
+
+                        <th scope="col" class="text-center">
+                            <a href='/Search/sortresult?id1=15201100490000&column=DateRecorded&direction=asc&page=1' class='searchresult'><i class='fa fa-sort-up' style='color:orange;'></i> Doc Recorded</a>
+                        </th>
+                        <th scope="col" class="text-center">
+                            <a href='/Search/sortresult?id1=15201100490000&column=DateExecuted&direction=asc&page=1' class='searchresult'> Doc Executed</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=15201100490000&column=DocTypeDescription&direction=asc&page=1' class='searchresult'> Doc Type</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=15201100490000&column=FirstGrantor&direction=asc&page=1' class='searchresult'> 1st Grantor</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=15201100490000&column=FirstGrantee&direction=asc&page=1' class='searchresult'> 1st Grantee</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=15201100490000&column=RefDocNum&direction=asc&page=1' class='searchresult'> Assoc. Doc#</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=15201100490000&column=FirstPin&direction=asc&page=1' class='searchresult'> 1st PIN</a>
+                        </th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="45150618" type="checkbox" value="true" /><input name="45150618" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDUxNTA2MTg1&amp;hId=ZDYxODFkMzc5M2I4YWMxMzkzM2MwMzQ0MjJjNWU1MThjZDRkY2M1NjAyNDJmYzVjNzQ2MTQ0OTRjZDFlODIzZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2508522046</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/26/2025</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/25/2025</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>LIS PENDENS FORECLOSURE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA3Njk1NTE1">ARVEST BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTU5MDgyNTM1">ALANIS ERIC J</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDM0ODQ0OTA1&amp;hId=NzlmOTZmZjBiNDcwZTJkMzY5N2FiZjVhNjllNmRjOWIxZTc3YThlZDdjZjkxZTJhODAzY2ExYzVjZDA3Y2NjOA2">2123749064</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="45144521" type="checkbox" value="true" /><input name="45144521" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDUxNDQ1MjE1&amp;hId=OGNkMjFmMzhmNDc1ZWUzNDFmNDIzMGFhY2MwZDJkM2JhNDI1N2E2ZmZlOTAxNWE0YTUzNzBmZWQ0NTJiNzg1MQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2508002030</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/21/2025</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/26/2025</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA3Njk1NTE1">ARVEST BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDM0ODQ0OTA1&amp;hId=NzlmOTZmZjBiNDcwZTJkMzY5N2FiZjVhNjllNmRjOWIxZTc3YThlZDdjZjkxZTJhODAzY2ExYzVjZDA3Y2NjOA2">2123749064</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="43542333" type="checkbox" value="true" /><input name="43542333" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDM1NDIzMzM1&amp;hId=MjEwYjljNzgwZjk5NDU1MTFkZWQ1ZTY1NzVkYTFkOWVmOTRjMmIwZWM1YzJmODczOTBlMTBkYjgzY2NjOTEyNA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2126428455</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/21/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/20/2021</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQyNzc3MzE1">KOMAY XCENIA</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDM0OTM1ODk1&amp;hId=MzkyMDZkNWQxZDRhNThiZmRlMWRjOTdhMDIyMzEwYzE2ZjNkY2I3Mzc2YzAyNGNiMmJiNThiMjhjNWIyNDhjNA2">2124229028</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="43493588" type="checkbox" value="true" /><input name="43493588" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDM0OTM1ODg1&amp;hId=YjA4NWM2NmNjMTNjNTNhOTgyZWYzMmY0YzZlZWZlNGZlOWNiODJkMDg5NzczMjg5NWNiOWY2MTY5Y2ViMzBhNg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2124229027</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/30/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/13/2020</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>QUIT CLAIM DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQyNzc3MzE1">KOMAY XCENIA</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQyNzc3MzE1">KOMAY XCENIA</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="43493589" type="checkbox" value="true" /><input name="43493589" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDM0OTM1ODk1&amp;hId=MzkyMDZkNWQxZDRhNThiZmRlMWRjOTdhMDIyMzEwYzE2ZjNkY2I3Mzc2YzAyNGNiMmJiNThiMjhjNWIyNDhjNA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2124229028</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/30/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/13/2020</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjI4NjYzNw2">CLAUDIO ROBERT</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQ2MjA4Mjc1">QUICKEN LOANS LLC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDM1NDIzMzM1&amp;hId=MjEwYjljNzgwZjk5NDU1MTFkZWQ1ZTY1NzVkYTFkOWVmOTRjMmIwZWM1YzJmODczOTBlMTBkYjgzY2NjOTEyNA2">2126428455</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="43484489" type="checkbox" value="true" /><input name="43484489" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDM0ODQ0ODk1&amp;hId=MDNjZjBmZThlOTc0OTE3N2I4ZGNhOGMxYTc3ZmM2YzM2NGExOGZlYTRhZjgyOTIxM2RlNmNkOGIxMTFiMTA5Mg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2123749063</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/25/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/20/2021</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjI4NjYzNw2">CLAUDIO ROBERT</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTU5MDgyNTM1">ALANIS ERIC J</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="43484490" type="checkbox" value="true" /><input name="43484490" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDM0ODQ0OTA1&amp;hId=NzlmOTZmZjBiNDcwZTJkMzY5N2FiZjVhNjllNmRjOWIxZTc3YThlZDdjZjkxZTJhODAzY2ExYzVjZDA3Y2NjOA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2123749064</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/25/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/20/2021</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTU5MDgyNTM1">ALANIS ERIC J</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQ3NDg2NTc1">BAY EQUITY LLC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDUxNDQ1MjE1&amp;hId=OGNkMjFmMzhmNDc1ZWUzNDFmNDIzMGFhY2MwZDJkM2JhNDI1N2E2ZmZlOTAxNWE0YTUzNzBmZWQ0NTJiNzg1MQ2">2508002030</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42753530" type="checkbox" value="true" /><input name="42753530" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDI3NTM1MzA1&amp;hId=MjE2ODIyYmMxNWI0OWMxY2ExYzUyZWE1Nzc3ZGYzMDZmZGRmZGZiMGIzNzk5NGIyOWU5YmY5NzBmMWM0YWQ1ZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2029521306</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/21/2020</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/22/2020</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>QUIT CLAIM DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQyNzc3MzE1">KOMAY XCENIA</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQyNzc3MzE1">KOMAY XCENIA</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42674967" type="checkbox" value="true" /><input name="42674967" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDI2NzQ5Njc1&amp;hId=N2YxYWU1NjllMWNlZjNhM2QxNGY1ZDkxZjY2ZDNmY2EwN2M1N2NhNzcxZjY5ZWM5Mzc5ODYwMTVlOGUyM2E3OA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2026107060</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/17/2020</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/29/2020</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQyNzc3MzE1">KOMAY XCENIA</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzkzODc2NDE1&amp;hId=MThkOWU2ZDIyZDhiODJhODhjNTQ2MDljZTJlMTQ4MWZjODg4YjM3OWVhZjllNGM3MzQxMzNhZjU0NDk4MGJlYg2">1516842028</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39413718" type="checkbox" value="true" /><input name="39413718" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzk0MTM3MTg1&amp;hId=ODk4MDQyYjhiYWE1MWI2OTE2YzlkYjJjMjQxOGRmMzVhODllMDYyMzEzMzVlMTFhMjBjY2NlNWY2MjQ4NDNhYw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1517747050</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/26/2015</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/26/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTM2NTgwMzA1">TAGALOS JAMES P</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mzc1NjczNzI1&amp;hId=NDk4MWZjYzJmMTNmNjIxMzI5Nzg0M2I4ZTZjMjhmNTFkNjZiMDNlMDU0ZGUyNWFhNWJlNGQzNjllNmJmZjhjYg2">1307050001</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39387641" type="checkbox" value="true" /><input name="39387641" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzkzODc2NDE1&amp;hId=MThkOWU2ZDIyZDhiODJhODhjNTQ2MDljZTJlMTQ4MWZjODg4YjM3OWVhZjllNGM3MzQxMzNhZjU0NDk4MGJlYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1516842028</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/17/2015</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/10/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQyNzc3MzE1">KOMAY XCENIA</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDI2NzQ5Njc1&amp;hId=N2YxYWU1NjllMWNlZjNhM2QxNGY1ZDkxZjY2ZDNmY2EwN2M1N2NhNzcxZjY5ZWM5Mzc5ODYwMTVlOGUyM2E3OA2">2026107060</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39387638" type="checkbox" value="true" /><input name="39387638" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzkzODc2Mzg1&amp;hId=OTc3YTIwZWMyZGEzODc3ODlmMjMxZTdiNGY4ZDE4YTYzZDI0OTk5OTUwZDBmMDEzNDI0YTEzYzE0YjgzY2NkZg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1516842027</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/17/2015</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/10/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTM2NTgwMzA1">TAGALOS JAMES P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQyNzc3MzE1">KOMAY XCENIA</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="37586725" type="checkbox" value="true" /><input name="37586725" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzc1ODY3MjU1&amp;hId=N2M0NGM0YmUxNGYyNzVlYjhiNmY3MzkyM2I3MTAwYmUwMzk0ZjhmYjAyNmJlYmQ3MGZlMjFlMjJlNjcxZDJhZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1307808502</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/19/2013</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/18/2013</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA3ODk1">CITIBANK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI2MDQ4MTY1">GIARRATANO-TAGALOS JAMES P</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzQ1OTUwNTM1&amp;hId=MmEzZGQyYjViMmRiMTg4MmI4MDY1OTlkY2NiMmMxM2FhNGVkNGFhYTJmZjZhNzkwZjRhNmE5MTk5ZjM4NDc2OQ2">0930208079</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="37567371" type="checkbox" value="true" /><input name="37567371" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzc1NjczNzE1&amp;hId=MmJkNDYyYTBmYzQyZDM0OTVlMWJhMzRjZDI0YjM0MmE3Mzk0NjdiZjk2ZjNmM2NiMDFlYjg0NjY3N2VmYjdhNA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1307050000</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/11/2013</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/25/2013</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>QUIT CLAIM DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIzODg4MDU1">GIARRATANO-TAGALOS KATHERINE C</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTM2NTgwMzA1">TAGALOS JAMES P</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="37567372" type="checkbox" value="true" /><input name="37567372" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzc1NjczNzI1&amp;hId=NDk4MWZjYzJmMTNmNjIxMzI5Nzg0M2I4ZTZjMjhmNTFkNjZiMDNlMDU0ZGUyNWFhNWJlNGQzNjllNmJmZjhjYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1307050001</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/11/2013</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/25/2013</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTM2NTgwMzA1">TAGALOS JAMES P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mzk0MTM3MTg1&amp;hId=ODk4MDQyYjhiYWE1MWI2OTE2YzlkYjJjMjQxOGRmMzVhODllMDYyMzEzMzVlMTFhMjBjY2NlNWY2MjQ4NDNhYw2">1517747050</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34655941" type="checkbox" value="true" /><input name="34655941" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ2NTU5NDE1&amp;hId=NzZhODBmMzE2MTZlMjdmNjdjY2U2MzEyMzUzMmVlMjdkMTgwOWIzNmU5MGQ4MDhhYzdlMGMyNzQyNmUyZWE4MA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0932404272</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/20/2009</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/9/2009</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIzODg4MDU1">GIARRATANO-TAGALOS KATHERINE C</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzM4ODA5MDg1&amp;hId=MDgyNjAxNjM5MWEwZWY5MmMyNmNjYzcxOTg0YTljMTE1YTM5ZGVkYTJhMzFkYzgxY2RkYTQ0OTVkYmI0NzcwNA2">0904857112</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34595053" type="checkbox" value="true" /><input name="34595053" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ1OTUwNTM1&amp;hId=MmEzZGQyYjViMmRiMTg4MmI4MDY1OTlkY2NiMmMxM2FhNGVkNGFhYTJmZjZhNzkwZjRhNmE5MTk5ZjM4NDc2OQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0930208079</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/29/2009</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/17/2009</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI2MDQ4MTY1">GIARRATANO-TAGALOS JAMES P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzEzNzg4MA2">CITICORP TRUST BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mzc1ODY3MjU1&amp;hId=N2M0NGM0YmUxNGYyNzVlYjhiNmY3MzkyM2I3MTAwYmUwMzk0ZjhmYjAyNmJlYmQ3MGZlMjFlMjJlNjcxZDJhZQ2">1307808502</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33880905" type="checkbox" value="true" /><input name="33880905" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzM4ODA5MDU1&amp;hId=NmIyN2Y5OTgxN2E1ZmNmMGYyOWEzZTdkNjI2YTg2NjM3YjRkNzlhZTI2ZWI1Y2Y1ZGZkOTJlYjA4NWNhYTM1MA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0904857111</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/17/2009</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/30/2009</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIzODg4MDU1">GIARRATANO-TAGALOS KATHERINE C</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33880904" type="checkbox" value="true" /><input name="33880904" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzM4ODA5MDQ1&amp;hId=MDYzNjdjMWY0NzAxNjFhMjhjOWU5NzFmOWFiNDRkNWU0NTllZjNmYjExZjM2MjliMzE4MTI5NjM3NzYxMGYwMg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0904857110</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/17/2009</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/26/2002</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>CORRECTED WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjMzODk3Mzc1&amp;hId=OWU4OTVkMjU3MmM0M2VkOWZhM2VjNTI0OTIyMTdmYzdmMjkyMGEzYzFmNjJjYWY2YjIyNDZjNzA0YThkMDAxZQ2">0021145104</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33880908" type="checkbox" value="true" /><input name="33880908" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzM4ODA5MDg1&amp;hId=MDgyNjAxNjM5MWEwZWY5MmMyNmNjYzcxOTg0YTljMTE1YTM5ZGVkYTJhMzFkYzgxY2RkYTQ0OTVkYmI0NzcwNA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0904857112</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/17/2009</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/30/2009</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIzODg4MDU1">GIARRATANO-TAGALOS KATHERINE C</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzQ2NTU5NDE1&amp;hId=NzZhODBmMzE2MTZlMjdmNjdjY2U2MzEyMzUzMmVlMjdkMTgwOWIzNmU5MGQ4MDhhYzdlMGMyNzQyNmUyZWE4MA2">0932404272</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33855414" type="checkbox" value="true" /><input name="33855414" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzM4NTU0MTQ1&amp;hId=MTk3NjFjYjE1ZTRiMTg3MjMzNThhYzE5YmIxZGUyNTA4ZmQwM2I2NzQ1YzlhNDEyYzkxNGUxMzcyYzYwMTM5Yw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0903608132</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/5/2009</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/4/2009</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTE5NTQ0MzA1">FERGUSON ANDREW D</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI0MTUzODY1&amp;hId=MTUwMTcwZjQ2NGNmMGFlYjdhZWM4Mzk1NDFlYzA0ZjIwODBlMmZkNjYyYWM5MDI4YmE2ZTBkODY1Y2RjNWE5Mw2">0728405040</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="32482925" type="checkbox" value="true" /><input name="32482925" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzI0ODI5MjU1&amp;hId=NzljM2I4YTI1NDMzZDgwODUwYzYyM2ZhODEzOWFkMGFkM2JmZDNlZjZjNDkzNTRlY2JlZGQ4OGY0MGUxMWFjNQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0729815035</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/25/2007</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/2007</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzE0MDIyOTQ1&amp;hId=MzU0OTlhNzMwN2UyOGYxYzE0MzQzNmEyYjg4ZDRlOGIxNDhiODgwMTc4NDllMzc4MWM1MTI2NGFhYTM0ZjE2YQ2">0703602118</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="32415386" type="checkbox" value="true" /><input name="32415386" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzI0MTUzODY1&amp;hId=MTUwMTcwZjQ2NGNmMGFlYjdhZWM4Mzk1NDFlYzA0ZjIwODBlMmZkNjYyYWM5MDI4YmE2ZTBkODY1Y2RjNWE5Mw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0728405040</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/11/2007</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/28/2007</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTE5NTQ0MzA1">FERGUSON ANDREW D</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzM4NTU0MTQ1&amp;hId=MTk3NjFjYjE1ZTRiMTg3MjMzNThhYzE5YmIxZGUyNTA4ZmQwM2I2NzQ1YzlhNDEyYzkxNGUxMzcyYzYwMTM5Yw2">0903608132</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="31627600" type="checkbox" value="true" /><input name="31627600" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzE2Mjc2MDA1&amp;hId=MDAyYWI3NWE5NDgxNTI2OTI5YzdmYzM3YjA4MGQ2YjAyMTYwYzk2NmVhZjg4OGYzYzNhNWMzOWI2ZjA5MzM5Yw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0708816082</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/29/2007</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/10/2007</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzAzNzc4Mzk1&amp;hId=ZDM1Y2U3MzUzMjI4Nzg2N2EyNWUwOWIxYmJkYmNhODNkYjA0Yzc4NDEwMTUwYjFjNmNmNjU5ZWQyOTgxNmFmOQ2">0616505255</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="31402294" type="checkbox" value="true" /><input name="31402294" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzE0MDIyOTQ1&amp;hId=MzU0OTlhNzMwN2UyOGYxYzE0MzQzNmEyYjg4ZDRlOGIxNDhiODgwMTc4NDllMzc4MWM1MTI2NGFhYTM0ZjE2YQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0703602118</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/5/2007</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/27/2007</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI0ODI5MjU1&amp;hId=NzljM2I4YTI1NDMzZDgwODUwYzYyM2ZhODEzOWFkMGFkM2JmZDNlZjZjNDkzNTRlY2JlZGQ4OGY0MGUxMWFjNQ2">0729815035</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="31402293" type="checkbox" value="true" /><input name="31402293" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzE0MDIyOTM1&amp;hId=MTkzZmE0MDNhMTI0OGFiZTc4ZDhkY2RiODQ0M2Q2YzI4MzE2NDBjZGFjMTVjMjIyZTVmZmY3ZDI4NTI0NGQwNg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0703602117</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/5/2007</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/29/2007</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RECORD OF PAYMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzAzNzc4Mzk1&amp;hId=ZDM1Y2U3MzUzMjI4Nzg2N2EyNWUwOWIxYmJkYmNhODNkYjA0Yzc4NDEwMTUwYjFjNmNmNjU5ZWQyOTgxNmFmOQ2">0616505255</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="30377839" type="checkbox" value="true" /><input name="30377839" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzAzNzc4Mzk1&amp;hId=ZDM1Y2U3MzUzMjI4Nzg2N2EyNWUwOWIxYmJkYmNhODNkYjA0Yzc4NDEwMTUwYjFjNmNmNjU5ZWQyOTgxNmFmOQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0616505255</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/14/2006</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/31/2006</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTE0NDkyMzg1">FERGUSNO ANDREW</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDk0MDY1">MORTGAGE ELECTRONIC REGISTRATION SYSTEMS INC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzE0MDIyOTM1&amp;hId=MTkzZmE0MDNhMTI0OGFiZTc4ZDhkY2RiODQ0M2Q2YzI4MzE2NDBjZGFjMTVjMjIyZTVmZmY3ZDI4NTI0NGQwNg2">0703602117</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="28558146" type="checkbox" value="true" /><input name="28558146" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjg1NTgxNDY1&amp;hId=Nzg3NzliZDg2OTk3NGM3YWIxYmU0YzkyN2E0YzM2Mjk0OTRhYTZhN2FiZTQ3NDQyZmFkYWNiM2FmNzk2MDg5MA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0514616095</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/26/2005</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/13/2005</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTYyODc3MQ2">UNION PLANTERS BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mjc0NTM1NDM1&amp;hId=MjMxZDcxYWQxZjJjYzBjNDliN2RjYzQ4YmRhZDdhNGRlZWEyM2MzY2ZiNDkyMTk4NmY4ZTY0YWZhOWI3NjIwMA2">0427905001</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="28513045" type="checkbox" value="true" /><input name="28513045" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjg1MTMwNDU1&amp;hId=MTBkZGIxODIxY2JjNzBhOTY1ZDIwZmE3ZDQ4Y2I2NDE3NTU3Zjg4N2M5YzU4ZTliZWYxZmZlOGI1ZjJiY2U2MA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0513805227</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/18/2005</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/29/2005</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RECORD OF PAYMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTk4MDUxOQ2">FIRST AMER TITLE INS CO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mjc0NTM1NDM1&amp;hId=MjMxZDcxYWQxZjJjYzBjNDliN2RjYzQ4YmRhZDdhNGRlZWEyM2MzY2ZiNDkyMTk4NmY4ZTY0YWZhOWI3NjIwMA2">0427905001</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="28459597" type="checkbox" value="true" /><input name="28459597" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjg0NTk1OTc1&amp;hId=NGUwMzA5MjBiZGU5ZDNiMmZhN2JkNTgzOGNlN2I0M2ZhYTJkNjA5YjUwNWU3NGJiYThmYjQ0YTZiODgyYTJhYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0512626107</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/6/2005</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/25/2005</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDQwMDE1Mw2">MORTGAGE ELEC REGISTRATION SYSTEM</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzA1MzA5NzM1&amp;hId=NzIxMWQ3ZWVlYzU0YThiYzc3ZTQwNDc5YzNlMjUzNjIxODM4NTE2ZjdlMTQ5NDVlMDVjOTVhNTIxM2U2MDRjYg2">0619953159</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201020380000">15-20-102-038-0000</a>                                <br />
+                                    <span class="small"><span>1243 BOEGER AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="28002612" type="checkbox" value="true" /><input name="28002612" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjgwMDI2MTI1&amp;hId=ZjkyMjY2YmNiYjg5ZjM4MDNmNmJhZWQ1ZDBkYjU3ZWRjMjJmNTYwN2JjM2QxOTNlYzUzNmE0ODk0ZTgyYTJkOQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0502748217</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/27/2005</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/24/2004</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDQwMDE1Mw2">MORTGAGE ELEC REGISTRATION SYSTEM</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjYyNjI0MTU1&amp;hId=ODYzN2ZlMjU0YmU5MDY3MjUzNjMwZjhjYjE1ZTllN2Q2MmQyZjFhZTk2ZjZiZjUxMGQ0NDA2Y2VjZjM3OTVkZg2">0404929039</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201020380000">15-20-102-038-0000</a>                                <br />
+                                    <span class="small"><span>1243 BOEGER AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="27453545" type="checkbox" value="true" /><input name="27453545" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjc0NTM1NDU1&amp;hId=MWRkN2MxZjc4OTE5ZGVhZDQ3YWVhNDZhYTliZjZiMTM0MjVlODI3Y2E5ZGE4YzlkMGJjY2JjYmRmYzYzZjQ0Zg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0427905003</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/5/2004</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/24/2004</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RECORD OF PAYMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTk4MDUxOQ2">FIRST AMER TITLE INS CO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjYyNjI0MTU1&amp;hId=ODYzN2ZlMjU0YmU5MDY3MjUzNjMwZjhjYjE1ZTllN2Q2MmQyZjFhZTk2ZjZiZjUxMGQ0NDA2Y2VjZjM3OTVkZg2">0404929039</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="27453543" type="checkbox" value="true" /><input name="27453543" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjc0NTM1NDM1&amp;hId=MjMxZDcxYWQxZjJjYzBjNDliN2RjYzQ4YmRhZDdhNGRlZWEyM2MzY2ZiNDkyMTk4NmY4ZTY0YWZhOWI3NjIwMA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0427905001</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/5/2004</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/20/2004</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzM1NTMyMA2">EXECUTIVE HOME MTG CORP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mjc0NTM1NDQ1&amp;hId=OWEwZWMwYzgxNTRkMTE0M2E2NTQ0NTIxNjAyZjY2OGI2MTUxYWY5ZGIzY2MyN2Y2MWQ3NmM1MzVjNWVjN2Q4NA2">0427905002</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="27453544" type="checkbox" value="true" /><input name="27453544" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjc0NTM1NDQ1&amp;hId=OWEwZWMwYzgxNTRkMTE0M2E2NTQ0NTIxNjAyZjY2OGI2MTUxYWY5ZGIzY2MyN2Y2MWQ3NmM1MzVjNWVjN2Q4NA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0427905002</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/5/2004</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/20/2004</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzM1NTMyMA2">EXECUTIVE HOME MTG CORP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTYyODc3MQ2">UNION PLANTERS BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mjc0NTM1NDM1&amp;hId=MjMxZDcxYWQxZjJjYzBjNDliN2RjYzQ4YmRhZDdhNGRlZWEyM2MzY2ZiNDkyMTk4NmY4ZTY0YWZhOWI3NjIwMA2">0427905001</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="26262415" type="checkbox" value="true" /><input name="26262415" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjYyNjI0MTU1&amp;hId=ODYzN2ZlMjU0YmU5MDY3MjUzNjMwZjhjYjE1ZTllN2Q2MmQyZjFhZTk2ZjZiZjUxMGQ0NDA2Y2VjZjM3OTVkZg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0404929039</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/18/2004</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/17/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDQwMDE1Mw2">MORTGAGE ELEC REGISTRATION SYSTEM</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mjc0NTM1NDU1&amp;hId=MWRkN2MxZjc4OTE5ZGVhZDQ3YWVhNDZhYTliZjZiMTM0MjVlODI3Y2E5ZGE4YzlkMGJjY2JjYmRmYzYzZjQ0Zg2">0427905003</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201020380000">15-20-102-038-0000</a>                                <br />
+                                    <span class="small"><span>1243 BOEGER AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="25208011" type="checkbox" value="true" /><input name="25208011" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjUyMDgwMTE1&amp;hId=NzkzM2ZiMzk3ODBhMTlkYjcyMDIwZTE5MDY2MjAxMzE0MmE1ZDg5YjYxYTUwN2U5ZDViZGE1ZGI3Y2ZlOGJmMw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0325115193</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/8/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/20/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDQwMDE1Mw2">MORTGAGE ELEC REGISTRATION SYSTEM</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjQwNjc2NTg1&amp;hId=NGFmYjZmMDE5OWY4ZjIyZGRkNTMyNzdmMGE4NGY3MjMzZTA1NTBkYzRhZjExNTFhNWMzM2Y4NWEwZjZhZDEyYQ2">0030327315</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="24435931" type="checkbox" value="true" /><input name="24435931" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjQ0MzU5MzE1&amp;hId=ZGM5ZDI1YWQ2ZDQ5NDdlODlhMTE0NGNjMTRhMzc3NjEyM2Q0MzhmMDlmNjgwNTYxNTNjMDhlODQwYmFkZWMxMw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0314016095</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/20/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/10/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTYyODc3MQ2">UNION PLANTERS BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjMzODk3Mzg1&amp;hId=ZWNjYTQ1NTA1NWU4N2FiNDNlYTZmZDY2NjE0NjE4NDk5ZWU4NTNkZjFiNzVlYjcwZDIyOWIyODVlMzNmYjQ5Zg2">0021145105</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="24067658" type="checkbox" value="true" /><input name="24067658" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjQwNjc2NTg1&amp;hId=NGFmYjZmMDE5OWY4ZjIyZGRkNTMyNzdmMGE4NGY3MjMzZTA1NTBkYzRhZjExNTFhNWMzM2Y4NWEwZjZhZDEyYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0030327315</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/10/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/21/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDQwMDE1Mw2">MORTGAGE ELEC REGISTRATION SYSTEM</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjUyMDgwMTE1&amp;hId=NzkzM2ZiMzk3ODBhMTlkYjcyMDIwZTE5MDY2MjAxMzE0MmE1ZDg5YjYxYTUwN2U5ZDViZGE1ZGI3Y2ZlOGJmMw2">0325115193</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="23584147" type="checkbox" value="true" /><input name="23584147" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjM1ODQxNDc1&amp;hId=MDA1YmI5Y2YzNDAyNzQzYWU5NTQxYmUyNWUwM2M5YWRmYmIzYWQ1ZWIyN2UyZDY0YTgzZDM3OTVhZTY3NTRmMA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0021327809</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/3/2002</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/9/2002</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTAxNTk1OA2">WASHINGTON MUTU BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjIwODc3ODE1&amp;hId=MTQyNjA3OWU3ZDY1OGY3MmYxNmRiZTYzNTE2MzJiYTUyNzRiOTNiZjhhYzM0YzhmY2U0ZGQxYTNmMmZmZGI4MQ2">0011188431</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="23389737" type="checkbox" value="true" /><input name="23389737" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjMzODk3Mzc1&amp;hId=OWU4OTVkMjU3MmM0M2VkOWZhM2VjNTI0OTIyMTdmYzdmMjkyMGEzYzFmNjJjYWY2YjIyNDZjNzA0YThkMDAxZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0021145104</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/18/2002</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/26/2002</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzM4ODA5MDQ1&amp;hId=MDYzNjdjMWY0NzAxNjFhMjhjOWU5NzFmOWFiNDRkNWU0NTllZjNmYjExZjM2MjliMzE4MTI5NjM3NzYxMGYwMg2">0904857110</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201020380000">15-20-102-038-0000</a>                                <br />
+                                    <span class="small"><span>1243 BOEGER AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="23389738" type="checkbox" value="true" /><input name="23389738" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjMzODk3Mzg1&amp;hId=ZWNjYTQ1NTA1NWU4N2FiNDNlYTZmZDY2NjE0NjE4NDk5ZWU4NTNkZjFiNzVlYjcwZDIyOWIyODVlMzNmYjQ5Zg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0021145105</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/18/2002</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/26/2002</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTczMjYyMw2">FERGUSON ANDREW</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzM1NTMyMA2">EXECUTIVE HOME MTG CORP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjQ0MzU5MzE1&amp;hId=ZGM5ZDI1YWQ2ZDQ5NDdlODlhMTE0NGNjMTRhMzc3NjEyM2Q0MzhmMDlmNjgwNTYxNTNjMDhlODQwYmFkZWMxMw2">0314016095</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="22247024" type="checkbox" value="true" /><input name="22247024" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjIyNDcwMjQ1&amp;hId=OTViZmRkNmU1Nzc1MTUwMjRiYmQ4ZTM5ZTVlOGU1Mjc0MDI3ZWIyMzJiOGY2MTMzMzZhM2FlZDQ0NGYyNzUwYw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0020090029</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/23/2002</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/17/2001</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDQwMDE1Mw2">MORTGAGE ELEC REGISTRATION SYSTEM</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTg4MjUxOTU1&amp;hId=ZmYyNGFmYWUxNzUzYjg3MjdkNzY5NmY4MWI3ZDVhMjc4ZTc3NzA3ZjM1ODdjOGU3MzU2MTAyYjJmYTY0MDI0NQ2">99470588</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="22087781" type="checkbox" value="true" /><input name="22087781" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjIwODc3ODE1&amp;hId=MTQyNjA3OWU3ZDY1OGY3MmYxNmRiZTYzNTE2MzJiYTUyNzRiOTNiZjhhYzM0YzhmY2U0ZGQxYTNmMmZmZGI4MQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0011188431</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/14/2001</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/26/2001</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=ODk0MzIxNA2">MAJESTIC MTG CORP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjIwODc3ODI1&amp;hId=YTJlMDg1ZDczMTdmMmQ1YmRjM2RmNWNiMjkwNGE1NGYyMWU3MDM2NWRkYWRlOTcwOGIwMzE1N2ZmMWMxMDdjYg2">0011188432</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="22087782" type="checkbox" value="true" /><input name="22087782" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjIwODc3ODI1&amp;hId=YTJlMDg1ZDczMTdmMmQ1YmRjM2RmNWNiMjkwNGE1NGYyMWU3MDM2NWRkYWRlOTcwOGIwMzE1N2ZmMWMxMDdjYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0011188432</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/14/2001</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/26/2001</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=ODk0MzIxNA2">MAJESTIC MTG CORP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTAxNTk1OA2">WASHINGTON MUTU BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjIwODc3ODE1&amp;hId=MTQyNjA3OWU3ZDY1OGY3MmYxNmRiZTYzNTE2MzJiYTUyNzRiOTNiZjhhYzM0YzhmY2U0ZGQxYTNmMmZmZGI4MQ2">0011188431</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="22087780" type="checkbox" value="true" /><input name="22087780" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjIwODc3ODA1&amp;hId=NDJhMzc2MGU3ZTMyZDYyZDkzNTg3YmIzMWQxYTQ5NTZlYzVlNDc5NDM4NzJjYjYyMjFjMWZjMTM2N2NlYTBkZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0011188430</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/14/2001</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/23/2001</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>QUIT CLAIM DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="19636138" type="checkbox" value="true" /><input name="19636138" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTk2MzYxMzg1&amp;hId=MjVkNGNmZjlmNGQ4YTQyMzFjNTdlYmU3MGE0ZTY2OTlhMjIwMTFlNTI0ZGRjZTEyNjc0Mzc5NDRmZTgxMDg5Nw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>09204504</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/29/1999</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1999</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2Mzc4NA2">NORTH AMERN MTG CO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTAxNjAyMw2">MORTGAGE ELEC REGISTRATION SYSTEMS</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTg4MjUxOTU1&amp;hId=ZmYyNGFmYWUxNzUzYjg3MjdkNzY5NmY4MWI3ZDVhMjc4ZTc3NzA3ZjM1ODdjOGU3MzU2MTAyYjJmYTY0MDI0NQ2">99470588</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="19205296" type="checkbox" value="true" /><input name="19205296" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTkyMDUyOTY1&amp;hId=ZGY0ZWJjYmFlNzg1ODQ0NTJjMDk5ZGJkMDg0NTFlMjllNzRlOWQ0M2ZhZGRjN2E5YzVhNGUzZDRkMjg3OGUwZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>99813294</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/25/1999</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/2/1999</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA0OTA0Nzk1">DIME SAV BK NY</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTYzNzM3NDA1&amp;hId=ZmE0ZmZiZWFlNGZjMWM1M2Q4YjI0MjQ3YTI5NWE5NmZmNWJmNTZiNDFjYWZhYTQwYjZjY2YyOGFjYjNmMTViOA2">97283255</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="18825195" type="checkbox" value="true" /><input name="18825195" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTg4MjUxOTU1&amp;hId=ZmYyNGFmYWUxNzUzYjg3MjdkNzY5NmY4MWI3ZDVhMjc4ZTc3NzA3ZjM1ODdjOGU3MzU2MTAyYjJmYTY0MDI0NQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>99470588</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/14/1999</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/30/1999</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjIzNzI0NQ2">NORTH AMERN MTG CORP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTk2MzYxMzg1&amp;hId=MjVkNGNmZjlmNGQ4YTQyMzFjNTdlYmU3MGE0ZTY2OTlhMjIwMTFlNTI0ZGRjZTEyNjc0Mzc5NDRmZTgxMDg5Nw2">09204504</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16373740" type="checkbox" value="true" /><input name="16373740" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTYzNzM3NDA1&amp;hId=ZmE0ZmZiZWFlNGZjMWM1M2Q4YjI0MjQ3YTI5NWE5NmZmNWJmNTZiNDFjYWZhYTQwYjZjY2YyOGFjYjNmMTViOA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97283255</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/24/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/1/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTc0NzMxMQ2">DIME MTG INC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTYzNzM3NDE1&amp;hId=ZWIzNzUyNWRmNzQ3YTI4YTAwNDljMWNiNjNhMDFmOTIyYTc2YjI5MzIyMTE4NWVlMTc1ZmJlNjM4ZmQ5MjA2OA2">97283256</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16373741" type="checkbox" value="true" /><input name="16373741" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTYzNzM3NDE1&amp;hId=ZWIzNzUyNWRmNzQ3YTI4YTAwNDljMWNiNjNhMDFmOTIyYTc2YjI5MzIyMTE4NWVlMTc1ZmJlNjM4ZmQ5MjA2OA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97283256</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/24/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/1/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTc0NzMxMQ2">DIME MTG INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzY0NzU3NQ2">DIME SAV BK NEW YORK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTYzNzM3NDA1&amp;hId=ZmE0ZmZiZWFlNGZjMWM1M2Q4YjI0MjQ3YTI5NWE5NmZmNWJmNTZiNDFjYWZhYTQwYjZjY2YyOGFjYjNmMTViOA2">97283255</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16366388" type="checkbox" value="true" /><input name="16366388" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTYzNjYzODg1&amp;hId=MDcwOThkYTAwNjg2M2ExNWZjZmQ3Yjk1OTcxNDI1ZjA0MTFiYWM1NTEwZDhhNWY1OWYzMjIyNzVjZGFjYWEyYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97276837</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/22/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/1/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTYxODg0OA2">RAGSDALE DIXIE SR</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjMyMzEyOA2">BONNEMA WILLIAM J</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="15737503" type="checkbox" value="true" /><input name="15737503" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTU3Mzc1MDM1&amp;hId=YjU3NTk3M2UwZmM3YWExNzNjZGUxNDE3YWViMzBiYzVmYTI3ZDYyYTJhYTc3NjMxZmY3OTIwY2RkOTI4MjNlYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>96648457</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/23/1996</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/6/1996</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1NzIzODg1">FIRST FED S&amp;L ASSN WESTCHESTER</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=ODMzNzY4Mg2">RAGSDALE DIXIE</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTEyNDg4OTk1&amp;hId=NTdmYjU5MTg3YmMxMjliOTE4OWUxMmMzYWUzOWQ5ODQyMTlhNjBiZDc5YTczNTE2MzRiYmJiMTI5ZjMyYjc2Ng2">92252816</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="11248898" type="checkbox" value="true" /><input name="11248898" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTEyNDg4OTg1&amp;hId=Yzk5YzJhYjNjODI2M2NkZTI3MTU5MWM3MzE2NDM0NjI1MDE0OGQzN2IxYjUyZDY5MTAzODRlNjIwYTkwMWJjYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>92252815</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/20/1992</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/25/1992</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODQzODA1">FIRST FED S&amp;L ASN WESTCH</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzUzNjM0Ng2">RAGSDALE ADA C</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="11248899" type="checkbox" value="true" /><input name="11248899" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTEyNDg4OTk1&amp;hId=NTdmYjU5MTg3YmMxMjliOTE4OWUxMmMzYWUzOWQ5ODQyMTlhNjBiZDc5YTczNTE2MzRiYmJiMTI5ZjMyYjc2Ng2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>92252816</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/20/1992</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/27/1992</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzUzNjM0Ng2">RAGSDALE ADA C</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzY4MTkxMw2">1ST FED S&amp;L ASN WESTCHES</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTU3Mzc1MDM1&amp;hId=YjU3NTk3M2UwZmM3YWExNzNjZGUxNDE3YWViMzBiYzVmYTI3ZDYyYTJhYTc3NjMxZmY3OTIwY2RkOTI4MjNlYQ2">96648457</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=15201100490000">15-20-110-049-0000</a>                                <br />
+                                    <span class="small"><span>1336 EVERS AVE, WESTCHESTER</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                </tbody>
+            </table>
+        <br />
+        <div id='Paging' style="text-align: left;">
+            Page 1 of 1 <span class="ml-2">Page Size: 100</span>
+            <div class="pagination-container"><ul class="pagination"><li class="active"><a>1</a></li></ul></div>
+        </div>
+        <p class="small">The CCCO indexes documents by Legal Description, grantor/grantee name, Property Index Number, and Document Number.   Address is only for informational purposes and should not be relied upon.   CCCO does not guarantee legality or accuracy of address information. CCCO accepts no liability for damages incurred directly, indirectly, incidental, punitive or consequential, as a result of address errors, omissions or discrepancies</p>
+<p class="text-start small mark">
+    <b> Please Note: </b> Annexations, Condominium declarations, Dedications, Easements, Highway plats, Monuments, Plats, Vacations/Dedications, and Real estate transfer declarations are not available for purchase on our website. If you would like a copy
+    of these document types, you may purchase them at our <a target="_blank" href="https://www.cookcountyclerkil.gov/about/locations/downtown-chicago-recordings">downtown office</a>.
+</p>
+</div>
+    </div>
+</form>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            //Highlight();
+            var totalSelected = 0;
+            //var $dialog = $("#modaldiag");
+            var $dialog = $('<div class="modal fade" id="modaldiag" tabindex="-1" role="dialog" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered justify-content-center" role = "document"><span class="fa fa-spinner fa-spin fa-3x"></span></div></div>');
+            /*var mi = new bootstrap.Modal($dialog);*/
+
+            $(document).on('click', '#selectAll', function (e) {
+                $('input:checkbox').not(this).prop('checked', this.checked);
+                $("#totalSelected").empty();
+                totalSelected = 0;
+
+                $("table > tbody > tr").each(function () {
+                    $(this).removeClass("table-success");
+                });
+                if (this.checked) {
+                    $('input[type=checkbox][class=docitem]').each(function () {
+                        if (this.checked) {
+                            var arr = {};
+                            totalSelected = totalSelected + 1;
+                            $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>'); // <input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+                        }
+                    });
+                    $("table > tbody > tr").each(function () {
+                        $(this).addClass("table-success");
+                    });
+
+                }
+            });
+
+            $(document).on('click', 'input[type=checkbox][class=docitem]', function (e) {
+                $("#totalSelected").empty();
+                if (this.checked) {
+                    totalSelected = totalSelected + 1;
+                    $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    $(this).closest('tr').addClass("table-success");
+
+                }
+                else {
+                    $(this).closest('tr').removeClass("table-success");
+                    totalSelected = totalSelected - 1;
+                    if (totalSelected <= 0) {
+                        $("#totalSelected").empty();
+                    }
+                    else {
+                        $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    }
+                }
+            });
+
+            $(document).on('click', '#btnSearch', function (e) {
+                $dialog.modal('show');
+            });
+
+            $(document).on('click', '#btnAddDoc, #btnAddData,  #btnAddCert, #btnAllData', function (e) {
+
+
+                if (totalSelected > 0) {
+                    $dialog.modal('show');
+                    var obj = $(this).attr('href');
+                    var all = "";
+                    if ($(this).attr('id') == "btnAllData") {
+                        all = "all";
+                    }
+                    $dialog.on('shown.bs.modal', function (e) {
+                        var url = "/Cart/AddItem";
+                        loadData(obj, all, url, $dialog);
+
+                        $('#selectAll').prop('checked', false);
+                        $("#totalSelected").empty();
+                        $('input[type=checkbox][class=docitem]').prop('checked', false);
+                        $("table > tbody > tr").each(function () {
+                            $(this).removeClass("table-success");
+                            totalSelected = 0;
+                        });
+
+                    });
+                    $dialog.modal('hide');
+
+
+                }
+                else {
+                    alert("Select your documents before adding to the cart.");
+                }
+                e.preventDefault();
+                return false;
+            });
+
+            //$(window).on("beforeunload", function (e) {
+            //    window.setInterval(function () {
+            //        $dialog.modal('hide');
+            //    }, 3000);//Check if receive cookie from server by second
+
+            //});
+
+          if (isSafari) {
+            $(window).on('load', function () {
+                window.setInterval(function () {
+                    $dialog.modal('hide');
+                }, 1000);//Check if receive cookie from server by second
+            });
+        }
+        else {
+            $(window).on("beforeunload", function (e) {
+                window.setInterval(function () {
+
+                    var url = "/search/searchstatus";
+
+                    $.ajax({
+                        type: "GET",
+                        url: url,
+                        async: false,
+                        data: null,
+                        success: function (data) {
+                            if (data.Success == "true") {
+                                $dialog.modal('hide');
+                            }
+                        },
+                        error: function (xhr, staus, error) {
+
+                        }
+
+                    });
+
+                }, 1000);
+
+            });
+        }
+
+
+
+            $(document).on('click', '.searchresult', function (e) {
+
+                 $("#result").empty();
+
+                var href = $(this).attr('href');
+                var result = GetParam(href);
+
+                var url = "/search/sortresult";
+
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    async: false,
+                    data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    },
+                    error: function (xhr, staus, error) {
+
+                    }
+
+                });
+
+
+                e.preventDefault();
+                return false;
+
+            });
+            $(document).on('click', '#Paging a[href]', function (e) {
+                //debugger;
+                var href = $(this).attr('href');
+                //alert(href);
+                
+
+                var url = "/search/sortresult";
+                $.ajax({
+                    type: "GET",
+                    url:href,
+                    //data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    }
+                });
+
+                e.preventDefault();
+                return false;
+            });
+
+            window.onpopstate = function () {
+                $dialog.modal('hide');
+            }
+
+            //$(window).on('popstate', function () {
+            //    //alert('here');
+            //    $dialog.modal('hide');
+            //});
+
+
+
+            function Highlight() {
+
+                $("table > tbody > tr > td:find('2127')").css("color", "yellow");
+                $("table > tbody > tr > td > a:contains('2127')").css("color", "yellow");
+
+                /*var sourceText = $("#inputStr").val();*/
+                //var value = "2127";
+                //var arr = $("#inputStr").val().split(" ");
+                //var result = $("#tblData").html();
+                //var text = result;
+                //text = text.replace(value, "<mark>" + value + "</mark>");
+                ////$.each(arr, function (index, value) {
+                ////    text = text.replace(value, "<mark>" + value + "</mark > ");
+                ////});
+                //$("#tblData").html(text);
+            }
+
+            function GetParam(href) {
+                var result = {};
+                var pars = href.split("?")[1].split("&");
+
+                for (var i = 0; i < pars.length; i++) {
+                    var tmp = pars[i].split("=");
+                    result[tmp[0]] = tmp[1];
+                }
+                return result;
+            }
+
+
+            //$("#btnAddDoc, #btnAddData,  #btnAddCert").unbind().click(function () {
+
+            //});
+
+            //$(document).on('click', ''', function (e) {
+
+            //    e.preventDefault();
+            //    if (totalSelected > 0) {
+
+            //        $dialog.modal('show');
+            //        var obj = $(this).attr('class');
+            //        $dialog.on('shown.bs.modal', function (e) {
+            //            loadData(obj);
+
+            //        });
+            //        $dialog.modal('hide');
+            //    }
+            //    return false;
+            //});
+            //function testData(btn) {
+            //    var form = $('#__AjaxAntiForgeryForm');
+            //    var token = $('input[name="__RequestVerificationToken"]', form).val();
+            //    $('input[type=checkbox]').each(function () {
+            //        if (this.checked) {
+            //            var docId = $(this).attr("name");
+
+            //            $("#hfd").append('<input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+            //            index = index + 1;
+
+            //        }
+            //    });
+
+            //    var docs = [
+            //        { DocId: 25303231 },
+            //        { DocId: 36606619 },
+            //        { DocId: 26374988 }
+            //    ];
+            //}
+        });
+
+</script>
+
+
+                </div>
+            </div>
+        </div>
+        <hr />
+        <footer style="margin-top:10px;">
+           
+            <div class="footerLeft">
+                <p>&copy; Copyright 2025 Cook County Clerk's Office. All Rights Reserved.</p>
+
+            </div>
+            <div class="footerRight">
+                <p class="cookCounty"><a href="https://www.cookcountyclerkil.gov/recordings/search-recordings" target="_blank" class="cookCountyLink">Go To Cook County Clerk's Website</a></p>
+            </div>
+            <div class="clear">
+            </div>
+        </footer>
+    </div>
+
+</body>
+
+
+</html>

@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="format-detection" content="telephone=no">
+    <title>Property Records Search | Clerk's Recordings System</title>
+    <noscript>
+
+        <meta http-equiv="refresh" content="0;URL=http://crs.cookcountyclerkil.gov/Home/EnableJavascript" />
+        
+    </noscript>
+
+    <script src="/Scripts/popper.js"></script>
+    <script src="/bundles/modernizr?v=inCVuEFe6J4Q07A0AcRsbJic_UE5MwpRMNGcOtk94TE1"></script>
+
+    <script src="/bundles/jquery?v=8Oos0avDZyPg-cbyVzvkIfERIE1DGSe3sRQdCSYrgEQ1"></script>
+
+
+    <script src="/Scripts/bootstrap.js"></script>
+
+    
+
+    <link href="/Content/css?v=rsU2Eji0u9P2WvZEOnL1IuAZ4thNyibej24hJDWdkAY1" rel="stylesheet"/>
+
+
+    
+
+
+    <link href="/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+    <script src="/bundles/maskedinput?v=IndHTEQMh70Ra3yP5TZNrwDp50M1KbiN0kpoXmd4k_01"></script>
+
+
+    
+
+    
+    <script src="/Scripts/jquery.maskedinput-1.4.1.js"></script>
+
+
+
+    <link href="/Content/jquery-ui.css" rel="stylesheet" />
+    <link rel="icon" href="https://www.cookcountyclerkil.gov/themes/custom/clerk/cookcountyclerk.ico" />
+
+    <link href="/Content/Site.css?v=1" rel="stylesheet" />
+    <script type="text/javascript" src="/Scripts/jquery-ui.js"></script>
+
+    
+    
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.date').mask("99/99/9999");
+            //$('.phone_with_ddd').mask('000-000-0000');
+            $('.zip').mask('99999');
+
+
+        });
+        function clearForm(form) {
+            var $f = $(form);
+            var $f = $f.find(':input').not(':button, :submit, :reset, :hidden');
+            $f.val('').attr('value', '').removeAttr('checked').removeAttr('selected');
+
+        }
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!--<script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>-->
+    
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+</head>
+<body>
+    
+
+    <div class="bg-light container">
+        <div class="mRow">
+            <div class="Column" style="width:8%;">
+                <div class="nav-clerk-logo-link">
+                    <a href="/Search">
+                        <img src="/Images/seal.png" />
+                    </a>
+                </div>
+            </div>
+            <div class="Column p-0 m-0 pt-3" style="vertical-align:top;">
+                <div class="text-end" id="cartDisplay">
+                    <div class="shoppingCart ms-2">
+    <a href="/Cart" class="no-textdecoration" id="lnkCart">
+0    </a>
+</div>
+
+                </div>
+                <div class="font-weight-boldOld text-uppercase float-left" style="font-size:12px;">Recordings</div>
+
+                <div class="smallFont text-uppercase float-left">
+                    Cook County Clerk's Office
+                </div>
+
+                <hr class="w-100 float-left p-0 mt-0 mb-0" />
+
+                <div class="float-left">
+                    <span class="appTitle small"><small></small></span>
+
+                    <div class="text-end">
+
+                        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                            <div class="container-fluid ps-0">
+                                <div class="ms-auto">
+                                    <button class="navbar-toggler btn btn-primary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                        <span class="navbar-toggler-icon1"><i class="fa fa-bars fa-lg" style="background-color:#337AB7;color:white; "></i></span>
+                                    </button>
+                                </div>
+                                <div class="collapse navbar-collapse collapse w-100 order-3 dual-collapse2 text-end" id="navbarSupportedContent">
+                                    <ul class="navbar-nav ms-auto" style="font-size :15px;">
+                                        <li class="nav-item text-start">
+
+                                            <a href="/Search" class="nav-link menuActiveLink"><i class="fa fa-search"></i> Search</a>
+                                            
+                                        </li>
+                                        
+                                        <li class="nav-item text-start">
+                                            <a href="/Public" class="nav-link "><i class="fa fa-commenting-o"></i> Property Fraud Alert</a>
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/MailTracking?returnUrl=%2FSearch%2FResult%3Fid1%3D17172120161081" class="nav-link "><i class="fa fa-envelope-o"></i> Mail Tracking</a>
+
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/ChangeRequest" class="nav-link "><i class="fa fa-table"></i> Indexing Corrections</a>
+                                        </li>
+                                            <li class="nav-item text-start">
+                                                <a href="/Order/Search?column=OrderDate&amp;direction=desc" class="nav-link "><i class="fa fa-table"></i> Orders</a>
+                                            </li>
+                                                                                    <li class="nav-item text-start">
+                                                <a href="/Account/Login?returnUrl=%2FSearch%2FResult%3Fid1%3D17172120161081" class="nav-link "><i class="fa fa-sign-in"></i> Account</a>
+
+                                            </li>
+
+
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </nav>
+                        
+
+                    </div>
+
+
+
+                </div>
+            </div>
+
+            
+        </div>
+
+        
+
+
+    </div>
+
+
+
+
+
+    <div class="container">
+        <div class="row ">
+            <div class="breadcrumb container m-0 p-0">
+                <p class="float-right m-0">
+
+                    
+    <text>Search Results - Documents</text>
+
+                </p>
+            </div>
+            <div class="bg-white">
+                
+                
+
+
+                
+            </div>
+            
+            <div class="container mt-1">
+                
+                <div class="row container-box" style="padding:5px 20px;">
+                    
+
+
+
+
+<script src="/Scripts/Custom.js"></script>
+<input id="inputStr" name="inputStr" type="hidden" value="17172120161081" />
+<div class="row mt-2">
+    <div class="col-md-6">
+        
+        
+        <a href="/Search">Start a new Search</a>
+        
+    </div>
+</div>
+<form action="/Search?strAction=Result" method="post"><input name="__RequestVerificationToken" type="hidden" value="ZBLEyh93gQdLrJH62zfHn8sm_8hjJR0AZJqS_lnwSIcpDyMF2fUoBZH6Q6ruAq-v2eYWOTiewLJmpfNZdpY91o0qM7A1" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div class="row pt-2">
+        <div class="col-md-8 mx-auto">
+            <div class="form-group input-group">
+
+                <input type="search" id="inputField" name="inputField"  placeholder="Enter Search Criteria Here" class="form-control fs-5" value="17172120161081" style="padding: 0.175rem 0.15rem;" />
+                <button type="submit" id="btnSearch" name="submitButton" value="FullSearch" class="btn btn-primary">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                </button>
+
+            </div>
+            
+        <div class="text-center small mt-1">
+            Documents Indexed Through: 07-29-2025
+                <span> | </span>
+            <a data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                <i class="fa fa-info-circle me-1" aria-hidden="true"></i>Search Tips
+            </a>
+            
+        </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="collapse small text-center" id="collapseExample">
+                <strong>
+                    Search by PIN:
+                </strong>  30-31-220-032-0000 or 30312200320000 <br />
+                <strong>
+                    Search by First Name, Last Name, and Street Address:
+                </strong>  John Smith 18058 Burnham <br />
+                <strong>
+                    Search by FirstName, Last Name, and House Number:
+                </strong>  John Smith 18058 <br />
+                <strong>
+                    Search by FirstName, Last Name, and Street Name:
+                </strong>  John Smith Burnham <br />
+                <strong>  Search by Document Number: </strong> 2222113250
+            </div>
+            
+        </div>
+    </div>
+</form><form action="/Cart/AddItem" id="__AjaxAntiForgeryForm" method="post"><input name="__RequestVerificationToken" type="hidden" value="LODnCnuQ3zTy7rfGL7DnvA4mZPTHTugDazROGM_y7T0btnGAMU-E40KYShdOm6JcLp058Xc9v3D3ymuaBF3dnY-oH-Y1" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="hfd"></div>
+<div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="result">
+
+
+
+
+    <div class="row mb-2 mt-2">
+
+        <div class="col-md-6">
+            Total Documents : <span class="text-big-and-bold">29</span>         </div>
+    </div>
+
+<div>
+    <span class="fw-bold">Click the boxes to select your documents before adding to the cart.</span><br />
+        <span class="small">You may remove documents from your cart by clicking the “Shopping Cart”, which is located on the upper right corner of the page.</span>
+</div>
+<div class="row mb-1">
+            <div class="col-md-2 pt-2 productlist">
+                <a href="1" id="btnAddDoc" class="1 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Documents</a>
+            </div>
+            <div class="col-md-3 pt-2 productlist">
+                <a href="2" id="btnAddData" class="3 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Certified Documents</a>
+            </div>
+            <div class="col-md-3 pt-2 productlist">
+                <a href="3" id="btnAddData" class="3 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Search Result (No Images)</a>
+            </div>
+    
+    
+
+    
+    
+</div>
+
+
+<div class="table-responsive">
+        <div id="totalSelected"></div>
+            <table id="tblData" class="table table-hover table-responsive tblfmt">
+                <thead>
+                    <tr>
+                        <td scope="col" class="align-middle"><input id="selectAll" name="selectAll" title="Select All" type="checkbox" value="true" /><input name="selectAll" type="hidden" value="false" /></td>
+                        <th scope="col" class="align-middle text-center">
+                            <span >View Doc</span>
+                        </th>
+                        <th scope="col"><a href='/Search/sortresult?id1=17172120161081&column=AlphaDocNumber&direction=asc&page=1' class='searchresult'> Doc Number</a></th>
+
+                        <th scope="col" class="text-center">
+                            <a href='/Search/sortresult?id1=17172120161081&column=DateRecorded&direction=asc&page=1' class='searchresult'><i class='fa fa-sort-up' style='color:orange;'></i> Doc Recorded</a>
+                        </th>
+                        <th scope="col" class="text-center">
+                            <a href='/Search/sortresult?id1=17172120161081&column=DateExecuted&direction=asc&page=1' class='searchresult'> Doc Executed</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17172120161081&column=DocTypeDescription&direction=asc&page=1' class='searchresult'> Doc Type</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17172120161081&column=FirstGrantor&direction=asc&page=1' class='searchresult'> 1st Grantor</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17172120161081&column=FirstGrantee&direction=asc&page=1' class='searchresult'> 1st Grantee</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17172120161081&column=RefDocNum&direction=asc&page=1' class='searchresult'> Assoc. Doc#</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17172120161081&column=FirstPin&direction=asc&page=1' class='searchresult'> 1st PIN</a>
+                        </th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="41584046" type="checkbox" value="true" /><input name="41584046" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDE1ODQwNDY1&amp;hId=MDUxNDFjZDM4YTVjMWUxYjVmYmY5OTMwZWVkOTM4ZTJiYmY1M2I1ZWE1NmRjMjY4OTM0YmVhMDk3M2VkYWIwMw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1822712056</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/15/2018</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/27/2018</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzgwNzk5NQ2">CASTILLO GEORGE</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTUxMjg4OTc1">WATANABE HISAKO</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="41582448" type="checkbox" value="true" /><input name="41582448" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDE1ODI0NDg1&amp;hId=MmRjY2JlMDU4ZDAyZDE4YTVkZDVkNDhkMTFjMzM3M2UwYjk5NzVkOTg1NjE2MDUwMmY5M2FmMGZjNDVmYTZlYw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1822619249</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/14/2018</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/13/2018</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzQ3MTEyOA2">JPMORGAN CHASE BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzgwNzk5NQ2">CASTILLO GEORGE</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDAxMzIyNzM1&amp;hId=NDI3NjM4ZTAxMmE1NGQ1MDZlN2VjNjMzNjk1OTQyOTZiOWIwZGZlZTNlMGEzZGE1ZDE4OGIyOTVmOGExZjFlNQ2">1615208182</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="40274750" type="checkbox" value="true" /><input name="40274750" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDAyNzQ3NTA1&amp;hId=NmNjZDRkZTMyNWZiYmMzYmM0YTY0YzE4NzY3YjAzOWE4ZmFhMjMxZDk5MWQyNGJiYjhkNDIwYzQ1OGVhMGE1YQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1621529027</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/2/2016</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/15/2016</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI4ODc4NjY1">ONE ONE ONE MORGAN CONDOMINIUM</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjM5OTU2MzQ1&amp;hId=ZDlmOWM3MzgyNGI2N2UwN2FiNWMzYmZhOWVjMmZiMDViMTAyYzA1NmM2NjhhNmM5NTAxNzA5Y2RkNWNkYmUxYg2">0030258832</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161001">17-17-212-016-1001</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="40132273" type="checkbox" value="true" /><input name="40132273" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDAxMzIyNzM1&amp;hId=NDI3NjM4ZTAxMmE1NGQ1MDZlN2VjNjMzNjk1OTQyOTZiOWIwZGZlZTNlMGEzZGE1ZDE4OGIyOTVmOGExZjFlNQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1615208182</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/31/2016</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/21/2016</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzgwNzk5NQ2">CASTILLO GEORGE</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzQ3MTEyOA2">JPMORGAN CHASE BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDE1ODI0NDg1&amp;hId=MmRjY2JlMDU4ZDAyZDE4YTVkZDVkNDhkMTFjMzM3M2UwYjk5NzVkOTg1NjE2MDUwMmY5M2FmMGZjNDVmYTZlYw2">1822619249</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39358684" type="checkbox" value="true" /><input name="39358684" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzkzNTg2ODQ1&amp;hId=MGJmNjdmYTE4OGQ0NjYzNzdiODkwMTllMTM3YzI0MzBmMmRkMmJiNzE2YzZlZWY5NDAyMzg3YzE4MDAzMWNhZg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1515557072</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/4/2015</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/3/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzQ3MTEyOA2">JPMORGAN CHASE BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzgwNzk5NQ2">CASTILLO GEORGE</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mzc4OTE4NjQ1&amp;hId=YzFhZGQxOGMxNWZjZTg0ZDU4ODE3NjQ2NTM1Y2VjYmJjZDc0OWZjMjk3MzhiNWIwNjJmYTVjM2IzNDJjMDg5OQ2">1319841095</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="37971724" type="checkbox" value="true" /><input name="37971724" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzc5NzE3MjQ1&amp;hId=MTYwMWYyZjY4NGFlZDcxMGI0OWZkYzYxMWZiNTU5MTg2NDViMDk1YjhlM2M1ODJjZDI3MmJkOTM4ZDFhYzc3ZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1322619044</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/14/2013</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/29/2013</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI1NDU1NzA1">ALLY BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIyMTI4MDU1">VACLAVIK JOSEPH C JR</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzMzMzk5NjQ1&amp;hId=NGI1YjdlYjU4MTg1ZGM2Y2RhYTQzOTQ1YzJhNWUzODFlYTVjMzU4NWVjZTJmMTllZjBiNzcxMTc0MDUwZWQzMw2">0819641099</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="37891862" type="checkbox" value="true" /><input name="37891862" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzc4OTE4NjI1&amp;hId=ODIzNzQyNzdmZTZmMjQyZjYwMzZjMTEwZGU1OWNjOTQwYjhjNDcxNjUzMzViMzk1ZWI1MWM0M2YzNTFhNGU0Mg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1319841094</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/17/2013</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/20/2013</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIyMTI4MDU1">VACLAVIK JOSEPH C JR</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzgwNzk5NQ2">CASTILLO GEORGE</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="37891864" type="checkbox" value="true" /><input name="37891864" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzc4OTE4NjQ1&amp;hId=YzFhZGQxOGMxNWZjZTg0ZDU4ODE3NjQ2NTM1Y2VjYmJjZDc0OWZjMjk3MzhiNWIwNjJmYTVjM2IzNDJjMDg5OQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1319841095</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/17/2013</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/25/2013</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzgwNzk5NQ2">CASTILLO GEORGE</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzQ3MTEyOA2">JPMORGAN CHASE BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzkzNTg2ODQ1&amp;hId=MGJmNjdmYTE4OGQ0NjYzNzdiODkwMTllMTM3YzI0MzBmMmRkMmJiNzE2YzZlZWY5NDAyMzg3YzE4MDAzMWNhZg2">1515557072</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="37801647" type="checkbox" value="true" /><input name="37801647" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzc4MDE2NDc1&amp;hId=MmM1YjcwZjA3MTQ3MmFjMjAxNjNkM2ZkYjg4MjAzYjVjMzBlODBiZjYyNWFiZmMwNzJhM2U2NzU5NzY2MjI1Mg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1316210108</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/11/2013</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/14/2013</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI1NDU1NzA1">ALLY BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTExMDE1OTM1">OCWEN LOAN SERVICING LLC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzMzMzk5NjQ1&amp;hId=NGI1YjdlYjU4MTg1ZGM2Y2RhYTQzOTQ1YzJhNWUzODFlYTVjMzU4NWVjZTJmMTllZjBiNzcxMTc0MDUwZWQzMw2">0819641099</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="37503486" type="checkbox" value="true" /><input name="37503486" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzc1MDM0ODY1&amp;hId=YmE0NjNkOTQxYjVmZmI1NTE1MDRlNGM5ZjVjMWZiOTY4ZjJlMTA4ZmUxNmJkOWE1NGZhNGRkMjI5YjQ2MTI0OA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1304419069</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/13/2013</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/4/2013</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDAzMjQ2Mg2">GMAC MTG LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI1NDU1NzA1">ALLY BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzMzMzk5NjQ1&amp;hId=NGI1YjdlYjU4MTg1ZGM2Y2RhYTQzOTQ1YzJhNWUzODFlYTVjMzU4NWVjZTJmMTllZjBiNzcxMTc0MDUwZWQzMw2">0819641099</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34419579" type="checkbox" value="true" /><input name="34419579" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ0MTk1Nzk1&amp;hId=YzQ0NmZkNDhhNzZjNzU5NTA4MjgxYmY4ZTZiZjA5ZjAyY2ViYzY0MzI5ZTNjYWM1OTM0OTg0YzlkZjZjNGYyYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0923344011</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/21/2009</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/16/2008</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzUwNjI0OA2">FIRST PLACE BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDAzMjQ2Mg2">GMAC MTG LLC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzMzMzk5NjQ1&amp;hId=NGI1YjdlYjU4MTg1ZGM2Y2RhYTQzOTQ1YzJhNWUzODFlYTVjMzU4NWVjZTJmMTllZjBiNzcxMTc0MDUwZWQzMw2">0819641099</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33374309" type="checkbox" value="true" /><input name="33374309" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzMzNzQzMDk1&amp;hId=NzFlNTQ4YWM0ODliZjg5OWZhYzE1ZDhiYjYwNjA5Y2UyOThhYTIzMjcxZWNhN2FjOWYyM2E2MTBhMDMwMWRjZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0820704082</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/25/2008</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/2/2008</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzQ3MTEyOA2">JPMORGAN CHASE BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEzNDc0MTY1">CONDOTTI MARC R</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mjk5NjUwNzc1&amp;hId=MGYzYjhmNWYwY2E1NDJjMjFlZWY0YjhhMTI1ZDc5Nzc2ZjkxNTVlYWY5NmRkNDhmNGRmYTdlYzdjY2NjOTg5YQ2">0607902094</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33371429" type="checkbox" value="true" /><input name="33371429" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzMzNzE0Mjk1&amp;hId=YjIyN2M0NGZlYWI5YjE0ZDhiMzc5YmMyMzM3MWE0OWEzMmFlMDMzMTdmNzY3YTU5YzgyY2U2ZWUzMTM4ZGYyYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0820622042</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/24/2008</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/2/2008</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzQ3MTEyOA2">JPMORGAN CHASE BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEzNDc0MTY1">CONDOTTI MARC R</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mjk5NjUwNzY1&amp;hId=YmNiYjEyMjQwZmQ2MTE2MGYzMmQ1ODYyOTIwZDAwM2RmNWIyZWMxY2I0NjgzNDM1NDY2MGE2MGU5YTBiYjc4ZA2">0607902093</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33339961" type="checkbox" value="true" /><input name="33339961" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzMzMzk5NjE1&amp;hId=MDQwOWJmNjE0ZDIzODhkNGExMTI2NGQ1YWEyNjUxMzZjZmYyNDQ3N2MxZjQ5NjIwOTk1Nzk5OGFhYjNlZDA1NA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0819641098</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/14/2008</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/27/2008</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEzNDc0MTY1">CONDOTTI MARC R</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIyMTI4MDU1">VACLAVIK JOSEPH C JR</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33339965" type="checkbox" value="true" /><input name="33339965" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzMzMzk5NjU1&amp;hId=MmVkYWZlYzdmMjBiYjQxMDM5Njk3ZmRlM2VmNmEzMmMyNDc3NmZkMmM4NDkwZWRlOTkwMzIyMmI5NWMwMzFhMA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0819641100</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/14/2008</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/27/2008</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTg4NDA5OA2">BANCGROUP MTG CORP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=Mjc2ODM2Mg2">FIRST PL BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzMzMzk5NjQ1&amp;hId=NGI1YjdlYjU4MTg1ZGM2Y2RhYTQzOTQ1YzJhNWUzODFlYTVjMzU4NWVjZTJmMTllZjBiNzcxMTc0MDUwZWQzMw2">0819641099</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33339964" type="checkbox" value="true" /><input name="33339964" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzMzMzk5NjQ1&amp;hId=NGI1YjdlYjU4MTg1ZGM2Y2RhYTQzOTQ1YzJhNWUzODFlYTVjMzU4NWVjZTJmMTllZjBiNzcxMTc0MDUwZWQzMw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0819641099</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/14/2008</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/27/2008</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIyMTI4MDU1">VACLAVIK JOSEPH C JR</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTg4NDA5OA2">BANCGROUP MTG CORP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzMzMzk5NjU1&amp;hId=MmVkYWZlYzdmMjBiYjQxMDM5Njk3ZmRlM2VmNmEzMmMyNDc3NmZkMmM4NDkwZWRlOTkwMzIyMmI5NWMwMzFhMA2">0819641100</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="29965073" type="checkbox" value="true" /><input name="29965073" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjk5NjUwNzM1&amp;hId=ZjQ2ZWVmMTI0YTVlMzM5MjQyYzRkMGEzNTlkMTI5OTdlYTZiMjc1ODBmZDIwOWI3MTNiOTdlNDcwZmQ5ZTIzNA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0607902092</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/20/2006</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/24/2006</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MjU4NTYxNA2">SCHWARTZ AUSTIN F</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEzNDc0MTY1">CONDOTTI MARC R</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="29965076" type="checkbox" value="true" /><input name="29965076" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjk5NjUwNzY1&amp;hId=YmNiYjEyMjQwZmQ2MTE2MGYzMmQ1ODYyOTIwZDAwM2RmNWIyZWMxY2I0NjgzNDM1NDY2MGE2MGU5YTBiYjc4ZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0607902093</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/20/2006</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/24/2006</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEzNDc0MTY1">CONDOTTI MARC R</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzQ3MTEyOA2">JPMORGAN CHASE BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzMzNzE0Mjk1&amp;hId=YjIyN2M0NGZlYWI5YjE0ZDhiMzc5YmMyMzM3MWE0OWEzMmFlMDMzMTdmNzY3YTU5YzgyY2U2ZWUzMTM4ZGYyYg2">0820622042</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="29965077" type="checkbox" value="true" /><input name="29965077" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjk5NjUwNzc1&amp;hId=MGYzYjhmNWYwY2E1NDJjMjFlZWY0YjhhMTI1ZDc5Nzc2ZjkxNTVlYWY5NmRkNDhmNGRmYTdlYzdjY2NjOTg5YQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0607902094</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/20/2006</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/24/2006</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEzNDc0MTY1">CONDOTTI MARC R</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzQ3MTEyOA2">JPMORGAN CHASE BK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzMzNzQzMDk1&amp;hId=NzFlNTQ4YWM0ODliZjg5OWZhYzE1ZDhiYjYwNjA5Y2UyOThhYTIzMjcxZWNhN2FjOWYyM2E2MTBhMDMwMWRjZQ2">0820704082</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="29943994" type="checkbox" value="true" /><input name="29943994" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjk5NDM5OTQ1&amp;hId=NmM2N2I3MmU2MTAwZGMwMzQ0ZGM3MzA2ZDJmNzk0M2Y4OGEyMTVjZmI5NDgzNGI4NmQwNGI3MzMzMmJjZWQ1Yw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0607402215</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/15/2006</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/28/2006</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDI4MzE2NA2">ABN AMRO MTG GRP INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MjU4NTYxNA2">SCHWARTZ AUSTIN F</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjU1NDM0NzE1&amp;hId=MmYwMmFhNGQzNzVmYmE4OTY0NGJiOWJkMmFhMzA4YTVhNjc3ZmNhMWJhZDlmYWRmZDBiODA2MDVjMmE1MTM0ZA2">0329514091</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="28529876" type="checkbox" value="true" /><input name="28529876" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mjg1Mjk4NzY1&amp;hId=OGU5ZjI3ZDUyZTg1MGVlYzMyZjE1NDFmMjEyOGRmMzljNTQ0ODk4Njc1NTJjZmE3ZGFhNTZkZTJmYTkzNTBhYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0514027133</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/20/2005</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/27/2004</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA5ODgwOTA1">MB BLDG MATERIAL CO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTg1NjI0MQ2">WALSH CONST CO IL</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjU3MTU3MzI1&amp;hId=MzBhZmY3ZmVkNzU2ZDM3MTI2YWNhZDZjOTQyNmYxM2Q3MzNiMjI1ZjQwZWMxM2E2NzNiY2M0MjdlZWVhNjVjYQ2">0331834214</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161001">17-17-212-016-1001</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="25837625" type="checkbox" value="true" /><input name="25837625" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjU4Mzc2MjU1&amp;hId=OWZlN2YyNDVkZmYxYWRjMmQ4NTUyNjgwOGRmY2MyMzkxYmQwNDdkNGVkOTZkYThiZGQ0YjBmNGU1ZDMwN2Q0OA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0333718003</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/3/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/2/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MECHANICS LIEN</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTg1NjI0MQ2">WALSH CONST CO IL</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MjUyMjEzOA2">111 S MORGAN CONDO</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161001">17-17-212-016-1001</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="25715732" type="checkbox" value="true" /><input name="25715732" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjU3MTU3MzI1&amp;hId=MzBhZmY3ZmVkNzU2ZDM3MTI2YWNhZDZjOTQyNmYxM2Q3MzNiMjI1ZjQwZWMxM2E2NzNiY2M0MjdlZWVhNjVjYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0331834214</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/14/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/12/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>LIEN</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=ODg5MTc2Mw2">MD BLDG MATERIAL CO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTg1NjI0MQ2">WALSH CONST CO IL</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mjg1Mjk4NzY1&amp;hId=OGU5ZjI3ZDUyZTg1MGVlYzMyZjE1NDFmMjEyOGRmMzljNTQ0ODk4Njc1NTJjZmE3ZGFhNTZkZTJmYTkzNTBhYg2">0514027133</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161001">17-17-212-016-1001</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="25543466" type="checkbox" value="true" /><input name="25543466" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjU1NDM0NjY1&amp;hId=NmU0OGYyNTAwYWEyN2QxNWQ0ZTY3MjM3YTg2OTAzYjY2YjFkNzU3ZTc2YWMzMzExM2EwMWViNTQ1Nzk0MzExZg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0329514090</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/22/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/19/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzYxODY5MA2">111 S MORGAN LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MjU4NTYxNA2">SCHWARTZ AUSTIN F</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="25543471" type="checkbox" value="true" /><input name="25543471" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjU1NDM0NzE1&amp;hId=MmYwMmFhNGQzNzVmYmE4OTY0NGJiOWJkMmFhMzA4YTVhNjc3ZmNhMWJhZDlmYWRmZDBiODA2MDVjMmE1MTM0ZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0329514091</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/22/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/19/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MjU4NTYxNA2">SCHWARTZ AUSTIN F</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NDI4MjI0MA2">ABN AMRO MTG GRP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mjk5NDM5OTQ1&amp;hId=NmM2N2I3MmU2MTAwZGMwMzQ0ZGM3MzA2ZDJmNzk0M2Y4OGEyMTVjZmI5NDgzNGI4NmQwNGI3MzMzMmJjZWQ1Yw2">0607402215</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161081">17-17-212-016-1081</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="25330864" type="checkbox" value="true" /><input name="25330864" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjUzMzA4NjQ1&amp;hId=MmVkMGNhODZlZjEzYzQ1ZjRjZWE0NjQ0Njg0NWM3OTcyM2Y2OWEzM2E3YzM2YmE2NDA1OTI3YTgwMGMxYTg4ZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0326620275</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/23/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/22/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>PARTIAL RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODQxNzM1">HARRIS T&amp;S BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=Mjg2NTE1MQ2">111 S MORGAN</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjE3NzQ4ODQ1&amp;hId=NWIwMTU3MTMyODkzYWM4M2Y4MDJjNTU1ZmQ0NzM1NmNlMTBhNWJkOGEzMzJkZjEzMmZhM2FkMTYwMTU4NzQzYQ2">0010898755</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161003">17-17-212-016-1003</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="25127694" type="checkbox" value="true" /><input name="25127694" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjUxMjc2OTQ1&amp;hId=YjdmMGJjY2E3ZjRiYTAzNWFjYzA2MDY4Mzk3YzU3NWFjMGZjZjNiNThkNWIwOTdmNWEzYzY5YjkxMGFlOTlkNQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0323903114</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/27/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/18/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>PARTIAL RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODQxNzM1">HARRIS T&amp;S BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=Mjg2NTE1MQ2">111 S MORGAN</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjE3NzQ4ODQ1&amp;hId=NWIwMTU3MTMyODkzYWM4M2Y4MDJjNTU1ZmQ0NzM1NmNlMTBhNWJkOGEzMzJkZjEzMmZhM2FkMTYwMTU4NzQzYQ2">0010898755</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161002">17-17-212-016-1002</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="24473972" type="checkbox" value="true" /><input name="24473972" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjQ0NzM5NzI1&amp;hId=MTEwM2VjYzJiMzZlOTBkNTljNTEzMWYwMGZmY2NiOGJkODlhOGY0YjdmY2Q2YzBlMjVkZjBhYjM2OTllYjBhYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0314739152</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/27/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/2/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>PARTIAL RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODQxNzM1">HARRIS T&amp;S BK</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=Mjg2NTE1MQ2">111 S MORGAN</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjE3NzQ4ODQ1&amp;hId=NWIwMTU3MTMyODkzYWM4M2Y4MDJjNTU1ZmQ0NzM1NmNlMTBhNWJkOGEzMzJkZjEzMmZhM2FkMTYwMTU4NzQzYQ2">0010898755</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120161001">17-17-212-016-1001</a>                                <br />
+                                    <span class="small"><span>111 S MORGAN ST, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="24224806" type="checkbox" value="true" /><input name="24224806" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjQyMjQ4MDY1&amp;hId=NjBkZDFhN2Y2ZWUyZDU2M2M3YjU5MDU5ZmEzY2Q0NTZlMTFiNzFkYjEyYWVlMjBmYmYzYmZjYmE1NDM2OGYyYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0030480436</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/9/2003</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/1/2003</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=Mjg2OTgwNA2">AFLUFAB INC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjIwMzIwNg2">DAVID ARCHITECTURAL METALS INC</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17172120020000">17-17-212-002-0000</a>                                <br />
+
+
+
+                            </td>
+
+                        </tr>
+                </tbody>
+            </table>
+        <br />
+        <div id='Paging' style="text-align: left;">
+            Page 1 of 1 <span class="ml-2">Page Size: 100</span>
+            <div class="pagination-container"><ul class="pagination"><li class="active"><a>1</a></li></ul></div>
+        </div>
+        <p class="small">The CCCO indexes documents by Legal Description, grantor/grantee name, Property Index Number, and Document Number.   Address is only for informational purposes and should not be relied upon.   CCCO does not guarantee legality or accuracy of address information. CCCO accepts no liability for damages incurred directly, indirectly, incidental, punitive or consequential, as a result of address errors, omissions or discrepancies</p>
+<p class="text-start small mark">
+    <b> Please Note: </b> Annexations, Condominium declarations, Dedications, Easements, Highway plats, Monuments, Plats, Vacations/Dedications, and Real estate transfer declarations are not available for purchase on our website. If you would like a copy
+    of these document types, you may purchase them at our <a target="_blank" href="https://www.cookcountyclerkil.gov/about/locations/downtown-chicago-recordings">downtown office</a>.
+</p>
+</div>
+    </div>
+</form>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            //Highlight();
+            var totalSelected = 0;
+            //var $dialog = $("#modaldiag");
+            var $dialog = $('<div class="modal fade" id="modaldiag" tabindex="-1" role="dialog" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered justify-content-center" role = "document"><span class="fa fa-spinner fa-spin fa-3x"></span></div></div>');
+            /*var mi = new bootstrap.Modal($dialog);*/
+
+            $(document).on('click', '#selectAll', function (e) {
+                $('input:checkbox').not(this).prop('checked', this.checked);
+                $("#totalSelected").empty();
+                totalSelected = 0;
+
+                $("table > tbody > tr").each(function () {
+                    $(this).removeClass("table-success");
+                });
+                if (this.checked) {
+                    $('input[type=checkbox][class=docitem]').each(function () {
+                        if (this.checked) {
+                            var arr = {};
+                            totalSelected = totalSelected + 1;
+                            $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>'); // <input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+                        }
+                    });
+                    $("table > tbody > tr").each(function () {
+                        $(this).addClass("table-success");
+                    });
+
+                }
+            });
+
+            $(document).on('click', 'input[type=checkbox][class=docitem]', function (e) {
+                $("#totalSelected").empty();
+                if (this.checked) {
+                    totalSelected = totalSelected + 1;
+                    $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    $(this).closest('tr').addClass("table-success");
+
+                }
+                else {
+                    $(this).closest('tr').removeClass("table-success");
+                    totalSelected = totalSelected - 1;
+                    if (totalSelected <= 0) {
+                        $("#totalSelected").empty();
+                    }
+                    else {
+                        $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    }
+                }
+            });
+
+            $(document).on('click', '#btnSearch', function (e) {
+                $dialog.modal('show');
+            });
+
+            $(document).on('click', '#btnAddDoc, #btnAddData,  #btnAddCert, #btnAllData', function (e) {
+
+
+                if (totalSelected > 0) {
+                    $dialog.modal('show');
+                    var obj = $(this).attr('href');
+                    var all = "";
+                    if ($(this).attr('id') == "btnAllData") {
+                        all = "all";
+                    }
+                    $dialog.on('shown.bs.modal', function (e) {
+                        var url = "/Cart/AddItem";
+                        loadData(obj, all, url, $dialog);
+
+                        $('#selectAll').prop('checked', false);
+                        $("#totalSelected").empty();
+                        $('input[type=checkbox][class=docitem]').prop('checked', false);
+                        $("table > tbody > tr").each(function () {
+                            $(this).removeClass("table-success");
+                            totalSelected = 0;
+                        });
+
+                    });
+                    $dialog.modal('hide');
+
+
+                }
+                else {
+                    alert("Select your documents before adding to the cart.");
+                }
+                e.preventDefault();
+                return false;
+            });
+
+            //$(window).on("beforeunload", function (e) {
+            //    window.setInterval(function () {
+            //        $dialog.modal('hide');
+            //    }, 3000);//Check if receive cookie from server by second
+
+            //});
+
+          if (isSafari) {
+            $(window).on('load', function () {
+                window.setInterval(function () {
+                    $dialog.modal('hide');
+                }, 1000);//Check if receive cookie from server by second
+            });
+        }
+        else {
+            $(window).on("beforeunload", function (e) {
+                window.setInterval(function () {
+
+                    var url = "/search/searchstatus";
+
+                    $.ajax({
+                        type: "GET",
+                        url: url,
+                        async: false,
+                        data: null,
+                        success: function (data) {
+                            if (data.Success == "true") {
+                                $dialog.modal('hide');
+                            }
+                        },
+                        error: function (xhr, staus, error) {
+
+                        }
+
+                    });
+
+                }, 1000);
+
+            });
+        }
+
+
+
+            $(document).on('click', '.searchresult', function (e) {
+
+                 $("#result").empty();
+
+                var href = $(this).attr('href');
+                var result = GetParam(href);
+
+                var url = "/search/sortresult";
+
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    async: false,
+                    data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    },
+                    error: function (xhr, staus, error) {
+
+                    }
+
+                });
+
+
+                e.preventDefault();
+                return false;
+
+            });
+            $(document).on('click', '#Paging a[href]', function (e) {
+                //debugger;
+                var href = $(this).attr('href');
+                //alert(href);
+                
+
+                var url = "/search/sortresult";
+                $.ajax({
+                    type: "GET",
+                    url:href,
+                    //data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    }
+                });
+
+                e.preventDefault();
+                return false;
+            });
+
+            window.onpopstate = function () {
+                $dialog.modal('hide');
+            }
+
+            //$(window).on('popstate', function () {
+            //    //alert('here');
+            //    $dialog.modal('hide');
+            //});
+
+
+
+            function Highlight() {
+
+                $("table > tbody > tr > td:find('2127')").css("color", "yellow");
+                $("table > tbody > tr > td > a:contains('2127')").css("color", "yellow");
+
+                /*var sourceText = $("#inputStr").val();*/
+                //var value = "2127";
+                //var arr = $("#inputStr").val().split(" ");
+                //var result = $("#tblData").html();
+                //var text = result;
+                //text = text.replace(value, "<mark>" + value + "</mark>");
+                ////$.each(arr, function (index, value) {
+                ////    text = text.replace(value, "<mark>" + value + "</mark > ");
+                ////});
+                //$("#tblData").html(text);
+            }
+
+            function GetParam(href) {
+                var result = {};
+                var pars = href.split("?")[1].split("&");
+
+                for (var i = 0; i < pars.length; i++) {
+                    var tmp = pars[i].split("=");
+                    result[tmp[0]] = tmp[1];
+                }
+                return result;
+            }
+
+
+            //$("#btnAddDoc, #btnAddData,  #btnAddCert").unbind().click(function () {
+
+            //});
+
+            //$(document).on('click', ''', function (e) {
+
+            //    e.preventDefault();
+            //    if (totalSelected > 0) {
+
+            //        $dialog.modal('show');
+            //        var obj = $(this).attr('class');
+            //        $dialog.on('shown.bs.modal', function (e) {
+            //            loadData(obj);
+
+            //        });
+            //        $dialog.modal('hide');
+            //    }
+            //    return false;
+            //});
+            //function testData(btn) {
+            //    var form = $('#__AjaxAntiForgeryForm');
+            //    var token = $('input[name="__RequestVerificationToken"]', form).val();
+            //    $('input[type=checkbox]').each(function () {
+            //        if (this.checked) {
+            //            var docId = $(this).attr("name");
+
+            //            $("#hfd").append('<input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+            //            index = index + 1;
+
+            //        }
+            //    });
+
+            //    var docs = [
+            //        { DocId: 25303231 },
+            //        { DocId: 36606619 },
+            //        { DocId: 26374988 }
+            //    ];
+            //}
+        });
+
+</script>
+
+
+                </div>
+            </div>
+        </div>
+        <hr />
+        <footer style="margin-top:10px;">
+           
+            <div class="footerLeft">
+                <p>&copy; Copyright 2025 Cook County Clerk's Office. All Rights Reserved.</p>
+
+            </div>
+            <div class="footerRight">
+                <p class="cookCounty"><a href="https://www.cookcountyclerkil.gov/recordings/search-recordings" target="_blank" class="cookCountyLink">Go To Cook County Clerk's Website</a></p>
+            </div>
+            <div class="clear">
+            </div>
+        </footer>
+    </div>
+
+</body>
+
+
+</html>

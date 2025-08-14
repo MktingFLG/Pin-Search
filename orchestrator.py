@@ -16,6 +16,8 @@ from fetchers import (
     fetch_assessor_hie_additions,fetch_ptax_main,
     fetch_ptax_additional_buyers, fetch_ptax_additional_sellers,
     fetch_ptax_additional_pins, fetch_ptax_personal_property,
+    fetch_recorder_bundle,fetch_ptax_main_multi,
+    merge_ptax_by_declaration,
 )
 
 from datetime import datetime
@@ -50,6 +52,7 @@ TTL = {
     "PTAX_ADDL_SELLERS": timedelta(hours=12),
     "PTAX_ADDL_PINS": timedelta(hours=12),
     "PTAX_PERS": timedelta(hours=12),
+    "ROD": timedelta(hours=6),
 }
 
 TTL.pop("ASSR_MAIL", None)
@@ -104,14 +107,50 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     notice_sum = fetch_assessor_notice_summary(pin_norm, force=fresh or _expired(prev, "ASSR_NOTICE_SUMMARY", now))
     appeals = fetch_assessor_appeals_coes(pin_norm, force=fresh or _expired(prev, "ASSR_APPEALS", now))
     assr_hie = fetch_assessor_hie_additions(pin_norm, force=fresh or _expired(prev, "ASSR_HIE_ADDN", now))
-    ptax_main      = fetch_ptax_main(pin_norm)
-    ptax_buyers    = fetch_ptax_additional_buyers(pin_norm)
-    ptax_sellers   = fetch_ptax_additional_sellers(pin_norm)
-    ptax_pins      = fetch_ptax_additional_pins(pin_norm)
-    ptax_personal  = fetch_ptax_personal_property(pin_norm)
+    # --- Recorder of Deeds first (we use its associated pins to widen PTAX search) ---
+    rod = fetch_recorder_bundle(pin_norm, top_n=1)
+    rod_norm = (rod or {}).get("normalized", {}) or {}
+    assoc_pins = rod_norm.get("associated_pins_dashed") or []
 
+    # Build PTAX search input = base + associated (unique, capped at 20)
+    pins_for_ptax = [pin_norm] + assoc_pins
+    seen = set()
+    pins_for_ptax = [p for p in pins_for_ptax if not (p in seen or seen.add(p))][:20]
 
+    # --- PTAX main for ALL pins at once ---
+    ptax_main = fetch_ptax_main_multi(pins_for_ptax)
+    main_rows = (ptax_main.get("normalized", {}) or {}).get("rows") or []
 
+    # Which of our input pins matched each declaration_id?
+    from utils import normalize_pin as _norm
+    pin_match_map = {}  # decl_id -> set(pins)
+    for r in main_rows:
+        did = r.get("declaration_id")
+        ptxt = (r.get("line_1_primary_pin") or "").strip()
+        if not (did and ptxt): continue
+        try:
+            pnorm = _norm(ptxt)
+        except Exception:
+            pnorm = ptxt
+        pin_match_map.setdefault(did, set()).add(pnorm)
+
+    # --- PTAX secondary tables by declaration_id ---
+    decl_ids = [r.get("declaration_id") for r in main_rows if r.get("declaration_id")]
+    ptax_buyers     = fetch_ptax_additional_buyers(declaration_ids=decl_ids)
+    ptax_sellers    = fetch_ptax_additional_sellers(declaration_ids=decl_ids)
+    ptax_pins       = fetch_ptax_additional_pins(declaration_ids=decl_ids)
+    ptax_personal   = fetch_ptax_personal_property(declaration_ids=decl_ids)
+
+    buyers_rows   = (ptax_buyers.get("normalized", {}) or {}).get("rows") or []
+    sellers_rows  = (ptax_sellers.get("normalized", {}) or {}).get("rows") or []
+    addlpins_rows = (ptax_pins.get("normalized", {}) or {}).get("rows") or []
+    pp_rows       = (ptax_personal.get("normalized", {}) or {}).get("rows") or []
+
+    # --- Merge all PTAX rows by declaration_id ---
+    bundle, ptax_summary_rows, set_matches = merge_ptax_by_declaration(
+        main_rows, buyers_rows, sellers_rows, addlpins_rows, pp_rows, normalize_pin_fn=_norm
+    )
+    set_matches(pin_match_map)
 
 
     # Derived metrics (keep simple; expand as needed)
@@ -140,11 +179,14 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "appeals_coes": appeals.get("normalized", {}),
             "permits": _shape_permits(permits),
             "hie_additions": assr_hie.get("normalized", {}),
-            "ptax_main": ptax_main.get("normalized", {}),
-            "ptax_buyers": ptax_buyers.get("normalized", {}),
-            "ptax_sellers": ptax_sellers.get("normalized", {}),
-            "ptax_additional_pins": ptax_pins.get("normalized", {}),
-            "ptax_personal_property": ptax_personal.get("normalized", {}),
+            "ptax": {
+                "base_pin": pin_norm,
+                "associated_pins": assoc_pins,
+                "pin_search_input": pins_for_ptax,
+                "by_declaration_id": bundle,
+                "rows": ptax_summary_rows,
+            },
+            "recorder_of_deeds": (rod or {}).get("normalized", {}),
             "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_norm),
             
@@ -177,6 +219,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "PTAX_ADDL_SELLERS": ptax_sellers.get("_status", "ok"),
             "PTAX_ADDL_PINS": ptax_pins.get("_status", "ok"),
             "PTAX_PERS": ptax_personal.get("_status", "ok"),
+            "ROD": rod.get("_status", "ok"),
         }
 
     }

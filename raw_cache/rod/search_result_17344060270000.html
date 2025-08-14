@@ -1,0 +1,2412 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="format-detection" content="telephone=no">
+    <title>Property Records Search | Clerk's Recordings System</title>
+    <noscript>
+
+        <meta http-equiv="refresh" content="0;URL=http://crs.cookcountyclerkil.gov/Home/EnableJavascript" />
+        
+    </noscript>
+
+    <script src="/Scripts/popper.js"></script>
+    <script src="/bundles/modernizr?v=inCVuEFe6J4Q07A0AcRsbJic_UE5MwpRMNGcOtk94TE1"></script>
+
+    <script src="/bundles/jquery?v=8Oos0avDZyPg-cbyVzvkIfERIE1DGSe3sRQdCSYrgEQ1"></script>
+
+
+    <script src="/Scripts/bootstrap.js"></script>
+
+    
+
+    <link href="/Content/css?v=rsU2Eji0u9P2WvZEOnL1IuAZ4thNyibej24hJDWdkAY1" rel="stylesheet"/>
+
+
+    
+
+
+    <link href="/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+    <script src="/bundles/maskedinput?v=IndHTEQMh70Ra3yP5TZNrwDp50M1KbiN0kpoXmd4k_01"></script>
+
+
+    
+
+    
+    <script src="/Scripts/jquery.maskedinput-1.4.1.js"></script>
+
+
+
+    <link href="/Content/jquery-ui.css" rel="stylesheet" />
+    <link rel="icon" href="https://www.cookcountyclerkil.gov/themes/custom/clerk/cookcountyclerk.ico" />
+
+    <link href="/Content/Site.css?v=1" rel="stylesheet" />
+    <script type="text/javascript" src="/Scripts/jquery-ui.js"></script>
+
+    
+    
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.date').mask("99/99/9999");
+            //$('.phone_with_ddd').mask('000-000-0000');
+            $('.zip').mask('99999');
+
+
+        });
+        function clearForm(form) {
+            var $f = $(form);
+            var $f = $f.find(':input').not(':button, :submit, :reset, :hidden');
+            $f.val('').attr('value', '').removeAttr('checked').removeAttr('selected');
+
+        }
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!--<script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>-->
+    
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+</head>
+<body>
+    
+
+    <div class="bg-light container">
+        <div class="mRow">
+            <div class="Column" style="width:8%;">
+                <div class="nav-clerk-logo-link">
+                    <a href="/Search">
+                        <img src="/Images/seal.png" />
+                    </a>
+                </div>
+            </div>
+            <div class="Column p-0 m-0 pt-3" style="vertical-align:top;">
+                <div class="text-end" id="cartDisplay">
+                    <div class="shoppingCart ms-2">
+    <a href="/Cart" class="no-textdecoration" id="lnkCart">
+0    </a>
+</div>
+
+                </div>
+                <div class="font-weight-boldOld text-uppercase float-left" style="font-size:12px;">Recordings</div>
+
+                <div class="smallFont text-uppercase float-left">
+                    Cook County Clerk's Office
+                </div>
+
+                <hr class="w-100 float-left p-0 mt-0 mb-0" />
+
+                <div class="float-left">
+                    <span class="appTitle small"><small></small></span>
+
+                    <div class="text-end">
+
+                        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                            <div class="container-fluid ps-0">
+                                <div class="ms-auto">
+                                    <button class="navbar-toggler btn btn-primary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                        <span class="navbar-toggler-icon1"><i class="fa fa-bars fa-lg" style="background-color:#337AB7;color:white; "></i></span>
+                                    </button>
+                                </div>
+                                <div class="collapse navbar-collapse collapse w-100 order-3 dual-collapse2 text-end" id="navbarSupportedContent">
+                                    <ul class="navbar-nav ms-auto" style="font-size :15px;">
+                                        <li class="nav-item text-start">
+
+                                            <a href="/Search" class="nav-link menuActiveLink"><i class="fa fa-search"></i> Search</a>
+                                            
+                                        </li>
+                                        
+                                        <li class="nav-item text-start">
+                                            <a href="/Public" class="nav-link "><i class="fa fa-commenting-o"></i> Property Fraud Alert</a>
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/MailTracking?returnUrl=%2FSearch%2FResult%3Fid1%3D17344060270000" class="nav-link "><i class="fa fa-envelope-o"></i> Mail Tracking</a>
+
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/ChangeRequest" class="nav-link "><i class="fa fa-table"></i> Indexing Corrections</a>
+                                        </li>
+                                            <li class="nav-item text-start">
+                                                <a href="/Order/Search?column=OrderDate&amp;direction=desc" class="nav-link "><i class="fa fa-table"></i> Orders</a>
+                                            </li>
+                                                                                    <li class="nav-item text-start">
+                                                <a href="/Account/Login?returnUrl=%2FSearch%2FResult%3Fid1%3D17344060270000" class="nav-link "><i class="fa fa-sign-in"></i> Account</a>
+
+                                            </li>
+
+
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </nav>
+                        
+
+                    </div>
+
+
+
+                </div>
+            </div>
+
+            
+        </div>
+
+        
+
+
+    </div>
+
+
+
+
+
+    <div class="container">
+        <div class="row ">
+            <div class="breadcrumb container m-0 p-0">
+                <p class="float-right m-0">
+
+                    
+    <text>Search Results - Documents</text>
+
+                </p>
+            </div>
+            <div class="bg-white">
+                
+                
+
+
+                
+            </div>
+            
+            <div class="container mt-1">
+                
+                <div class="row container-box" style="padding:5px 20px;">
+                    
+
+
+
+
+<script src="/Scripts/Custom.js"></script>
+<input id="inputStr" name="inputStr" type="hidden" value="17344060270000" />
+<div class="row mt-2">
+    <div class="col-md-6">
+        
+        
+        <a href="/Search">Start a new Search</a>
+        
+    </div>
+</div>
+<form action="/Search?strAction=Result" method="post"><input name="__RequestVerificationToken" type="hidden" value="eqVzLK1_O_YFLtA4WxY2zFkWBSo-EXJN9gvTMkeEFBSnO-SwAvXHLxUvkDpqx9o_EJRwRneK-XwGWsolYgxHnhek0DM1" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div class="row pt-2">
+        <div class="col-md-8 mx-auto">
+            <div class="form-group input-group">
+
+                <input type="search" id="inputField" name="inputField"  placeholder="Enter Search Criteria Here" class="form-control fs-5" value="17344060270000" style="padding: 0.175rem 0.15rem;" />
+                <button type="submit" id="btnSearch" name="submitButton" value="FullSearch" class="btn btn-primary">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                </button>
+
+            </div>
+            
+        <div class="text-center small mt-1">
+            Documents Indexed Through: 07-29-2025
+                <span> | </span>
+            <a data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                <i class="fa fa-info-circle me-1" aria-hidden="true"></i>Search Tips
+            </a>
+            
+        </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="collapse small text-center" id="collapseExample">
+                <strong>
+                    Search by PIN:
+                </strong>  30-31-220-032-0000 or 30312200320000 <br />
+                <strong>
+                    Search by First Name, Last Name, and Street Address:
+                </strong>  John Smith 18058 Burnham <br />
+                <strong>
+                    Search by FirstName, Last Name, and House Number:
+                </strong>  John Smith 18058 <br />
+                <strong>
+                    Search by FirstName, Last Name, and Street Name:
+                </strong>  John Smith Burnham <br />
+                <strong>  Search by Document Number: </strong> 2222113250
+            </div>
+            
+        </div>
+    </div>
+</form><form action="/Cart/AddItem" id="__AjaxAntiForgeryForm" method="post"><input name="__RequestVerificationToken" type="hidden" value="-vKCL1d9SjCDxO6btT-f_gQFJFv6YYC5tWTfKgckinhFu5qUs4kntotFhNtHa0xYW-PT2X1U_EU_-DGCsNDwj9mVrOA1" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="hfd"></div>
+<div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="result">
+
+
+
+
+    <div class="row mb-2 mt-2">
+
+        <div class="col-md-6">
+            Total Documents : <span class="text-big-and-bold">48</span>         </div>
+    </div>
+
+<div>
+    <span class="fw-bold">Click the boxes to select your documents before adding to the cart.</span><br />
+        <span class="small">You may remove documents from your cart by clicking the “Shopping Cart”, which is located on the upper right corner of the page.</span>
+</div>
+<div class="row mb-1">
+            <div class="col-md-2 pt-2 productlist">
+                <a href="1" id="btnAddDoc" class="1 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Documents</a>
+            </div>
+            <div class="col-md-3 pt-2 productlist">
+                <a href="2" id="btnAddData" class="3 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Certified Documents</a>
+            </div>
+            <div class="col-md-3 pt-2 productlist">
+                <a href="3" id="btnAddData" class="3 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Search Result (No Images)</a>
+            </div>
+    
+    
+
+    
+    
+</div>
+
+
+<div class="table-responsive">
+        <div id="totalSelected"></div>
+            <table id="tblData" class="table table-hover table-responsive tblfmt">
+                <thead>
+                    <tr>
+                        <td scope="col" class="align-middle"><input id="selectAll" name="selectAll" title="Select All" type="checkbox" value="true" /><input name="selectAll" type="hidden" value="false" /></td>
+                        <th scope="col" class="align-middle text-center">
+                            <span >View Doc</span>
+                        </th>
+                        <th scope="col"><a href='/Search/sortresult?id1=17344060270000&column=AlphaDocNumber&direction=asc&page=1' class='searchresult'> Doc Number</a></th>
+
+                        <th scope="col" class="text-center">
+                            <a href='/Search/sortresult?id1=17344060270000&column=DateRecorded&direction=asc&page=1' class='searchresult'><i class='fa fa-sort-up' style='color:orange;'></i> Doc Recorded</a>
+                        </th>
+                        <th scope="col" class="text-center">
+                            <a href='/Search/sortresult?id1=17344060270000&column=DateExecuted&direction=asc&page=1' class='searchresult'> Doc Executed</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17344060270000&column=DocTypeDescription&direction=asc&page=1' class='searchresult'> Doc Type</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17344060270000&column=FirstGrantor&direction=asc&page=1' class='searchresult'> 1st Grantor</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17344060270000&column=FirstGrantee&direction=asc&page=1' class='searchresult'> 1st Grantee</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17344060270000&column=RefDocNum&direction=asc&page=1' class='searchresult'> Assoc. Doc#</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17344060270000&column=FirstPin&direction=asc&page=1' class='searchresult'> 1st PIN</a>
+                        </th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="45199420" type="checkbox" value="true" /><input name="45199420" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDUxOTk0MjA1&amp;hId=ZTJlMjY4OWJkNzBiYTZhMDExMjVlZGYyYmZiZDNlMzEyYTNhN2FjZWVkNDg4YmY5NDgwMWVmYjQwZGUwMzY5Nw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2512523076</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/5/2025</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/19/2025</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTY4MDQwMTM1">IMPACT MTG OPPOR FUND II LP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTMxODMzOTA1">IMPACT CIL LLC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDUxMzQzNzk1&amp;hId=OGZmOTM2NWFhMzNjNGZlY2FlZTZjMWI4YWE2ZDQ1OTM1NGIxODM3N2U2YjA2MTY2MjY5YzFhNDg4ZjE5ZWVjYQ2">2507108018</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="45134380" type="checkbox" value="true" /><input name="45134380" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDUxMzQzODA1&amp;hId=M2ZiZTZiOGY0ZDFjMDk4OGJlZmQ0Y2E1ZDQ1OTMzNWVjODUyOTRmYjY3ZjU3MDMwNTNkMGVkZTg1NWVkMTEwZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2507108019</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/12/2025</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/15/2024</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTU5MDU5Njk1">ROSE COMM CAP LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTY4MDQwMTM1">IMPACT MTG OPPOR FUND II LP</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="45134381" type="checkbox" value="true" /><input name="45134381" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDUxMzQzODE1&amp;hId=ZjFhNjgwOGVmMTg1MzQ0MjA1ZDUyNjUxZWVmY2E1Mjc0YjkzNGUxMWE2MzgxZDQzMmIwYTMzODZiOWIxYmQ5ZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2507108020</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/12/2025</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/23/2024</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AGREEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>
+                            </td>
+                            <td class="align-middle">
+                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="44280032" type="checkbox" value="true" /><input name="44280032" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDQyODAwMzI1&amp;hId=NjQ1ZmU4YzRkYmM5ZGIxNjkwODhlZDAzZGQ0MGQ2MzJkOGYzYmRlZDBiNjAxZjk5ZjFmNDdlYzczMDE0NjM2YQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2301910023</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/19/2023</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                
+                            </td>
+                            <td class="align-middle">
+                                <span>TERMINATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI2MzkxNw2">US BK NATL ASSN TR</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mzk3NzgxNzA1&amp;hId=ZWJkOTYyNTA5MDVjYWE3ZDA3NThjZGYyNWMwM2Q5MWEzYTMyNGM2MzZjNTFkN2I1NzY5YTUwMzEwYzE3ZjhjNA2">1533444037</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="44265121" type="checkbox" value="true" /><input name="44265121" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDQyNjUxMjE1&amp;hId=MjcxMTRkY2M2MDQzMGZhYzI2NjQ5OGMzZDJjYTRmYjFhZTU1ZWYxMjk0OGYxOWRlZjlkOWMzNzhhNDdlZjM4OQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2300434050</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/4/2023</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/13/2022</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI2MzkxNw2">US BK NATL ASSN TR</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mzk3NzgxNjg1&amp;hId=YjQyM2JiNDFjZmRjZWYxMmVhNTBhYWUyMjdjMzIwN2UwNzhlOWI2Y2I2MWJlYmE2YjQ0ZmQ1Mzc0MzFhYTkyNQ2">1533444035</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42991137" type="checkbox" value="true" /><input name="42991137" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDI5OTExMzc1&amp;hId=NjU2Y2VmNDIwNzRhYzdjNTRkZTc3MjIzODE3Njg4MTZmMzU2YzYwMjc1N2MyOGI2NWJlMGNjMTY5YjVjODMwNA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2103317006</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/2/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/18/2020</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTU2ODk2NjY1">CHASE COMM DEV CORP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTY4NDU4NjY1&amp;hId=MDJmYjRlNzMyNzRjOWM3NWRiZTQxZTg4YjFiYTA3MmQyNzAyNTc3M2U0ZGViMjU3ZDc4MDRlMTI4MjczYTU2NQ2">97757220</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42974244" type="checkbox" value="true" /><input name="42974244" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDI5NzQyNDQ1&amp;hId=MDRlZDA4MWViMjZlYWRlYThjZmJmMGQ5MmJkZTkxYWRlZTA0MTMzYTQ3NDE1MTY5MWVhNjVkNzIxZDM3Y2VlOQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2102728034</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/27/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/17/2020</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA3ODMxNTQ1">JPMORGAN CHASE BK NA</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTY4NDU4NjQ1&amp;hId=M2JjZWYyMzBlZDNiZjViNTY3NDBhYjBhYzM1NWExZDhlMmIxYWU0NTJhYzdhNzY4NmEzM2UwNWE5YWVlM2I3YQ2">97757218</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42974245" type="checkbox" value="true" /><input name="42974245" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDI5NzQyNDU1&amp;hId=NGVhMDY5Y2E3MDk5ZmQzMTAyOTVjZDNhNmJkNjM5ODJjYmY3NDJkODE0MTRmMmM0ODQ5Njk2MWZjYjc2YzM1Ng2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2102728035</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/27/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/17/2020</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA3ODMxNTQ1">JPMORGAN CHASE BK NA</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42959539" type="checkbox" value="true" /><input name="42959539" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDI5NTk1Mzk1&amp;hId=ODdkZGZmNGYxMTVlZTNmOTlmODE0OTFlMDFkYzUyNDNkODAyMjg1ZmY1OGQ3ZTc2Y2Y3MGMwNWIyMjc0MTZlYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2102149058</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/21/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/18/2020</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTU2ODk2NjY1">CHASE COMM DEV CORP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTY4NDU4NjU1&amp;hId=ZjJiZjY2NTc4MjY3NTAxOWI2ZGExOGM2MTYzZDJiZjllYjg2MTgyYWI4NmYyMWFjYzU0YzJhNDUxZjA3MmZmYQ2">97757219</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42874747" type="checkbox" value="true" /><input name="42874747" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDI4NzQ3NDc1&amp;hId=ODdlNDY5Y2E0MDA2ZjMzN2I2OTZhNzZiYWFkYzIxNWIwYzYzNmQ1OThkMWM5YmNiN2EzODEzNDg0MTY5YmYxYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2034233003</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/7/2020</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/17/2020</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>NOTICE </span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTAxOTU4OTM1">HERNANDEZ ANDRES</a>
+                            </td>
+                            <td class="align-middle">
+                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42599071" type="checkbox" value="true" /><input name="42599071" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDI1OTkwNzE1&amp;hId=NjQ0ZGU3OTFiMzBjYzBhZDJkYjUyMGVmNzQ0OWY0ZGViZGE2OWMxMGQxNTllMjU4M2U1MDIzZWNlMzc2YjM4OQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2020506136</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/23/2020</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                
+                            </td>
+                            <td class="align-middle">
+                                <span>CONTINUING FINANCING STMT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTc5MTE4NA2">U S BANK TR</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mzk3NzgxNzA1&amp;hId=ZWJkOTYyNTA5MDVjYWE3ZDA3NThjZGYyNWMwM2Q5MWEzYTMyNGM2MzZjNTFkN2I1NzY5YTUwMzEwYzE3ZjhjNA2">1533444037</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="40619501" type="checkbox" value="true" /><input name="40619501" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDA2MTk1MDE1&amp;hId=Y2U4NTU2YTc0YTVkYjg4NjI1YzBmMTA0YTAwNmUxOGVjOGFlM2YyODQ4NTAyYjNiZjkwOGVkYTdmZjhkYzMxNw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1701019118</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/10/2017</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/30/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI2MjA3OTg1">FEDERAL HOME LOAN MORTGAGE CORPORATION</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjQzMDM0Ng2">US BANK</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mzk3NzgxNzA1&amp;hId=ZWJkOTYyNTA5MDVjYWE3ZDA3NThjZGYyNWMwM2Q5MWEzYTMyNGM2MzZjNTFkN2I1NzY5YTUwMzEwYzE3ZjhjNA2">1533444037</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39896017" type="checkbox" value="true" /><input name="39896017" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzk4OTYwMTc1&amp;hId=NGQ5MDcyMWUwYThlYTA5YTYwOTAxNjgyNzIxNWQ2ZWE3ZGRlMjMzNWM4YWJiOTZkNTVhOTFjYTYxZWJhZTM4OA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1603216000</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/1/2016</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/23/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI3MjIzOTM1">CHICAGO TITLE LAND TRUST CO TR</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTY4NDU4Njc1&amp;hId=NWQ5YzFiM2Q4ODY1ZTFhMTkwNmM3Y2M4ODRhZDU0MGU2ZTYwMDJiZWI3YmY1YjBkYmQ0N2NkMzYzZDEyOTA2ZQ2">97757221</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39777621" type="checkbox" value="true" /><input name="39777621" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzk3Nzc2MjE1&amp;hId=ZjI2NzU4MWY0NTFhYTljMGY3N2Q1ZmYwNzEzNzBkYzE1YjQ5NzNhZDliN2Y5NWRmODIwYTA0YWVlMGMyMDBkOA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1533418045</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/30/2015</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/3/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>QUIT CLAIM DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQzOTcxOTI1">CHICAGO CONFERENCE OF THE AFRICAN METHODIST</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTQzOTcxOTM1">LAKE GROVE LLC</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060270000">17-34-406-027-0000</a>                                <br />
+                                    <span class="small"><span>3535 S COTTAGE GROVE AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39778167" type="checkbox" value="true" /><input name="39778167" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzk3NzgxNjc1&amp;hId=ZmU0MGZkOGY3ZGU5YmVhZDljMzJhZDdmZDdjOThkMWMyZTRkZTgwZjMxZGI1NGNkNjA1MWU4N2NhYTQzYTQ4OQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1533444034</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/30/2015</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/30/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>TRUSTEES DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI3MjIzOTM1">CHICAGO TITLE LAND TRUST CO TR</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39778168" type="checkbox" value="true" /><input name="39778168" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzk3NzgxNjg1&amp;hId=YjQyM2JiNDFjZmRjZWYxMmVhNTBhYWUyMjdjMzIwN2UwNzhlOWI2Y2I2MWJlYmE2YjQ0ZmQ1Mzc0MzFhYTkyNQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1533444035</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/30/2015</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/17/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTM1Mzc3NDc1">PRUDENTIAL AFFORDABLE MTG CO LLC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDQyNjUxMjE1&amp;hId=MjcxMTRkY2M2MDQzMGZhYzI2NjQ5OGMzZDJjYTRmYjFhZTU1ZWYxMjk0OGYxOWRlZjlkOWMzNzhhNDdlZjM4OQ2">2300434050</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39778170" type="checkbox" value="true" /><input name="39778170" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzk3NzgxNzA1&amp;hId=ZWJkOTYyNTA5MDVjYWE3ZDA3NThjZGYyNWMwM2Q5MWEzYTMyNGM2MzZjNTFkN2I1NzY5YTUwMzEwYzE3ZjhjNA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1533444037</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/30/2015</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                
+                            </td>
+                            <td class="align-middle">
+                                <span>FINANCING STATEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTM1Mzc3NDc1">PRUDENTIAL AFFORDABLE MTG CO LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=Nzk0MjE5NA2">FEDERAL HOME LOAN MTG CORP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDA2MTk1MDE1&amp;hId=Y2U4NTU2YTc0YTVkYjg4NjI1YzBmMTA0YTAwNmUxOGVjOGFlM2YyODQ4NTAyYjNiZjkwOGVkYTdmZjhkYzMxNw2">1701019118</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="39778169" type="checkbox" value="true" /><input name="39778169" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzk3NzgxNjk1&amp;hId=YmU1ZTRkYTY3OTJhZGFiOTIxN2ZkMzY0NmVhY2VkMDMwMTNiYmQ2NWU0NTM2NDI1ZWI2MTNjZmJjMGQyNjE1ZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1533444036</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/30/2015</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/17/2015</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTM1Mzc3NDc1">PRUDENTIAL AFFORDABLE MTG CO LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=Nzk0MjE5NA2">FEDERAL HOME LOAN MTG CORP</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33470330" type="checkbox" value="true" /><input name="33470330" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzM0NzAzMzA1&amp;hId=NDY0ZTc2NWNhY2MzMjdjOWMwNGRkOTE3MGQzZjllNDcwNDVlMjJhZTk1N2QwNDcxYWZmMDNmNzkwYThjYWQyNA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0823934009</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/26/2008</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                
+                            </td>
+                            <td class="align-middle">
+                                <span>FINANCING STATEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIyNTEyMDI1">AMERICAN NATL B&amp;T TRUST</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTE2NjI1MjQ1">HOUSING &amp; URBAN DEVELOPMENT</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33470331" type="checkbox" value="true" /><input name="33470331" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzM0NzAzMzE1&amp;hId=ZjBkODUzM2RlNjc4MTA4MDRiY2E5MzM0ODk2MDI1M2M1YmFjZDE0OGYxNjhkNGJlYWE4NmJlY2U0ZDE1MTY1Ng2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0823934010</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/26/2008</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                
+                            </td>
+                            <td class="align-middle">
+                                <span>FINANCING STATEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIyNTEyMDI1">AMERICAN NATL B&amp;T TRUST</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33153914" type="checkbox" value="true" /><input name="33153914" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzMxNTM5MTQ1&amp;hId=ZjFmZjViNzkyNjU2Y2QzOThjYzM2OTRlZDdhMTNkMTY5ZjMxNmM5MThhMjE1MzA1ZWRiOTRiNzhhMDY2Y2U2MQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0813522054</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/14/2008</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                
+                            </td>
+                            <td class="align-middle">
+                                <span>FINANCING STATEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="21467576" type="checkbox" value="true" /><input name="21467576" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjE0Njc1NzY1&amp;hId=MTAwZTdiNjBiNTcyMmJkZDQzMGRlZGMwMzVhZTM3MTJjNGNjZmJiZDZhZDJmZTZhYmE1NTk3OWUyMWM1ODUwNw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0010617240</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/12/2001</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/31/2001</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>LIS PENDENS</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODM3NDk1">CHICAGO CITY</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MzgxMTE0MA2">COMMUNITY HSG PRTN </a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTczNDE0NjU1&amp;hId=ZmMyODI2MzkxZGM5MTFhZDM5NjUxNjU2MGFhYmVhMmIzYTBmZjU4MWE4ZTI4ODUyNDViMzI4MTA3ZDdhMjExOQ2">98251843</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="21362457" type="checkbox" value="true" /><input name="21362457" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MjEzNjI0NTc1&amp;hId=YmI2OGFjNjBhYTZhNzc5MTA4Y2U1NDI4ZDUwYjcyZTcwMDIyMWY2NjFiYjIzMTQwZjdiMDljMTQyZDAzNmNhOA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0010521453</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/14/2001</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/21/2001</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>LIS PENDENS</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODM3NDk1">CHICAGO CITY</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=Mzg4MDkxNw2">COMM HOUS PRTN II</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTczNDE0NjU1&amp;hId=ZmMyODI2MzkxZGM5MTFhZDM5NjUxNjU2MGFhYmVhMmIzYTBmZjU4MWE4ZTI4ODUyNDViMzI4MTA3ZDdhMjExOQ2">98251843</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="17341463" type="checkbox" value="true" /><input name="17341463" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTczNDE0NjM1&amp;hId=MGI3MjQzNWMzOWFjNGIyMDUyMWIxOTgxODA2NzE5YTU1Y2VlYzBlNTEzOGQ3MTE2YTkyZDMyNjIxODgxMmU3Mg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>98251841</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/1998</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/1998</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=ODgxNzAzOA2">CHICAGO COMM DEV CORP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTAwOTE3Mw2">UNITED PRESBY-AFRICAN METHODIST EP CONF</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="17341465" type="checkbox" value="true" /><input name="17341465" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTczNDE0NjU1&amp;hId=ZmMyODI2MzkxZGM5MTFhZDM5NjUxNjU2MGFhYmVhMmIzYTBmZjU4MWE4ZTI4ODUyNDViMzI4MTA3ZDdhMjExOQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>98251843</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/1998</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/1/1998</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>DEED IN TRUST</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTAwOTE2MQ2">AMERICAN NATL B&amp;T CO CHGO TR</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjEzNjI0NTc1&amp;hId=YmI2OGFjNjBhYTZhNzc5MTA4Y2U1NDI4ZDUwYjcyZTcwMDIyMWY2NjFiYjIzMTQwZjdiMDljMTQyZDAzNmNhOA2">0010521453</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="17341466" type="checkbox" value="true" /><input name="17341466" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTczNDE0NjY1&amp;hId=ZTA0YTNmZjczNjhjM2FhODIzMGVhYWY5ZmI1OTE2ZmU1YmMwMTg1NmRlMjUyOWU1YjczZTBlMTFiMDcyN2U2Nw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>98251844</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/1998</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/1/1998</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AGREEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="17341467" type="checkbox" value="true" /><input name="17341467" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTczNDE0Njc1&amp;hId=NDgxNDgzMjhiMjE0Zjc1YWRhNTQ0OTdjYWVmOTE2OWU1Yjg0YjA3YTIwNWFlYzU3N2Q4YTI0MWVkNmRmZTE1Yg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>98251845</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/1998</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/1/1998</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AGREEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=Mzk4OTYwMTc1&amp;hId=NGQ5MDcyMWUwYThlYTA5YTYwOTAxNjgyNzIxNWQ2ZWE3ZGRlMjMzNWM4YWJiOTZkNTVhOTFjYTYxZWJhZTM4OA2">1603216000</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="17341469" type="checkbox" value="true" /><input name="17341469" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTczNDE0Njk1&amp;hId=NDFkYmI4ZmM5YTNiMDIxOTg0MGQzYTAxNjhjYTRhNWI1ZjkyZDY1NzdhMTdjMTBkYmMwZDY0MjkxZWY2ZWNlZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>98251847</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/1998</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/1/1998</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>SUBORDINATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTY4NDU4Njc1&amp;hId=NWQ5YzFiM2Q4ODY1ZTFhMTkwNmM3Y2M4ODRhZDU0MGU2ZTYwMDJiZWI3YmY1YjBkYmQ0N2NkMzYzZDEyOTA2ZQ2">97757221</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="17341468" type="checkbox" value="true" /><input name="17341468" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTczNDE0Njg1&amp;hId=YjQzNDMwOTM4YzE4NjJkMWZlNGY4ZmExYWEzNTZjYjc5OGY4NDBlM2NlMmU0ZjkyZGU5OGMwODZiZjE0OTg1Mw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>98251846</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/1998</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/1/1998</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjEzNjI0NTc1&amp;hId=YmI2OGFjNjBhYTZhNzc5MTA4Y2U1NDI4ZDUwYjcyZTcwMDIyMWY2NjFiYjIzMTQwZjdiMDljMTQyZDAzNmNhOA2">0010521453</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="17341470" type="checkbox" value="true" /><input name="17341470" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTczNDE0NzA1&amp;hId=YjkwMjYzZWZkMzc4YWE1YTBhYTM3ZDY0YWYyYjBmMmY3ZThiN2ZlOTMxODI1ZWE4Yzk0OTk3NGY2MWRlNmYxYw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>98251848</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/1998</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/1/1998</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AGREEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjY5ODUxMg2">EASTLAKE MGMT &amp; DEV CORP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjY5ODUxMg2">EASTLAKE MGMT &amp; DEV CORP</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845859" type="checkbox" value="true" /><input name="16845859" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4NTk1&amp;hId=ZDQyNDQ2ODFlYzY3ZWRjNGY1M2I1NWM3MGMzMmNlYmM2MzhjZWNhNDcwMDdmNjRlMTIwMzRkODE1MmNjM2FmNw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757213</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>QUIT CLAIM DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU4NA2">UNITED PRESBYTERIAN-AFRICAN METH EPISC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU4Mg2">COMMUNITY HOUSING P P II L P</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845861" type="checkbox" value="true" /><input name="16845861" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4NjE1&amp;hId=YTMwNjVjMDZjMGYzZDAyOGJhNTJkMzY5ODA2MWY2MGZjZGRmNGM2MDQ2Nzk0ZGI2NDZlZTE3Y2QwMzcyMjU2MA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757215</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/3/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTk0MTMwNQ2">HOUSING &amp; URBAN DEV</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTg1ODA2NQ2">CHICAGO COMMUNITY DEV CORP</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845867" type="checkbox" value="true" /><input name="16845867" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4Njc1&amp;hId=NWQ5YzFiM2Q4ODY1ZTFhMTkwNmM3Y2M4ODRhZDU0MGU2ZTYwMDJiZWI3YmY1YjBkYmQ0N2NkMzYzZDEyOTA2ZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757221</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AGREEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU3Mg2">COMMUNITY HOUSING PARTNERS II L P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU3Mg2">COMMUNITY HOUSING PARTNERS II L P</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTczNDE0Njk1&amp;hId=NDFkYmI4ZmM5YTNiMDIxOTg0MGQzYTAxNjhjYTRhNWI1ZjkyZDY1NzdhMTdjMTBkYmMwZDY0MjkxZWY2ZWNlZQ2">98251847</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845870" type="checkbox" value="true" /><input name="16845870" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4NzA1&amp;hId=YWEzM2FmYzRjMTU0ZTEzNDg0M2VkZDBlMGVmYmM1NWYzYWQ3MTI4MzJiYWM4NDAwNDI3MmY3MTcxOTUxMTU2Yw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757224</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AGREEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU3Mg2">COMMUNITY HOUSING PARTNERS II L P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU3Mg2">COMMUNITY HOUSING PARTNERS II L P</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845860" type="checkbox" value="true" /><input name="16845860" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4NjA1&amp;hId=MjhhY2U0YjRlZmE5ODcyYzNiMWM2MWJiNzU2ZjIwYmE0YmY1ZjljNzhlYzMwOWI5NmM3Yzg5NDRlY2FkNTQ2Mw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757214</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AGREEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTk0MTMwNQ2">HOUSING &amp; URBAN DEV</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTk0MTMwNQ2">HOUSING &amp; URBAN DEV</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=ODI1NDQwNw2&amp;hId=NmQ0MjlhNGE5N2YyNjY4ZjMzNWNmNzVkYzk5MDdkZWJkM2NlYmJiY2ViNjBkZjUwYTlkNjk0NWEzY2E4MTQ0Yg2">88136915</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845862" type="checkbox" value="true" /><input name="16845862" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4NjI1&amp;hId=OGY4NzE4MmIwYTEwYTk2MDFmMzRkNGQ2ODA0ZjM1YjJkNzMxYjJhNTk3MDljNzk0Mzc2MmYwZWU3Y2FkMjUwMQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757216</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/3/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTk0MTMwNQ2">HOUSING &amp; URBAN DEV</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU4NA2">UNITED PRESBYTERIAN-AFRICAN METH EPISC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=ODI1NDQwNw2&amp;hId=NmQ0MjlhNGE5N2YyNjY4ZjMzNWNmNzVkYzk5MDdkZWJkM2NlYmJiY2ViNjBkZjUwYTlkNjk0NWEzY2E4MTQ0Yg2">88136915</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845868" type="checkbox" value="true" /><input name="16845868" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4Njg1&amp;hId=NTc3N2IwNDQ4OTQ4ODQ2Y2Q2OThjZGVlMTkzNmZkYzk5NmNkZDMwYmFmNTI2OGMyZmQyMjdlMTdlZGI3MWVmYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757222</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU3Mg2">COMMUNITY HOUSING PARTNERS II L P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NjM2MzkxMg2">ILLINOIS HOUSING DEVELOPMENT AUTHORITY</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MTczNDE0Njk1&amp;hId=NDFkYmI4ZmM5YTNiMDIxOTg0MGQzYTAxNjhjYTRhNWI1ZjkyZDY1NzdhMTdjMTBkYmMwZDY0MjkxZWY2ZWNlZQ2">98251847</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845864" type="checkbox" value="true" /><input name="16845864" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4NjQ1&amp;hId=M2JjZWYyMzBlZDNiZjViNTY3NDBhYjBhYzM1NWExZDhlMmIxYWU0NTJhYzdhNzY4NmEzM2UwNWE5YWVlM2I3YQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757218</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU4Mg2">COMMUNITY HOUSING P P II L P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzI3MDQwNg2">BANK ONE IL</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDI5NzQyNDQ1&amp;hId=MDRlZDA4MWViMjZlYWRlYThjZmJmMGQ5MmJkZTkxYWRlZTA0MTMzYTQ3NDE1MTY5MWVhNjVkNzIxZDM3Y2VlOQ2">2102728034</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845863" type="checkbox" value="true" /><input name="16845863" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4NjM1&amp;hId=NGQ0NzBlMTkwZGMwMDJlZDlhODllYzVjMWUzMjVjYmI0YmY3MTZkYzg3NWUwNzc4ZTBhMzlhMjAxYTY5YTA3YQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757217</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU3Mg2">COMMUNITY HOUSING PARTNERS II L P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzI3MDQwNg2">BANK ONE IL</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjE5MTQ0OTg1&amp;hId=NzIxNmQwZDhhN2ZmMGZkODVlNDZiYTk2OGI1MDg1MWYwMjU1NjYzY2U5ZWQzZGU4MzYxOGVhZGE4MTdiOTgzNg2">0011026368</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845865" type="checkbox" value="true" /><input name="16845865" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4NjU1&amp;hId=ZjJiZjY2NTc4MjY3NTAxOWI2ZGExOGM2MTYzZDJiZjllYjg2MTgyYWI4NmYyMWFjYzU0YzJhNDUxZjA3MmZmYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757219</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU4Mg2">COMMUNITY HOUSING P P II L P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU1Nw2">BANC ONE COMM DEV CORP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDI5NTk1Mzk1&amp;hId=ODdkZGZmNGYxMTVlZTNmOTlmODE0OTFlMDFkYzUyNDNkODAyMjg1ZmY1OGQ3ZTc2Y2Y3MGMwNWIyMjc0MTZlYQ2">2102149058</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845866" type="checkbox" value="true" /><input name="16845866" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4NjY1&amp;hId=MDJmYjRlNzMyNzRjOWM3NWRiZTQxZTg4YjFiYTA3MmQyNzAyNTc3M2U0ZGViMjU3ZDc4MDRlMTI4MjczYTU2NQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757220</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU4Mg2">COMMUNITY HOUSING P P II L P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU1Nw2">BANC ONE COMM DEV CORP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MjE5MTQ0OTg1&amp;hId=NzIxNmQwZDhhN2ZmMGZkODVlNDZiYTk2OGI1MDg1MWYwMjU1NjYzY2U5ZWQzZGU4MzYxOGVhZGE4MTdiOTgzNg2">0011026368</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16845869" type="checkbox" value="true" /><input name="16845869" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4NDU4Njk1&amp;hId=ZmViODdhZDA4ZTA5YzMyMGU0NTc0NmFhMjZjNDYzNDY5NmVmZGMyYjZmY2MxNWU4NDMxYzRhOGMzNjkzMDlhZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97757223</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/8/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AGREEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU3Mg2">COMMUNITY HOUSING PARTNERS II L P</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4MDU3Mg2">COMMUNITY HOUSING PARTNERS II L P</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16834750" type="checkbox" value="true" /><input name="16834750" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4MzQ3NTA1&amp;hId=ODFhNWY3Y2Y3NGRmM2Q4NzRhZDI0MjQyNTQyODY0MWU1OTc5ZjIyMjQ2YjBlZTA2ODJlNTcyMzQxNzgyMjhjOQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97746094</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/7/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/7/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=ODk3NDU2MA2">LAKE GROVE VLG LTD</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=OTIyNjI2Mg2&amp;hId=YTQ3YzQ3OGI5ODc5Y2Y5NzhkYjI5YmE2NmJlNWMxNTEwYTY5YTlkMDg0YzU4ZjFiZGI2YmNhMDk3ZjgyMjk2OQ2">89386992</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16834749" type="checkbox" value="true" /><input name="16834749" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4MzQ3NDk1&amp;hId=N2Y3NjAyNjg0MjA4YjBmY2EwYmY3NDkyNWJjYzZiNDI0MWM4YjkzNjgwODYzM2MwMDUxZGNiNTY3ZGVhMDZlOA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97746093</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/7/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/6/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=ODk3NDU2MA2">LAKE GROVE VLG LTD</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4ODg2MQ2">LG HOUSING PARTNERS LP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=OTIyNjI2Mg2&amp;hId=YTQ3YzQ3OGI5ODc5Y2Y5NzhkYjI5YmE2NmJlNWMxNTEwYTY5YTlkMDg0YzU4ZjFiZGI2YmNhMDk3ZjgyMjk2OQ2">89386992</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="16834751" type="checkbox" value="true" /><input name="16834751" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTY4MzQ3NTE1&amp;hId=MTY4YTY0ZjMzYWRiMGIxM2EyNGU4YzFmMjA1ZWRjOTAwOGZkNjQ4ZWY0MTUyMjI0NDkwYzg3YjUwN2UzY2NiZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>97746095</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/7/1997</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/7/1997</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTI4ODg2MQ2">LG HOUSING PARTNERS LP</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY0ODU0MQ2">COMMUNITY HOUSING PARTNERS II LP</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=OTIyNjI2Mg2&amp;hId=YTQ3YzQ3OGI5ODc5Y2Y5NzhkYjI5YmE2NmJlNWMxNTEwYTY5YTlkMDg0YzU4ZjFiZGI2YmNhMDk3ZjgyMjk2OQ2">89386992</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="15699095" type="checkbox" value="true" /><input name="15699095" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTU2OTkwOTU1&amp;hId=YmRlM2M3MzNmOWM5NjI5Mzg3ZDJmODkyZGNiYjZjMDZlOGQ2YWQ3ODYxYTNlYzdkYTZiZGQyZGIxOTU3NDI5ZQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>96610365</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/9/1996</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/9/1996</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>LIEN</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=ODQ3NzA2OQ2">HOPKINS ILL ELEVATOR CO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY5NzY1Nw2">UNITED PRESBYTERIAN AFRICAN METHODIST</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="15699096" type="checkbox" value="true" /><input name="15699096" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTU2OTkwOTY1&amp;hId=NDg1NmE2MTM1MWU4ZGViNTQ5OTQxMGU3MWE4ZGQwNDljMmJmYmVkMDYwZjY0OGNlNDk4MDVlNWRlZTM3ZGU0ZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>96610366</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/9/1996</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/9/1996</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>LIEN</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=ODQ3NzA2OQ2">HOPKINS ILL ELEVATOR CO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTY5NzY1Nw2">UNITED PRESBYTERIAN AFRICAN METHODIST</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="14445034" type="checkbox" value="true" /><input name="14445034" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MTQ0NDUwMzQ1&amp;hId=Nzg5NDg3YjZkNzVkZDI3OTEzNmRjNjNkNmM3YTEzNzliYzZhNGJkZGQ2ZTZkYmUwZWZhNWVkMDQwOWM2NjU1Ng2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>95281402</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/28/1995</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/11/1995</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>LIS PENDENS</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODM3NDk1">CHICAGO CITY</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NzE1ODA3NA2">DATA PROMPT INC TAX</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17344060020000">17-34-406-002-0000</a>                                <br />
+                                    <span class="small"><span>3500 S ELLIS AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                </tbody>
+            </table>
+        <br />
+        <div id='Paging' style="text-align: left;">
+            Page 1 of 1 <span class="ml-2">Page Size: 100</span>
+            <div class="pagination-container"><ul class="pagination"><li class="active"><a>1</a></li></ul></div>
+        </div>
+        <p class="small">The CCCO indexes documents by Legal Description, grantor/grantee name, Property Index Number, and Document Number.   Address is only for informational purposes and should not be relied upon.   CCCO does not guarantee legality or accuracy of address information. CCCO accepts no liability for damages incurred directly, indirectly, incidental, punitive or consequential, as a result of address errors, omissions or discrepancies</p>
+<p class="text-start small mark">
+    <b> Please Note: </b> Annexations, Condominium declarations, Dedications, Easements, Highway plats, Monuments, Plats, Vacations/Dedications, and Real estate transfer declarations are not available for purchase on our website. If you would like a copy
+    of these document types, you may purchase them at our <a target="_blank" href="https://www.cookcountyclerkil.gov/about/locations/downtown-chicago-recordings">downtown office</a>.
+</p>
+</div>
+    </div>
+</form>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            //Highlight();
+            var totalSelected = 0;
+            //var $dialog = $("#modaldiag");
+            var $dialog = $('<div class="modal fade" id="modaldiag" tabindex="-1" role="dialog" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered justify-content-center" role = "document"><span class="fa fa-spinner fa-spin fa-3x"></span></div></div>');
+            /*var mi = new bootstrap.Modal($dialog);*/
+
+            $(document).on('click', '#selectAll', function (e) {
+                $('input:checkbox').not(this).prop('checked', this.checked);
+                $("#totalSelected").empty();
+                totalSelected = 0;
+
+                $("table > tbody > tr").each(function () {
+                    $(this).removeClass("table-success");
+                });
+                if (this.checked) {
+                    $('input[type=checkbox][class=docitem]').each(function () {
+                        if (this.checked) {
+                            var arr = {};
+                            totalSelected = totalSelected + 1;
+                            $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>'); // <input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+                        }
+                    });
+                    $("table > tbody > tr").each(function () {
+                        $(this).addClass("table-success");
+                    });
+
+                }
+            });
+
+            $(document).on('click', 'input[type=checkbox][class=docitem]', function (e) {
+                $("#totalSelected").empty();
+                if (this.checked) {
+                    totalSelected = totalSelected + 1;
+                    $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    $(this).closest('tr').addClass("table-success");
+
+                }
+                else {
+                    $(this).closest('tr').removeClass("table-success");
+                    totalSelected = totalSelected - 1;
+                    if (totalSelected <= 0) {
+                        $("#totalSelected").empty();
+                    }
+                    else {
+                        $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    }
+                }
+            });
+
+            $(document).on('click', '#btnSearch', function (e) {
+                $dialog.modal('show');
+            });
+
+            $(document).on('click', '#btnAddDoc, #btnAddData,  #btnAddCert, #btnAllData', function (e) {
+
+
+                if (totalSelected > 0) {
+                    $dialog.modal('show');
+                    var obj = $(this).attr('href');
+                    var all = "";
+                    if ($(this).attr('id') == "btnAllData") {
+                        all = "all";
+                    }
+                    $dialog.on('shown.bs.modal', function (e) {
+                        var url = "/Cart/AddItem";
+                        loadData(obj, all, url, $dialog);
+
+                        $('#selectAll').prop('checked', false);
+                        $("#totalSelected").empty();
+                        $('input[type=checkbox][class=docitem]').prop('checked', false);
+                        $("table > tbody > tr").each(function () {
+                            $(this).removeClass("table-success");
+                            totalSelected = 0;
+                        });
+
+                    });
+                    $dialog.modal('hide');
+
+
+                }
+                else {
+                    alert("Select your documents before adding to the cart.");
+                }
+                e.preventDefault();
+                return false;
+            });
+
+            //$(window).on("beforeunload", function (e) {
+            //    window.setInterval(function () {
+            //        $dialog.modal('hide');
+            //    }, 3000);//Check if receive cookie from server by second
+
+            //});
+
+          if (isSafari) {
+            $(window).on('load', function () {
+                window.setInterval(function () {
+                    $dialog.modal('hide');
+                }, 1000);//Check if receive cookie from server by second
+            });
+        }
+        else {
+            $(window).on("beforeunload", function (e) {
+                window.setInterval(function () {
+
+                    var url = "/search/searchstatus";
+
+                    $.ajax({
+                        type: "GET",
+                        url: url,
+                        async: false,
+                        data: null,
+                        success: function (data) {
+                            if (data.Success == "true") {
+                                $dialog.modal('hide');
+                            }
+                        },
+                        error: function (xhr, staus, error) {
+
+                        }
+
+                    });
+
+                }, 1000);
+
+            });
+        }
+
+
+
+            $(document).on('click', '.searchresult', function (e) {
+
+                 $("#result").empty();
+
+                var href = $(this).attr('href');
+                var result = GetParam(href);
+
+                var url = "/search/sortresult";
+
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    async: false,
+                    data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    },
+                    error: function (xhr, staus, error) {
+
+                    }
+
+                });
+
+
+                e.preventDefault();
+                return false;
+
+            });
+            $(document).on('click', '#Paging a[href]', function (e) {
+                //debugger;
+                var href = $(this).attr('href');
+                //alert(href);
+                
+
+                var url = "/search/sortresult";
+                $.ajax({
+                    type: "GET",
+                    url:href,
+                    //data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    }
+                });
+
+                e.preventDefault();
+                return false;
+            });
+
+            window.onpopstate = function () {
+                $dialog.modal('hide');
+            }
+
+            //$(window).on('popstate', function () {
+            //    //alert('here');
+            //    $dialog.modal('hide');
+            //});
+
+
+
+            function Highlight() {
+
+                $("table > tbody > tr > td:find('2127')").css("color", "yellow");
+                $("table > tbody > tr > td > a:contains('2127')").css("color", "yellow");
+
+                /*var sourceText = $("#inputStr").val();*/
+                //var value = "2127";
+                //var arr = $("#inputStr").val().split(" ");
+                //var result = $("#tblData").html();
+                //var text = result;
+                //text = text.replace(value, "<mark>" + value + "</mark>");
+                ////$.each(arr, function (index, value) {
+                ////    text = text.replace(value, "<mark>" + value + "</mark > ");
+                ////});
+                //$("#tblData").html(text);
+            }
+
+            function GetParam(href) {
+                var result = {};
+                var pars = href.split("?")[1].split("&");
+
+                for (var i = 0; i < pars.length; i++) {
+                    var tmp = pars[i].split("=");
+                    result[tmp[0]] = tmp[1];
+                }
+                return result;
+            }
+
+
+            //$("#btnAddDoc, #btnAddData,  #btnAddCert").unbind().click(function () {
+
+            //});
+
+            //$(document).on('click', ''', function (e) {
+
+            //    e.preventDefault();
+            //    if (totalSelected > 0) {
+
+            //        $dialog.modal('show');
+            //        var obj = $(this).attr('class');
+            //        $dialog.on('shown.bs.modal', function (e) {
+            //            loadData(obj);
+
+            //        });
+            //        $dialog.modal('hide');
+            //    }
+            //    return false;
+            //});
+            //function testData(btn) {
+            //    var form = $('#__AjaxAntiForgeryForm');
+            //    var token = $('input[name="__RequestVerificationToken"]', form).val();
+            //    $('input[type=checkbox]').each(function () {
+            //        if (this.checked) {
+            //            var docId = $(this).attr("name");
+
+            //            $("#hfd").append('<input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+            //            index = index + 1;
+
+            //        }
+            //    });
+
+            //    var docs = [
+            //        { DocId: 25303231 },
+            //        { DocId: 36606619 },
+            //        { DocId: 26374988 }
+            //    ];
+            //}
+        });
+
+</script>
+
+
+                </div>
+            </div>
+        </div>
+        <hr />
+        <footer style="margin-top:10px;">
+           
+            <div class="footerLeft">
+                <p>&copy; Copyright 2025 Cook County Clerk's Office. All Rights Reserved.</p>
+
+            </div>
+            <div class="footerRight">
+                <p class="cookCounty"><a href="https://www.cookcountyclerkil.gov/recordings/search-recordings" target="_blank" class="cookCountyLink">Go To Cook County Clerk's Website</a></p>
+            </div>
+            <div class="clear">
+            </div>
+        </footer>
+    </div>
+
+</body>
+
+
+</html>

@@ -4,7 +4,7 @@ Thin adapters for each data source.
 Replace stubs with your actual BOR, CV, Sales, Assessor scraping, and Permits functions.
 """
 
-# --- Assessor Profile (pull everything) ---
+
 import time
 from datetime import datetime
 from pathlib import Path
@@ -12,9 +12,11 @@ import requests
 from bs4 import BeautifulSoup
 from utils import undashed_pin  # we need the 14-digit no-dash for the URL
 
-# --- S3 toggleable saving of raw HTML ----------------------------------------
+
 import os
 from pathlib import Path
+import urllib.parse
+import re
 
 _S3_ENABLED = os.getenv("S3_ENABLED", "").lower() in {"1","true","yes","on"}
 _S3_BUCKET = os.getenv("S3_BUCKET", "")
@@ -1564,102 +1566,763 @@ def fetch_assessor_hie_additions(pin: str, jur: str = "016", taxyr: str = "2025"
 
 # ======================= PTAX (Socrata) =======================
 SOCRATA_BASE = "https://data.illinois.gov/resource"
-APP_TOKEN = os.getenv("ILLINOIS_APP_TOKEN", "")  # Set this in Render → Environment
+APP_TOKEN = os.getenv("ILLINOIS_APP_TOKEN", "")  #
+
+# --- PTAX helpers (place ABOVE any fetch_ptax_* uses) ---
+def _pin_for_socrata(pin: str) -> str:
+    """Return dashed PIN XX-XX-XXX-XXX-XXXX for Socrata tables."""
+    d = undashed_pin(pin)  # "12345678901234"
+    return f"{d[0:2]}-{d[2:4]}-{d[4:7]}-{d[7:10]}-{d[10:14]}"
+
+def _ids_in_clause(ids):
+    # normalize to strings and drop empties
+    ids = [str(x) for x in (ids or []) if str(x)]
+    if not ids:
+        return None
+    # escape single quotes for Socrata SQL and join as ('a','b','c')
+    quoted = ",".join("'" + i.replace("'", "''") + "'" for i in ids)
+    return f"({quoted})"
+
+
+
 
 def _socrata_get(dataset_id: str, params: dict) -> list:
     """
-    Generic Socrata GET with paging. Returns list[dict].
+    Socrata fetch with auto-pagination, polite throttling (esp. when no APP_TOKEN),
+    and backoff on 429/5xx. Keeps memory small by streaming pages.
     """
+    import time
     headers = {"User-Agent": "PIN-Tool/1.0"}
     if APP_TOKEN:
         headers["X-App-Token"] = APP_TOKEN
 
-    out = []
-    limit = int(params.get("$limit", 5000))
-    offset = 0
+    out, limit, offset = [], int(params.get("$limit", 5000)), 0
+
+    # Anonymous = slower; tokened = faster
+    max_rps          = 4 if not APP_TOKEN else 10
+    base_sleep       = 1.0 / max(1, max_rps)           # ~0.25s (anon)
+    backoff_sleep_s  = 1.0
+    backoff_max_s    = 20.0
+    retries_per_page = 5
+
     while True:
         q = {**params, "$limit": str(limit), "$offset": str(offset)}
-        url = f"{SOCRATA_BASE}/{dataset_id}.json"
-        r = requests.get(url, headers=headers, params=q, timeout=30)
-        r.raise_for_status()
-        batch = r.json()
+        attempt = 0
+        while True:
+            try:
+                time.sleep(base_sleep)
+                url = f"{SOCRATA_BASE}/{dataset_id}.json"
+                r = requests.get(url, headers=headers, params=q, timeout=30)
+                if r.status_code in (429, 500, 502, 503, 504):
+                    attempt += 1
+                    if attempt > retries_per_page:
+                        raise requests.HTTPError(f"{r.status_code} after retries from {dataset_id}: {r.text}", response=r)
+                    time.sleep(min(backoff_sleep_s, backoff_max_s))
+                    backoff_sleep_s = min(backoff_sleep_s * 2, backoff_max_s)
+                    continue
+                r.raise_for_status()
+                batch = r.json()
+                break
+            except requests.Timeout:
+                attempt += 1
+                if attempt > retries_per_page:
+                    raise
+                time.sleep(min(backoff_sleep_s, backoff_max_s))
+                backoff_sleep_s = min(backoff_sleep_s * 2, backoff_max_s)
+
         if not batch:
             break
         out.extend(batch)
         if len(batch) < limit:
             break
         offset += limit
-        time.sleep(0.15)  # polite throttle
+        time.sleep(base_sleep)
+
     return out
 
-def _pin_for_socrata(pin: str) -> str:
-    """
-    Most PTAX tables use dashed 'pin'. We search by both dashed & undashed.
-    """
-    d = undashed_pin(pin)  # "12345678901234"
-    return f"{d[0:2]}-{d[2:4]}-{d[4:7]}-{d[7:10]}-{d[10:14]}"
+
 
 def fetch_ptax_main(pin: str, dataset_id: str = "it54-y4c6") -> dict:
     dashed = _pin_for_socrata(pin)
-    rows = _socrata_get(dataset_id, {
-        "$where": "line_1_primary_pin = @p OR replace(line_1_primary_pin,'-','') = @p_nodash",
-        "$order": "date_recorded DESC",
-        "$limit": "5000",
-        "@p": dashed,
-        "@p_nodash": dashed.replace("-", ""),
-    })
-    return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    try:
+        rows = _socrata_get(dataset_id, {
+            "$where": "line_1_primary_pin = :p OR replace(line_1_primary_pin,'-','') = :p_nodash",
+            "$order": "date_recorded DESC",
+            "$limit": "2000",
+            "p": dashed,
+            "p_nodash": dashed.replace("-", ""),
+        })
+        return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "error": str(e)}}
 
+def fetch_ptax_main_multi(pins: list[str], dataset_id: str = "it54-y4c6") -> dict:
+    """
+    Fetch PTAX main rows for many PINs at once (<= ~50; your usage ~20).
+    Matches both dashed and undashed formats.
+    """
+    dashed, undashed = [], []
+    for p in pins or []:
+        d = _pin_for_socrata(p)         # XX-XX-XXX-XXX-XXXX
+        dashed.append(d)
+        undashed.append(d.replace("-", ""))
 
+    def _in_clause(vals):
+        vals = [v for v in (vals or []) if v]
+        if not vals:
+            return None
+        return "(" + ",".join("'" + v.replace("'", "''") + "'" for v in vals) + ")"
 
-def fetch_ptax_additional_buyers(pin: str, dataset_id: str = "dwt7-rycp") -> dict:
-    dashed = _pin_for_socrata(pin)
-    # This table only has declaration_id + buyer_name per your query,
-    # but it usually relates by declaration_id to main table. We still filter by pin when present.
-    rows = _socrata_get(dataset_id, {
-        "$where": "pin = @p OR replace(pin,'-','') = @p_nodash OR pin IS NULL",
-        "$order": "buyer_name ASC",
-        "$limit": "5000",
-        "@p": dashed,
-        "@p_nodash": dashed.replace("-", ""),
-    })
-    return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    incl_d = _in_clause(dashed)
+    incl_u = _in_clause(undashed)
+    if not (incl_d or incl_u):
+        return {"_status": "ok", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "count": 0}}
 
-def fetch_ptax_additional_sellers(pin: str, dataset_id: str = "rzbz-mw8b") -> dict:
-    dashed = _pin_for_socrata(pin)
-    rows = _socrata_get(dataset_id, {
-        "$where": "pin = @p OR replace(pin,'-','') = @p_nodash OR pin IS NULL",
-        "$order": "seller_name ASC",
-        "$limit": "5000",
-        "@p": dashed,
-        "@p_nodash": dashed.replace("-", ""),
-    })
-    return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    where = []
+    if incl_d: where.append(f"line_1_primary_pin IN {incl_d}")
+    if incl_u: where.append(f"replace(line_1_primary_pin,'-','') IN {incl_u}")
 
-def fetch_ptax_additional_pins(pin: str, dataset_id: str = "ay2h-5hx3") -> dict:
-    dashed = _pin_for_socrata(pin)
-    rows = _socrata_get(dataset_id, {
-        "$where": "pin = @p OR replace(pin,'-','') = @p_nodash",
-        "$order": "pin ASC",
-        "$limit": "5000",
-        "@p": dashed,
-        "@p_nodash": dashed.replace("-", ""),
-    })
-    return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    try:
+        rows = _socrata_get(dataset_id, {
+            "$where": " OR ".join(where),
+            "$order": "date_recorded DESC",
+            "$limit": "5000",
+        })
+        return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "error": str(e)}}
 
-def fetch_ptax_personal_property(pin: str, dataset_id: str = "b46z-jwev") -> dict:
-    dashed = _pin_for_socrata(pin)
-    rows = _socrata_get(dataset_id, {
-        "$where": "pin = @p OR replace(pin,'-','') = @p_nodash",
-        "$order": "declaration_id DESC",
-        "$limit": "5000",
-        "@p": dashed,
-        "@p_nodash": dashed.replace("-", ""),
-    })
-    return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+def merge_ptax_by_declaration(ptax_main_rows, buyers_rows, sellers_rows, addlpins_rows, personal_rows, normalize_pin_fn=None):
+    """
+    Returns (bundle_dict, summary_rows_list, set_matches).
+    bundle_dict[decl_id] = { main, buyers, sellers, additional_pins, personal_property, matched_pins }
+    summary_rows_list = compact rows for a list UI.
+    set_matches(pin_match_map) lets caller attach matched pins per decl_id later.
+    """
+    from collections import defaultdict
+    buyers_by = defaultdict(list)
+    sellers_by = defaultdict(list)
+    pins_by   = defaultdict(list)
+    pp_by     = defaultdict(list)
 
+    for b in buyers_rows:   buyers_by[b.get("declaration_id")].append(b)
+    for s in sellers_rows:  sellers_by[s.get("declaration_id")].append(s)
+    for p in addlpins_rows: pins_by[p.get("declaration_id")].append(p)
+    for x in personal_rows: pp_by[x.get("declaration_id")].append(x)
+
+    pin_match_map = {}
+    def set_matches(mapping):
+        nonlocal pin_match_map
+        pin_match_map = mapping or {}
+
+    bundle = {}
+    from datetime import datetime as _dt
+    def _pdate(s):
+        try: return _dt.fromisoformat((s or "").replace("Z",""))
+        except Exception: return _dt.min
+    main_sorted = sorted(ptax_main_rows or [], key=lambda r: _pdate(r.get("date_recorded")), reverse=True)
+
+    for r in main_sorted:
+        did = r.get("declaration_id")
+        if not did: continue
+        bundle[did] = {
+            "main": r,
+            "buyers": buyers_by.get(did, []),
+            "sellers": sellers_by.get(did, []),
+            "additional_pins": pins_by.get(did, []),
+            "personal_property": pp_by.get(did, []),
+            "matched_pins": sorted(list(pin_match_map.get(did, set()))) if pin_match_map else [],
+        }
+
+    def _row_summary(d):
+        m = d.get("main", {})
+        primary_pin = m.get("line_1_primary_pin") or ""
+        if normalize_pin_fn:
+            try: primary_pin = normalize_pin_fn(primary_pin)
+            except Exception: pass
+        return {
+            "declaration_id": m.get("declaration_id"),
+            "date_recorded": m.get("date_recorded"),
+            "primary_pin": primary_pin,
+            "purchase_price": m.get("purchase_price"),
+            "grantor": m.get("grantor_name"),
+            "grantee": m.get("grantee_name"),
+            "doc_number": m.get("doc_number"),
+            "matched_pins": d.get("matched_pins", []),
+            "additional_pins_count": len(d.get("additional_pins", [])),
+        }
+    summary_rows = [_row_summary(bundle[did]) for did in bundle]
+    return bundle, summary_rows, set_matches
+
+def fetch_ptax_additional_buyers(declaration_ids=None, dataset_id: str = "dwt7-rycp") -> dict:
+    incl = _ids_in_clause(declaration_ids or [])
+    if not incl:
+        return {"_status": "ok", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "count": 0}}
+    try:
+        rows = _socrata_get(dataset_id, {"$where": f"declaration_id IN {incl}", "$order": "buyer_name ASC", "$limit": "5000"})
+        return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "error": str(e)}}
+
+def fetch_ptax_additional_sellers(declaration_ids=None, dataset_id: str = "rzbz-mw8b") -> dict:
+    incl = _ids_in_clause(declaration_ids or [])
+    if not incl:
+        return {"_status": "ok", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "count": 0}}
+    try:
+        rows = _socrata_get(dataset_id, {"$where": f"declaration_id IN {incl}", "$order": "seller_name ASC", "$limit": "5000"})
+        return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "error": str(e)}}
+
+def fetch_ptax_additional_pins(declaration_ids=None, dataset_id: str = "ay2h-5hx3") -> dict:
+    incl = _ids_in_clause(declaration_ids or [])
+    if not incl:
+        return {"_status": "ok", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "count": 0}}
+    try:
+        rows = _socrata_get(dataset_id, {"$where": f"declaration_id IN {incl}", "$order": "pin ASC", "$limit": "5000"})
+        return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "error": str(e)}}
+
+def fetch_ptax_personal_property(declaration_ids=None, dataset_id: str = "b46z-jwev") -> dict:
+    incl = _ids_in_clause(declaration_ids or [])
+    if not incl:
+        return {"_status": "ok", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "count": 0}}
+    try:
+        rows = _socrata_get(dataset_id, {"$where": f"declaration_id IN {incl}", "$order": "declaration_id DESC", "$limit": "5000"})
+        return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "error": str(e)}}
 
 # =================================================================
+
+# ======================= Recorder of Deeds (ROD) =======================
+# Site: https://crs.cookcountyclerkil.gov
+# We search by undashed PIN via: /Search/Result?id1=<14-digit>
+# and parse both (A) Associated Pins table, and (B) deed rows.
+
+import re, urllib.parse
+from datetime import datetime
+
+ROD_BASE = "https://crs.cookcountyclerkil.gov"
+
+def _rod_headers():
+    return {"User-Agent": "PinTool/1.0 (+https://example.com)"}
+
+import urllib.parse
+import re
+
+def _extract_dids_from_deed_url(deed_url: str) -> tuple[str, str]:
+    """
+    Pull dId and hId from the Document/Detail URL.
+    """
+    try:
+        q = urllib.parse.urlparse(deed_url).query
+        params = urllib.parse.parse_qs(q)
+        dId = (params.get("dId", [""])[0] or "").strip()
+        hId = (params.get("hId", [""])[0] or "").strip()
+        return dId, hId
+    except Exception:
+        return "", ""
+
+def _rod_fetch_pin_table_html(dId: str, hId: str) -> str:
+    """
+    Try the endpoints that serve the Associated PINs table used by the accordion.
+    We try sortpinresult first (what your snippet shows), then pinresult.
+    """
+    candidates = [
+        f"{ROD_BASE}/Document/sortpinresult?dId={dId}&hId={hId}&column=PIN&direction=asc&page=",
+        f"{ROD_BASE}/Document/pinresult?dId={dId}&hId={hId}",
+    ]
+    for url in candidates:
+        r = requests.get(url, headers=_rod_headers(), timeout=30)
+        if r.status_code == 200 and "<table" in r.text.lower():
+            return r.text
+    return ""
+
+
+# --- NEW helper in fetchers.py ---
+def _parse_assoc_pins_from_detail_soup(soup: BeautifulSoup) -> dict:
+    """
+    On Document Detail pages, the Associated PINs table appears under an accordion.
+    We detect any table whose header includes 'Property Index # (PIN)' and collect
+    the first-column anchors.
+    Returns: {"rows":[{pin, pin_undashed, address, ...}], "unique_dashed":[...], "unique_undashed":[...]}
+    """
+    target = None
+    for tbl in soup.find_all("table"):
+        # check header text (either <thead> or first <tr>)
+        header_row = tbl.find("thead") or tbl.find("tr")
+        if not header_row:
+            continue
+        hdr = header_row.get_text(" ", strip=True).upper()
+        if "PROPERTY INDEX" in hdr and "PIN" in hdr:
+            target = tbl
+            break
+    if target is None:
+        return {"rows": [], "unique_dashed": [], "unique_undashed": []}
+
+    # build column keys (nice-to-have; we mainly care about the first col with the PIN link)
+    keys = []
+    if target.find("thead"):
+        ths = target.find("thead").find_all(["th","td"])
+    else:
+        first_tr = target.find("tr")
+        ths = first_tr.find_all(["th","td"]) if first_tr else []
+    for th in ths:
+        txt = th.get_text(" ", strip=True).strip().lower()
+        # normalize a few common headers
+        if "property index" in txt and "pin" in txt:
+            keys.append("pin")
+        elif "address" in txt:
+            keys.append("address")
+        else:
+            keys.append(re.sub(r"\W+", "_", txt) or "col")
+
+    body = target.find("tbody") or target
+    rows_out, u_dashed, u_und = [], [], []
+    seen_d, seen_u = set(), set()
+
+    for tr in body.find_all("tr"):
+        tds = tr.find_all("td")
+        if not tds:
+            continue
+        # first cell contains the PIN link
+        a = tds[0].find("a", href=True)
+        txt = (a.get_text(" ", strip=True) if a else tds[0].get_text(" ", strip=True)).strip()
+        und = ""
+        if a:
+            try:
+                q = urllib.parse.urlparse(a["href"]).query
+                und = (urllib.parse.parse_qs(q).get("id1", [""])[0] or "").strip()
+            except Exception:
+                und = re.sub(r"\D", "", txt)
+        else:
+            und = re.sub(r"\D", "", txt)
+
+        row = {"pin": txt, "pin_undashed": und}
+        # map a couple more columns if present (address commonly in col 2)
+        if len(tds) > 1:
+            row["address"] = tds[1].get_text(" ", strip=True)
+
+        rows_out.append(row)
+        if "-" in txt and txt not in seen_d:
+            u_dashed.append(txt); seen_d.add(txt)
+        if und and und not in seen_u:
+            u_und.append(und); seen_u.add(und)
+
+    return {"rows": rows_out, "unique_dashed": u_dashed, "unique_undashed": u_und}
+
+
+def fetch_rod_search_html(pin: str) -> dict:
+    """
+    GET the ROD 'Search/Result' page for the given PIN.
+    Saves the HTML and returns {"url": ..., "html": ..., "raw": {...}}.
+    """
+    und = undashed_pin(pin)  # e.g., "17344060270000"
+    url = f"{ROD_BASE}/Search/Result?id1={und}"
+    r = requests.get(url, headers=_rod_headers(), timeout=30)
+    r.raise_for_status()
+    html = r.text
+
+    #Detect common bot-blocker pages
+    upper = html.upper()
+    blocked = any(s in upper for s in [
+        "VERIFY YOU ARE HUMAN", 
+        "ACCESS DENIED", 
+        "BLOCKED", 
+        "CLOUDFLARE", 
+        "PLEASE ENABLE JAVASCRIPT"
+    ])
+
+    
+
+    # prefer the shared save_raw_text if it's defined in this module
+    rel = f"rod/search_result_{und}.html"
+    try:
+        raw = save_raw_text(rel, html)  # from earlier S3/disk helper
+    except Exception:
+        p = Path("raw_cache/rod") / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(html, encoding="utf-8")
+        raw = {"storage": "disk", "path": str(p)}
+    raw["html_size_bytes"] = len(html)
+    return {"url": url, "html": html, "raw": raw, "blocked": blocked}
+
+
+def _parse_rod_associated_pins(html: str) -> dict:
+    """
+    Parse the 'Associated Pins' table on the results page.
+    Returns both dashed and undashed unique lists, and full rows (address, etc.).
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Find a table whose header contains "Property Index # (PIN)"
+    target = None
+    for tbl in soup.find_all("table"):
+        ths = [th.get_text(" ", strip=True) for th in tbl.find_all("th")]
+        if any("PROPERTY INDEX" in t.upper() and "PIN" in t.upper() for t in ths):
+            target = tbl
+            break
+    # Fallback: any table with links like /Search/ResultByPin?id1=<14digits>
+    if target is None:
+        for tbl in soup.find_all("table"):
+            if tbl.find("a", href=re.compile(r"/Search/ResultByPin\?id1=\d{14}")):
+                target = tbl
+                break
+    if target is None:
+        return {"rows": [], "unique_dashed": [], "unique_undashed": []}
+
+    # Build header -> key map (so we can also capture Address/Subdiv/Lot etc.)
+    def _key(h: str) -> str:
+        h = (h or "").strip().lower()
+        mapping = {
+            "property index # (pin)": "pin",
+            "address": "address",
+            "proptype": "prop_type",
+            "unit": "unit",
+            "s": "s",
+            "t": "t",
+            "r": "r",
+            "subdiv": "subdivision",
+            "lot": "lot",
+            "block": "block",
+            "part lot": "part_lot",
+            "bldg": "bldg",
+        }
+        return mapping.get(h, re.sub(r"\W+", "_", h) or "col")
+
+    header = target.find("thead")
+    keys = []
+    if header:
+        ths = header.find_all("th")
+        keys = [_key(th.get_text(" ", strip=True)) for th in ths]
+
+    body = target.find("tbody") or target
+    rows_out = []
+    for tr in body.find_all("tr"):
+        tds = tr.find_all("td")
+        if not tds:
+            continue
+        row = {}
+
+        # First cell: PIN with <a href="/Search/ResultByPin?id1=########......">
+        a = tds[0].find("a", href=True)
+        dashed = (a.get_text(" ", strip=True) if a else tds[0].get_text(" ", strip=True)).strip()
+        # undashed from href param when possible
+        und = ""
+        if a:
+            try:
+                q = urllib.parse.urlparse(a["href"]).query
+                params = urllib.parse.parse_qs(q)
+                und = (params.get("id1", [""])[0] or "").strip()
+            except Exception:
+                und = re.sub(r"\D", "", dashed)
+        else:
+            und = re.sub(r"\D", "", dashed)
+        row["pin"] = dashed
+        row["pin_undashed"] = und
+
+        # other columns mapped by header labels (when present)
+        for i, td in enumerate(tds[1:], start=1):
+            key = keys[i] if i < len(keys) else f"col_{i+1}"
+            row[key] = td.get_text(" ", strip=True)
+
+        rows_out.append(row)
+
+    # Unique sets
+    u_dashed, u_und = [], []
+    seen_d, seen_u = set(), set()
+    for r in rows_out:
+        d = r.get("pin")
+        u = r.get("pin_undashed")
+        if d and d not in seen_d:
+            u_dashed.append(d); seen_d.add(d)
+        if u and u not in seen_u:
+            u_und.append(u); seen_u.add(u)
+
+    return {"rows": rows_out, "unique_dashed": u_dashed, "unique_undashed": u_und}
+
+def _parse_rod_deed_rows(html: str) -> list[dict]:
+    soup = BeautifulSoup(html, "html.parser")
+    table = soup.select_one("#tblData") or soup.find("table")
+    if not table:
+        return []
+
+    # Build header map if there is a THEAD
+    headers = []
+    thead = table.find("thead")
+    if thead:
+        ths = thead.find_all(["th","td"])
+        headers = [th.get_text(" ", strip=True).upper() for th in ths]
+
+    # Helper to find column index by name fragment
+    def col_idx(*candidates):
+        up = [h.upper() for h in headers]
+        for i, h in enumerate(up):
+            if any(c in h for c in candidates):
+                return i
+        return None
+
+    # Try to find likely columns
+    idx_exec  = col_idx("EXEC", "EXECUTED", "DOC DATE", "DOCUMENT DATE")
+    idx_type  = col_idx("DOC TYPE", "DOCUMENT TYPE", "TYPE")
+
+    out = []
+    tbody = table.find("tbody") or table
+    for tr in tbody.find_all("tr"):
+        tds = tr.find_all("td")
+        if len(tds) < 3:
+            continue
+
+        # doc link
+        a = tr.find("a", href=True)
+        url = ROD_BASE + a["href"] if a and a["href"].startswith("/") else (a["href"] if a else "")
+
+        # type and exec date (fallbacks if no header mapping)
+        exec_txt = tds[idx_exec].get_text(strip=True) if (idx_exec is not None and idx_exec < len(tds)) else ""
+        type_txt = tds[idx_type].get_text(strip=True) if (idx_type is not None and idx_type < len(tds)) else (tds[-1].get_text(strip=True) if len(tds)>=1 else "")
+
+        if "DEED" not in type_txt.upper():
+            continue
+
+        try:
+            exec_date = datetime.strptime(exec_txt, "%m/%d/%Y") if exec_txt else datetime.min
+        except Exception:
+            exec_date = datetime.min
+
+        out.append({
+            "type": type_txt,
+            "executed": exec_date,
+            "executed_str": exec_txt,
+            "url": url,
+        })
+    return out
+
+
+def _select_latest_deed(all_deeds: list[dict]) -> list[dict]:
+    """
+    Return a single-item list with the newest deed purely by executed date,
+    ignoring deed type (WARRANTY/QUITCLAIM/etc).
+    """
+    if not all_deeds:
+        return []
+    # pick the deed with the max executed datetime
+    latest = max(all_deeds, key=lambda d: d.get("executed") or datetime.min)
+
+    # ensure nice string and drop the datetime object
+    if not latest.get("executed_str"):
+        latest["executed_str"] = (
+            latest["executed"].strftime("%m/%d/%Y")
+            if latest["executed"] and latest["executed"] != datetime.min else ""
+        )
+    latest.pop("executed", None)
+    return [latest]
+
+def _parse_assoc_pins_from_detail_soup(soup: BeautifulSoup) -> dict:
+    """
+    On Document Detail pages, find the table whose header includes
+    'Property Index # (PIN)' and extract the first-column PIN links.
+    Returns: {"rows":[...], "unique_dashed":[...], "unique_undashed":[...]}
+    """
+    import re, urllib.parse
+
+    target = None
+    for tbl in soup.find_all("table"):
+        header_row = tbl.find("thead") or tbl.find("tr")
+        if not header_row:
+            continue
+        hdr = header_row.get_text(" ", strip=True).upper()
+        if "PROPERTY INDEX" in hdr and "PIN" in hdr:
+            target = tbl
+            break
+    if target is None:
+        return {"rows": [], "unique_dashed": [], "unique_undashed": []}
+
+    # header map (optional)
+    keys = []
+    if target.find("thead"):
+        ths = target.find("thead").find_all(["th", "td"])
+    else:
+        first_tr = target.find("tr")
+        ths = first_tr.find_all(["th", "td"]) if first_tr else []
+    for th in ths:
+        txt = th.get_text(" ", strip=True).strip().lower()
+        if "property index" in txt and "pin" in txt:
+            keys.append("pin")
+        elif "address" in txt:
+            keys.append("address")
+        else:
+            keys.append(re.sub(r"\W+", "_", txt) or "col")
+
+    body = target.find("tbody") or target
+    rows_out, u_dashed, u_und = [], [], []
+    seen_d, seen_u = set(), set()
+
+    for tr in body.find_all("tr"):
+        tds = tr.find_all("td")
+        if not tds:
+            continue
+        a = tds[0].find("a", href=True)
+        txt = (a.get_text(" ", strip=True) if a else tds[0].get_text(" ", strip=True)).strip()
+        und = ""
+        if a:
+            try:
+                q = urllib.parse.urlparse(a["href"]).query
+                und = (urllib.parse.parse_qs(q).get("id1", [""])[0] or "").strip()
+            except Exception:
+                und = re.sub(r"\D", "", txt)
+        else:
+            und = re.sub(r"\D", "", txt)
+
+        row = {"pin": txt, "pin_undashed": und}
+        if len(tds) > 1:
+            row["address"] = tds[1].get_text(" ", strip=True)
+        rows_out.append(row)
+
+        if "-" in txt and txt not in seen_d:
+            u_dashed.append(txt); seen_d.add(txt)
+        if und and und not in seen_u:
+            u_und.append(und); seen_u.add(und)
+
+    return {"rows": rows_out, "unique_dashed": u_dashed, "unique_undashed": u_und}
+
+
+def fetch_rod_deed_detail(deed_url: str) -> dict:
+    r = requests.get(deed_url, headers=_rod_headers(), timeout=30)
+    r.raise_for_status()
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    # --- your existing consideration + party parsing here ---
+
+    consid = ""
+    th = soup.find("th", string=re.compile(r"Consideration", re.I))
+    if th:
+        td = th.find_next_sibling("td")
+        if td:
+            consid = td.get_text(strip=True)
+    if not consid:
+        txt = soup.find(text=re.compile(r"Consideration\s*[:\-]", re.I))
+        if txt:
+            m = re.search(r"Consideration\s*[:\-]\s*(\$\s*[\d,]+(?:\.\d{2})?)", txt)
+            if m:
+                consid = m.group(1).replace(" ", "")
+
+    def _party_table(label: str) -> list[dict]:
+        span = soup.find("span", string=re.compile(fr"^{label}$", re.I))
+        if not span:
+            return []
+        tbl = span.find_next("table")
+        if not tbl:
+            return []
+        out = []
+        for tr in tbl.select("tbody tr"):
+            tds = tr.find_all("td")
+            if not tds:
+                continue
+            name  = tds[0].get_text(strip=True) if len(tds) >= 1 else ""
+            trust = tds[1].get_text(strip=True) if len(tds) >= 2 else ""
+            out.append({"name": name, "trust": trust})
+        return out
+    # --- Associated PINs: try inline first ---
+    assoc = _parse_assoc_pins_from_detail_soup(soup)
+
+    # If none inline, fetch the AJAX table (sortpinresult/pinresult)
+    if not assoc.get("rows"):
+        dId, hId = _extract_dids_from_deed_url(deed_url)
+        if dId and hId:
+            html = _rod_fetch_pin_table_html(dId, hId)
+            if html:
+                assoc = _parse_assoc_pins_from_detail_soup(BeautifulSoup(html, "html.parser"))
+
+    return {
+        "consideration": consid,
+        "grantors": _party_table("Grantors"),
+        "grantees": _party_table("Grantees"),
+        "associated_pins_dashed": assoc.get("unique_dashed", []),
+        "associated_pins_undashed": assoc.get("unique_undashed", []),
+        "associated_rows": assoc.get("rows", []),
+    }
+
+def fetch_recorder_bundle(pin: str, top_n: int = 3) -> dict:
+    """
+    One-stop shop:
+      - download search page for PIN
+      - parse 'Associated Pins' (unique)
+      - parse all deed rows and return top N with details (consideration + parties)
+    """
+    t0 = time.time()
+    try:
+        page = fetch_rod_search_html(pin)
+        html = page["html"]
+
+        assoc = _parse_rod_associated_pins(html)
+        all_deeds = _parse_rod_deed_rows(html)
+        top = _select_latest_deed(all_deeds)
+
+        enriched = []
+        for d in top:
+            detail = {}
+            try:
+                detail = fetch_rod_deed_detail(d["url"]) if d.get("url") else {}
+            except Exception:
+                detail = {}
+            enriched.append({**d, **detail})
+
+        # Build display pins: prefer search-page; if empty, use detail-page
+        from utils import normalize_pin
+
+        # assoc from the search page:
+        assoc = _parse_rod_associated_pins(html)
+
+        # pick newest deed and enrich
+        all_deeds = _parse_rod_deed_rows(html)
+        top = _select_latest_deed(all_deeds)
+        enriched = []
+        for d in top:
+            detail = {}
+            try:
+                detail = fetch_rod_deed_detail(d["url"]) if d.get("url") else {}
+            except Exception:
+                detail = {}
+            enriched.append({**d, **detail})
+
+        # Prefer search-page pins; if empty, use pins from the deed detail we just fetched
+        pins_dashed = assoc.get("unique_dashed") or [
+            normalize_pin(u) for u in (assoc.get("unique_undashed") or []) if u
+        ]
+        if not pins_dashed and enriched:
+            dd = enriched[0]
+            pins_dashed = dd.get("associated_pins_dashed") or [
+                normalize_pin(u) for u in (dd.get("associated_pins_undashed") or []) if u
+            ]
+
+        assoc_rows = [{"Associated Pins": p} for p in pins_dashed]
+
+
+        return {
+            "_status": "ok",
+            "normalized": {
+                "Associated Pins": assoc_rows,
+                "associated_pins_dashed": pins_dashed,
+                "associated_pins_undashed": assoc.get("unique_undashed", []),
+                "associated_count": len(pins_dashed),
+                "top_deeds": enriched,
+                "latest_deed": (enriched[0] if enriched else {}),
+            },
+            "raw": page["raw"],
+            "_meta": {
+                "searched_pin": undashed_pin(pin),
+                "duration_ms": int((time.time()-t0)*1000),
+                "html_bytes": page["raw"].get("html_size_bytes"),
+                "all_deeds_found": len(all_deeds),
+                "top_deeds_selected": len(top),
+            },
+        }
+    except Exception as e:
+        return {"_status": "error", "normalized": {}, "raw": {}, "_meta": {"error": str(e)}}
+# ======================================================================
+
 
 
 def fetch_bor(pin: str, force: bool = False) -> dict:
