@@ -3,6 +3,9 @@ from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from orchestrator import get_pin_summary
+import os
+print("ILLINOIS_APP_TOKEN set:", bool(os.getenv("ILLINOIS_APP_TOKEN")))
+
 
 app = FastAPI(title="PIN Tool API", version="0.1.0")
 

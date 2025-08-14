@@ -6,8 +6,20 @@ import json
 
 from fetchers import (
     fetch_bor, fetch_cv, fetch_sales, fetch_permits,
-    fetch_assessor_values, fetch_assessor_mail_exempt
+    fetch_assessor_values,
+    fetch_assessor_profile, fetch_assessor_maildetail,
+    fetch_assessor_exemptions,fetch_assessor_location,
+    fetch_assessor_land,fetch_assessor_residential,
+    fetch_assessor_other_structures,fetch_assessor_commercial_building,
+    fetch_assessor_prop_association,fetch_assessor_sales_datalet,
+    fetch_assessor_notice_summary,fetch_assessor_appeals_coes,
+    fetch_assessor_hie_additions,fetch_ptax_main,
+    fetch_ptax_additional_buyers, fetch_ptax_additional_sellers,
+    fetch_ptax_additional_pins, fetch_ptax_personal_property,
 )
+
+from datetime import datetime
+
 from utils import normalize_pin  # reuse your function if you have one
 
 # Simple in-memory cache (works fine on one dyno). You can swap to Redis later.
@@ -20,13 +32,46 @@ TTL = {
     "PERMITS": timedelta(hours=24),
     "ASSR_VALUES": timedelta(hours=12),
     "ASSR_MAIL": timedelta(hours=24),
+    "ASSR_PROFILE": timedelta(hours=24),
+    "ASSR_MAILDETAIL": timedelta(hours=24),
+    "ASSR_EXEMPT": timedelta(hours=24),
+    "ASSR_LOCATION": timedelta(hours=24),
+    "ASSR_LAND": timedelta(hours=24),
+    "ASSR_RESIDENTIAL": timedelta(hours=24),
+    "ASSR_OBY": timedelta(hours=24),
+    "ASSR_COMM_BLDG": timedelta(hours=24),
+    "ASSR_PROP_ASSOCIATION" : timedelta(hours=24),
+    "ASSR_SALES": timedelta(hours=24),
+    "ASSR_NOTICE_SUMMARY": timedelta(hours=24), 
+    "ASSR_APPEALS": timedelta(hours=24), 
+    "ASSR_HIE_ADDN" : timedelta(hours=24),
+    "PTAX_MAIN": timedelta(hours=6),
+    "PTAX_ADDL_BUYERS": timedelta(hours=12),
+    "PTAX_ADDL_SELLERS": timedelta(hours=12),
+    "PTAX_ADDL_PINS": timedelta(hours=12),
+    "PTAX_PERS": timedelta(hours=12),
 }
+
+TTL.pop("ASSR_MAIL", None)
+
+
+
 
 def _cache_key(pin: str) -> str:
     return hashlib.sha1(pin.encode("utf-8")).hexdigest()
 
 def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
-    pin_norm = normalize_pin(pin) if "normalize_pin" in globals() else pin.strip()
+    try:
+        pin_norm = normalize_pin(pin)
+    except Exception:
+        return {
+            "pin": pin.strip(),
+            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "error": "Invalid PIN: must be 14 digits (Cook County).",
+            "sections": {},
+            "source_status": {}
+        }
+
     ck = _cache_key(pin_norm)
     now = datetime.utcnow()
 
@@ -46,7 +91,28 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     sales = fetch_sales(pin_norm, force=fresh or _expired(prev, "SALES", now))
     permits = fetch_permits(pin_norm, force=fresh or _expired(prev, "PERMITS", now))
     assr_vals = fetch_assessor_values(pin_norm, force=fresh or _expired(prev, "ASSR_VALUES", now))
-    assr_mail = fetch_assessor_mail_exempt(pin_norm, force=fresh or _expired(prev, "ASSR_MAIL", now))
+    assr_profile = fetch_assessor_profile(pin_norm, force=fresh or _expired(prev, "ASSR_PROFILE", now))
+    assr_maildetail = fetch_assessor_maildetail(pin_norm, force=fresh or _expired(prev, "ASSR_MAILDETAIL", now))
+    assr_exempt = fetch_assessor_exemptions(pin_norm, force=fresh or _expired(prev, "ASSR_EXEMPT", now))
+    assr_location = fetch_assessor_location(pin_norm, force=fresh or _expired(prev, "ASSR_LOCATION", now))
+    assr_land = fetch_assessor_land(pin_norm, force=fresh or _expired(prev, "ASSR_LAND", now))
+    assr_res = fetch_assessor_residential(pin_norm, force=fresh or _expired(prev, "ASSR_RESIDENTIAL", now))
+    assr_oby = fetch_assessor_other_structures(pin_norm, force=fresh or _expired(prev, "ASSR_OBY", now))
+    comm_bldg = fetch_assessor_commercial_building(pin_norm, force=fresh or _expired(prev, "ASSR_COMM_BLDG", now))
+    prop_assoc = fetch_assessor_prop_association(pin_norm, force=fresh or _expired(prev, "ASSR_PROP_ASSOCIATION", now))
+    assr_sales_dalet = fetch_assessor_sales_datalet(pin_norm, force=fresh or _expired(prev, "ASSR_SALES", now))  
+    notice_sum = fetch_assessor_notice_summary(pin_norm, force=fresh or _expired(prev, "ASSR_NOTICE_SUMMARY", now))
+    appeals = fetch_assessor_appeals_coes(pin_norm, force=fresh or _expired(prev, "ASSR_APPEALS", now))
+    assr_hie = fetch_assessor_hie_additions(pin_norm, force=fresh or _expired(prev, "ASSR_HIE_ADDN", now))
+    ptax_main      = fetch_ptax_main(pin_norm)
+    ptax_buyers    = fetch_ptax_additional_buyers(pin_norm)
+    ptax_sellers   = fetch_ptax_additional_sellers(pin_norm)
+    ptax_pins      = fetch_ptax_additional_pins(pin_norm)
+    ptax_personal  = fetch_ptax_personal_property(pin_norm)
+
+
+
+
 
     # Derived metrics (keep simple; expand as needed)
     derived = _compute_derived(bor, cv, sales)
@@ -56,13 +122,36 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
         "pin": pin_norm,
         "generated_at": now.isoformat() + "Z",
         "sections": {
-            "property_info": _shape_property_info(bor, cv, assr_mail),
+            "property_info": _shape_property_info(bor, cv, assr_maildetail, assr_profile),
+            "assessor_profile": assr_profile.get("normalized", {}),
+            "assessor_maildetail": assr_maildetail.get("normalized", {}),
+            "assessor_exemptions": assr_exempt.get("normalized", {}),  
+            "value_summary": (assr_vals.get("normalized", {}) or {}).get("value_summary_raw", []),
+            "property_location": assr_location.get("normalized", {}),
+            "land": assr_land.get("normalized", {}),
+            "residential_building": assr_res.get("normalized", {}),
             "assessed_market_values": _shape_assessed(assr_vals),
-            "sales": _shape_sales(sales, cv),
+            "other_structures": assr_oby.get("normalized", {}),
+            "commercial_building": comm_bldg.get("normalized", {}),
+            "divisions_consolidations": prop_assoc.get("normalized", {}),
+            "assessor_sales_datalet": assr_sales_dalet.get("normalized", {}), 
+            "sales": _shape_sales(sales, cv, assr_sales_dalet.get("normalized", {})),
+            "notice_summary": notice_sum.get("normalized", {}),
+            "appeals_coes": appeals.get("normalized", {}),
             "permits": _shape_permits(permits),
-            "nearby": _shape_nearby(bor, cv),  # placeholder: you can wire your logic
+            "hie_additions": assr_hie.get("normalized", {}),
+            "PTAX_MAIN": ptax_main.get("_status", "ok"),
+            "PTAX_ADDL_BUYERS": ptax_buyers.get("_status", "ok"),
+            "PTAX_ADDL_SELLERS": ptax_sellers.get("_status", "ok"),
+            "PTAX_ADDL_PINS": ptax_pins.get("_status", "ok"),
+            "PTAX_PERS": ptax_personal.get("_status", "ok"),
+            "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_norm),
+            
         },
+
+
+
         "derived": derived,
         "source_status": {
             "BOR": bor.get("_status", "ok"),
@@ -70,8 +159,21 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "SALES": sales.get("_status", "ok"),
             "PERMITS": permits.get("_status", "ok"),
             "ASSR_VALUES": assr_vals.get("_status", "ok"),
-            "ASSR_MAIL": assr_mail.get("_status", "ok"),
+            "ASSR_PROFILE": assr_profile.get("_status", "ok"),  # <-- add
+            "ASSR_MAILDETAIL": assr_maildetail.get("_status", "ok"),
+            "ASSR_EXEMPT": assr_exempt.get("_status", "ok"),
+            "ASSR_LOCATION": assr_location.get("_status", "ok"),
+            "ASSR_LAND": assr_land.get("_status", "ok"),
+            "ASSR_RESIDENTIAL": assr_res.get("_status", "ok"),
+            "ASSR_OBY": assr_oby.get("_status", "ok"),
+            "ASSR_COMM_BLDG": comm_bldg.get("_status", "ok"),
+            "ASSR_PROP_ASSOCIATION": prop_assoc.get("_status","ok"),
+            "ASSR_SALES": assr_sales_dalet.get("_status", "ok"),
+            "ASSR_NOTICE_SUMMARY": notice_sum.get("_status", "ok"),
+            "ASSR_APPEALS": appeals.get("_status", "ok"),
+            "ASSR_HIE_ADDN": assr_hie.get("_status", "ok"),
         }
+
     }
 
     _CACHE[ck] = {
@@ -104,33 +206,120 @@ def _compute_derived(bor, cv, sales) -> Dict[str, Any]:
         pass
     return out
 
-def _shape_property_info(bor, cv, assr_mail):
+def _shape_property_info(bor, cv, mail_src, assr_profile):
+    prof = (assr_profile or {}).get("normalized", {})
+    mail_norm = (mail_src or {}).get("normalized", {})
+    taxpayer = mail_norm.get("Taxpayer Name")
+    mailing = None
+    if mail_norm:
+        parts = [
+            mail_norm.get("Mailing Address (line1)"),
+            mail_norm.get("Mailing City"),
+            mail_norm.get("Mailing State"),
+            mail_norm.get("Mailing Zip"),
+        ]
+        mailing = ", ".join([p for p in parts if p])
     return {
         "Class": bor.get("class"),
+        "Class (Assessor Profile)": prof.get("PIN Info • Class"),
         "Property Use": cv.get("property_use"),
-        "Address": cv.get("address") or bor.get("address"),
+        "Address": (
+            cv.get("address")
+            or bor.get("address")
+            or prof.get("PIN Info • Property Address")
+            or prof.get("Address (header)")
+        ),
         "Building SqFt": cv.get("building_sqft"),
         "Land SqFt": cv.get("land_sqft"),
         "Investment Rating": cv.get("investment_rating"),
         "Age": cv.get("age"),
-        "Taxpayer Name": assr_mail.get("taxpayer"),
-        "Mailing Address": assr_mail.get("mailing_address"),
+        "Town Name": prof.get("PIN Info • Town Name"),
+        "Neighborhood": prof.get("PIN Info • Neighborhood") or prof.get("Neighborhood (header)"),
+        "Tax District": prof.get("PIN Info • Tax District"),
+        "Taxpayer Name": taxpayer,
+        "Mailing Address": mailing,
     }
 
-def _shape_assessed(assr_vals):
-    return {"values_summary": assr_vals.get("summary", [])[:3]}
 
-def _shape_sales(sales, cv):
-    latest = sales.get("latest") or {}
+
+def _shape_assessed(assr_vals):
+    # New fetcher returns:
+    # {"normalized": {"rows":[{...combined fields...}], "summary":[...], "detail":{...}}, ...}
+    norm = (assr_vals or {}).get("normalized") or {}
+    rows = norm.get("rows") or []
+    if rows:
+        return rows
+    # Fallbacks if rows didn't build for some reason
+    if norm.get("summary"):
+        return norm["summary"]
+    return []
+
+
+
+def _shape_sales(sales, cv, assr_sales_norm=None):
+    """
+    Prefer your external sales dataset. If it's empty, fall back to the
+    Assessor Sales datalet (summary_rows + details).
+    """
+    latest = (sales or {}).get("latest") or {}
+    history = (sales or {}).get("history") or []
+
+    # If your dataset is empty, try the Assessor datalet
+    if (not latest) and assr_sales_norm:
+        rows = assr_sales_norm.get("summary_rows") or []
+        if rows:
+            # sort by date desc if possible
+            def _pdate(s):
+                try:
+                    return datetime.strptime((s or "").strip(), "%m/%d/%Y")
+                except Exception:
+                    return datetime.min
+
+            rows_sorted = sorted(rows, key=lambda r: _pdate(r.get("Sale Date")), reverse=True)
+            r0 = rows_sorted[0]
+
+            latest = {
+                "date": r0.get("Sale Date"),
+                "price": r0.get("Sale Price"),
+                "doc": r0.get("Document #"),
+                "instrument_type": r0.get("Instr. Type"),
+                "seller": r0.get("Grantor/Seller"),
+                "buyer": r0.get("Grantee/Buyer"),
+                "source": "assessor_datalet",
+            }
+
+            history = [
+                {
+                    "date": r.get("Sale Date"),
+                    "price": r.get("Sale Price"),
+                    "doc": r.get("Document #"),
+                    "instrument_type": r.get("Instr. Type"),
+                    "seller": r.get("Grantor/Seller"),
+                    "buyer": r.get("Grantee/Buyer"),
+                }
+                for r in rows_sorted
+            ]
+
     return {
         "Latest Sale Date": latest.get("date"),
         "Latest Sale Price": latest.get("price"),
         "Notes": latest.get("notes"),
-        "History": sales.get("history", [])[:5],
+        "History": history[:5],
     }
 
+
 def _shape_permits(permits):
-    return {"rows": permits.get("rows", [])[:25]}
+    # accept both new + old fetcher shapes
+    norm = (permits or {}).get("normalized") or {}
+    rows = norm.get("rows") or permits.get("rows") or []
+    out = {"rows": rows[:25]}
+    # optional: expose count if UI wants it (harmless if ignored)
+    try:
+        out["count"] = len(rows)
+    except Exception:
+        pass
+    return out
+
 
 def _shape_nearby(bor, cv):
     # stub; wire your class+distance logic here later

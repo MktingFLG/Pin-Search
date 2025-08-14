@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -15,17 +16,13 @@
                class="border rounded-lg px-3 py-2 text-sm w-48 md:w-64" />
       </div>
 
-      <div class="flex gap-2 mb-4">
-        <button id="loadBtn" class="px-3 py-2 rounded-lg border">Load</button>
-        <button id="freshBtn" class="px-3 py-2 rounded-lg border">Load (Fresh)</button>
-      </div>
+
       <div class="flex gap-2 mb-4">
         <button id="loadBtn" class="px-3 py-2 rounded-lg border">Load</button>
         <button id="freshBtn" class="px-3 py-2 rounded-lg border">Load (Fresh)</button>
         <button id="copyBtn" class="px-3 py-2 rounded-lg border">Copy link</button>
       </div>
 
-      <div id="meta" class="text-xs text-gray-500 mb-1"></div>
       <div id="diag" class="text-xs text-gray-400 mb-3"></div>
 
 
@@ -50,7 +47,26 @@
       return await r.json();
     }
 
-    function renderSection(key, title, content) {
+
+   // ADD THIS helper before renderSection
+   function renderRowsAsTable(rows){
+     if (!rows || !rows.length) return document.createTextNode("No data");
+     const cols = Array.from(rows.reduce((s, r) => { Object.keys(r).forEach(k=>s.add(k)); return s; }, new Set()));
+     const table = document.createElement("table"); table.className = "w-full text-sm";
+     const thead = document.createElement("thead"); const thr = document.createElement("tr");
+     cols.forEach(c=>{ const th=document.createElement("th"); th.className="text-left border-b px-2 py-1"; th.textContent=c; thr.appendChild(th); });
+     thead.appendChild(thr); table.appendChild(thead);
+     const tbody = document.createElement("tbody");
+     rows.forEach(r=>{
+       const tr=document.createElement("tr");
+       cols.forEach(c=>{ const td=document.createElement("td"); td.className="border-b px-2 py-1 align-top"; td.textContent = (r[c] ?? ""); tr.appendChild(td); });
+       tbody.appendChild(tr);
+     });
+     table.appendChild(tbody);
+     return table;
+   }  
+   
+   function renderSection(key, title, content) {
       const details = document.createElement("details");
       details.className = "border rounded-xl";
       const sum = document.createElement("summary");
@@ -60,21 +76,9 @@
       body.className = "px-4 py-3 text-sm";
 
       // naive key-value renderer
-      if (Array.isArray(content)) {
-        const table = document.createElement("table");
-        table.className = "w-full text-sm";
-        content.forEach(row => {
-          const tr = document.createElement("tr");
-          Object.values(row).forEach(v => {
-            const td = document.createElement("td");
-            td.className = "border-b px-2 py-1 align-top";
-            td.textContent = v ?? "";
-            tr.appendChild(td);
-          });
-          table.appendChild(tr);
-        });
-        body.appendChild(table);
-      } else if (typeof content === "object" && content !== null) {
+      if (Array.isArray(content)){
+        body.appendChild(renderRowsAsTable(content));   
+      }  else if (typeof content === "object" && content !== null) {
         const dl = document.createElement("dl");
         for (const [k, v] of Object.entries(content)) {
           const dt = document.createElement("dt");
