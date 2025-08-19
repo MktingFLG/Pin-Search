@@ -24,3 +24,4 @@ data/*/20??-??-??/
 
 # Secrets (if used locally)
 .env.local
+Personal access tokens (classic).txt
