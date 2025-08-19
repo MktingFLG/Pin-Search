@@ -11,16 +11,13 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 from utils import undashed_pin  # we need the 14-digit no-dash for the URL
-
+from utils import normalize_pin, undashed_pin
 
 import os
-from pathlib import Path
 import urllib.parse
-import re
-
+import re, urllib.parse
 
 # ================= Assessor Detail (DT_PIN ⇄ DT_KEY_PIN) ======================
-from pathlib import Path
 from functools import lru_cache
 import pandas as _pd
 import re as _re
@@ -28,7 +25,7 @@ import re as _re
 _DATA_DIR = Path("data")
 
 from functools import lru_cache
-from utils import normalize_pin, undashed_pin
+
 
 @lru_cache(maxsize=256)
 def _rod_assoc_for(pin14: str) -> list[str]:
@@ -71,7 +68,7 @@ def _find_detail_files() -> list[Path]:
     pick only the newest date folder.
     Prefer normalized Detail.* in that folder; if none, fall back to NLTWND*.(xlsx|xls|csv).
     """
-    from datetime import datetime
+
 
     latest_dir_by_town: dict[str, Path] = {}
     for dated in _DATA_DIR.glob("*/20??-??-??"):
@@ -126,19 +123,14 @@ def _build_assoc_index() -> tuple[dict[str, list[str]], dict[str, str]]:
         def _norm_pin14(s: str) -> str:
             s = (s or "").strip()
             s = _re.sub(r"\D", "", s)
-            return s if len(s) == 14 else "" 
-        
-        def _norm_any_pin(s: str) -> str:
-            s = (s or "").strip()
-            s = _re.sub(r"\D", "", s)
-            return s.zfill(14)[:14] if s else ""  
+            return s if len(s) == 14 else ""  
 
-        pins = df[pin_col].astype(str).map(_norm_any_pin)
+        pins = df[pin_col].astype(str).map(_norm_pin14)
         keys = df[key_col].astype(str).map(_norm_pin14)
 
         assoc_rows = df[(keys != "") & keys.notna()]
         for i, row in assoc_rows.iterrows():
-            child = _norm_any_pin(row.get(pin_col, ""))
+            child = _norm_pin14(row.get(pin_col, ""))
             key   = _norm_pin14(row.get(key_col, ""))
             if not child or not key:
                 continue
@@ -631,12 +623,6 @@ def fetch_assessor_values(pin: str, jur: str = "016", taxyr: str = "2025", force
         out["raw_values"] = {**raw_rec_val, "html_size_bytes": len(r.text)}
 
 
-        # For the summary page:
-        # After r = requests.get(url_summary, ...)
-        # For the summary page (mirror the new save helper)
-        sum_rec = save_raw_text(f"values/{pin14}_{jur}_{taxyr}_summary.html", r.text)
-        out["raw_value_summary"] = {**sum_rec, "html_size_bytes": len(r.text)}
-
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
 
@@ -699,6 +685,8 @@ def fetch_assessor_values(pin: str, jur: str = "016", taxyr: str = "2025", force
     try:
         r = requests.get(url_summary, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
+        sum_rec = save_raw_text(f"values/{pin14}_{jur}_{taxyr}_summary.html", r.text)
+        out["raw_value_summary"] = {**sum_rec, "html_size_bytes": len(r.text)}
         out["normalized"]["value_summary_raw"] = _scrape_value_summary_raw(r.text)
     except Exception as e:
         out["_meta"]["summary_error"] = str(e)
@@ -1689,7 +1677,6 @@ def fetch_assessor_hie_additions(pin: str, jur: str = "016", taxyr: str = "2025"
     """
     Pull 'HIE Additions' (mode=res_addn). Captures any grid- or kv-style table.
     """
-    import time
     t0 = time.time()
     pin14 = undashed_pin(pin)
     url = f"{PROFILE_BASE}?mode=res_addn&UseSearch=no&pin={pin14}&jur={jur}&taxyr={taxyr}&LMparent=896"
@@ -1771,7 +1758,6 @@ def _socrata_get(dataset_id: str, params: dict) -> list:
     Socrata fetch with auto-pagination, polite throttling (esp. when no APP_TOKEN),
     and backoff on 429/5xx. Keeps memory small by streaming pages.
     """
-    import time
     headers = {"User-Agent": "PIN-Tool/1.0"}
     if APP_TOKEN:
         headers["X-App-Token"] = APP_TOKEN
@@ -1785,6 +1771,8 @@ def _socrata_get(dataset_id: str, params: dict) -> list:
     backoff_max_s    = 20.0
     retries_per_page = 5
 
+    max_pages = int(os.getenv("SOCRATA_MAX_PAGES", "200"))
+    pages = 0
     while True:
         q = {**params, "$limit": str(limit), "$offset": str(offset)}
         attempt = 0
@@ -1816,6 +1804,9 @@ def _socrata_get(dataset_id: str, params: dict) -> list:
         if len(batch) < limit:
             break
         offset += limit
+        pages += 1
+        if pages >= max_pages:
+            break
         time.sleep(base_sleep)
 
     return out
@@ -1981,8 +1972,6 @@ def fetch_ptax_personal_property(declaration_ids=None, dataset_id: str = "b46z-j
 # We search by undashed PIN via: /Search/Result?id1=<14-digit>
 # and parse both (A) Associated Pins table, and (B) deed rows.
 
-import re, urllib.parse
-from datetime import datetime
 
 ROD_BASE = "https://crs.cookcountyclerkil.gov"
 
@@ -2368,6 +2357,13 @@ def fetch_recorder_bundle(pin: str, top_n: int = 3) -> dict:
     try:
         page = fetch_rod_search_html(pin)
         html = page["html"]
+        if page.get("blocked"):
+            return {
+                "_status": "error",
+                "normalized": {},
+                "raw": page.get("raw", {}),
+                "_meta": {"error": "ROD blocked by bot/human check", "searched_pin": undashed_pin(pin)}
+            }
 
         assoc = _parse_rod_associated_pins(html)
         all_deeds = _parse_rod_deed_rows(html)
@@ -2382,23 +2378,7 @@ def fetch_recorder_bundle(pin: str, top_n: int = 3) -> dict:
                 detail = {}
             enriched.append({**d, **detail})
 
-        # Build display pins: prefer search-page; if empty, use detail-page
-        from utils import normalize_pin
 
-        # assoc from the search page:
-        assoc = _parse_rod_associated_pins(html)
-
-        # pick newest deed and enrich
-        all_deeds = _parse_rod_deed_rows(html)
-        top = _select_latest_deed(all_deeds)
-        enriched = []
-        for d in top:
-            detail = {}
-            try:
-                detail = fetch_rod_deed_detail(d["url"]) if d.get("url") else {}
-            except Exception:
-                detail = {}
-            enriched.append({**d, **detail})
 
         # Prefer search-page pins; if empty, use pins from the deed detail we just fetched
         pins_dashed = assoc.get("unique_dashed") or [

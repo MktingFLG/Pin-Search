@@ -1,3 +1,4 @@
+#import_subs.py
 """
 subscription/import_subs.py
 - DB utilities to upsert manifest, header, and detail tables
@@ -19,6 +20,7 @@ def get_conn():
 
 def ensure_schema():
     with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("SET LOCAL statement_timeout = '15s';")
         with open(SCHEMA_FILE, "r", encoding="utf-8") as f:
             cur.execute(f.read())
         conn.commit()
@@ -26,7 +28,7 @@ def ensure_schema():
 def upsert_manifest(row: Dict, layout_version: int, zip_sha256: str):
     sql = """
     INSERT INTO assessor_manifest (town_code, pass, last_update, head_pins_count, detail_pins_count, layout_version, zip_sha256)
-    VALUES (%(town_code)s, %(pass_no)s, %(last_date)s, %(head_cnt)s, %(detail_cnt)s, %(layout_version)s, %(zip_sha256)s)
+    VALUES (%(town_code)s, %(pass_no)s, to_date(%(last_date)s, 'YYYY-MM-DD'), %(head_cnt)s, %(detail_cnt)s, %(layout_version)s, %(zip_sha256)s)
     ON CONFLICT (town_code) DO UPDATE SET
       pass              = EXCLUDED.pass,
       last_update       = EXCLUDED.last_update,

@@ -22,7 +22,7 @@ from fetchers import (
 
 from datetime import datetime
 
-from utils import normalize_pin  # reuse your function if you have one
+from utils import normalize_pin, undashed_pin
 
 # Simple in-memory cache (works fine on one dyno). You can swap to Redis later.
 _CACHE: Dict[str, Dict[str, Any]] = {}
@@ -65,17 +65,18 @@ def _cache_key(pin: str) -> str:
 
 def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     try:
-        pin_norm = normalize_pin(pin)
+        pin_dash = normalize_pin(pin)     # display
+        pin_raw  = undashed_pin(pin_dash) # 14-digit for fetchers
     except Exception:
         return {
-            "pin": pin.strip(),
+            "pin": (pin or "").strip(),
             "generated_at": datetime.utcnow().isoformat() + "Z",
             "error": "Invalid PIN: must be 14 digits (Cook County).",
             "sections": {},
             "source_status": {}
         }
 
-    ck = _cache_key(pin_norm)
+    ck = _cache_key(pin_raw)
     now = datetime.utcnow()
 
     # Try cache
@@ -89,31 +90,43 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     prev = _CACHE.get(ck, {"data": {}, "stamps": {}})
 
     # Revalidate each source independently (ETag/If-Modified-Since inside fetchers)
-    bor = fetch_bor(pin_norm, force=fresh or _expired(prev, "BOR", now))
-    cv = fetch_cv(pin_norm, force=fresh or _expired(prev, "CV", now))
-    sales = fetch_sales(pin_norm, force=fresh or _expired(prev, "SALES", now))
-    permits = fetch_permits(pin_norm, force=fresh or _expired(prev, "PERMITS", now))
-    assr_vals = fetch_assessor_values(pin_norm, force=fresh or _expired(prev, "ASSR_VALUES", now))
-    assr_profile = fetch_assessor_profile(pin_norm, force=fresh or _expired(prev, "ASSR_PROFILE", now))
-    assr_maildetail = fetch_assessor_maildetail(pin_norm, force=fresh or _expired(prev, "ASSR_MAILDETAIL", now))
-    assr_exempt = fetch_assessor_exemptions(pin_norm, force=fresh or _expired(prev, "ASSR_EXEMPT", now))
-    assr_location = fetch_assessor_location(pin_norm, force=fresh or _expired(prev, "ASSR_LOCATION", now))
-    assr_land = fetch_assessor_land(pin_norm, force=fresh or _expired(prev, "ASSR_LAND", now))
-    assr_res = fetch_assessor_residential(pin_norm, force=fresh or _expired(prev, "ASSR_RESIDENTIAL", now))
-    assr_oby = fetch_assessor_other_structures(pin_norm, force=fresh or _expired(prev, "ASSR_OBY", now))
-    comm_bldg = fetch_assessor_commercial_building(pin_norm, force=fresh or _expired(prev, "ASSR_COMM_BLDG", now))
-    prop_assoc = fetch_assessor_prop_association(pin_norm, force=fresh or _expired(prev, "ASSR_PROP_ASSOCIATION", now))
-    assr_sales_dalet = fetch_assessor_sales_datalet(pin_norm, force=fresh or _expired(prev, "ASSR_SALES", now))  
-    notice_sum = fetch_assessor_notice_summary(pin_norm, force=fresh or _expired(prev, "ASSR_NOTICE_SUMMARY", now))
-    appeals = fetch_assessor_appeals_coes(pin_norm, force=fresh or _expired(prev, "ASSR_APPEALS", now))
-    assr_hie = fetch_assessor_hie_additions(pin_norm, force=fresh or _expired(prev, "ASSR_HIE_ADDN", now))
-    # --- Recorder of Deeds first (we use its associated pins to widen PTAX search) ---
-    rod = fetch_recorder_bundle(pin_norm, top_n=1)
-    rod_norm = (rod or {}).get("normalized", {}) or {}
-    assoc_pins = rod_norm.get("associated_pins_dashed") or []
+    bor = fetch_bor(pin_raw, force=fresh or _expired(prev, "BOR", now))
+    cv = fetch_cv(pin_raw, force=fresh or _expired(prev, "CV", now))
+    sales = fetch_sales(pin_raw, force=fresh or _expired(prev, "SALES", now))
+    permits = fetch_permits(pin_raw, force=fresh or _expired(prev, "PERMITS", now))
+    assr_vals = fetch_assessor_values(pin_raw, force=fresh or _expired(prev, "ASSR_VALUES", now))
+    assr_profile = fetch_assessor_profile(pin_raw, force=fresh or _expired(prev, "ASSR_PROFILE", now))
+    assr_maildetail = fetch_assessor_maildetail(pin_raw, force=fresh or _expired(prev, "ASSR_MAILDETAIL", now))
+    assr_exempt = fetch_assessor_exemptions(pin_raw, force=fresh or _expired(prev, "ASSR_EXEMPT", now))
+    assr_location = fetch_assessor_location(pin_raw, force=fresh or _expired(prev, "ASSR_LOCATION", now))
+    assr_land = fetch_assessor_land(pin_raw, force=fresh or _expired(prev, "ASSR_LAND", now))
+    assr_res = fetch_assessor_residential(pin_raw, force=fresh or _expired(prev, "ASSR_RESIDENTIAL", now))
+    assr_oby = fetch_assessor_other_structures(pin_raw, force=fresh or _expired(prev, "ASSR_OBY", now))
+    comm_bldg = fetch_assessor_commercial_building(pin_raw, force=fresh or _expired(prev, "ASSR_COMM_BLDG", now))
+    prop_assoc = fetch_assessor_prop_association(pin_raw, force=fresh or _expired(prev, "ASSR_PROP_ASSOCIATION", now))
+    assr_sales_dalet = fetch_assessor_sales_datalet(pin_raw, force=fresh or _expired(prev, "ASSR_SALES", now))  
+    notice_sum = fetch_assessor_notice_summary(pin_raw, force=fresh or _expired(prev, "ASSR_NOTICE_SUMMARY", now))
+    appeals = fetch_assessor_appeals_coes(pin_raw, force=fresh or _expired(prev, "ASSR_APPEALS", now))
+    assr_hie = fetch_assessor_hie_additions(pin_raw, force=fresh or _expired(prev, "ASSR_HIE_ADDN", now))
+    # --- Associated PINs: Detail index first; ROD fallback if trivial ---
+    from fetchers import get_assessor_associated_pins
+    assoc_und = get_assessor_associated_pins(pin_raw)  # undashed 14-digit list
+
+    if len(set(assoc_und)) <= 1:
+        # Not meaningful from Detail → fallback to ROD to try to expand the group
+        rod = fetch_recorder_bundle(pin_raw, top_n=1)
+        rod_norm = (rod or {}).get("normalized", {}) or {}
+        assoc_pins = rod_norm.get("associated_pins_dashed") or []
+        # bring back to undashed so PTAX input is consistent
+        assoc_und = [undashed_pin(p) for p in assoc_pins if p]
+    else:
+        # Detail gave us a real group; still fetch ROD so we can show its section
+        rod = fetch_recorder_bundle(pin_raw, top_n=1)
+        assoc_pins = [normalize_pin(p) for p in assoc_und]  # dashed for UI
+
 
     # Build PTAX search input = base + associated (unique, capped at 20)
-    pins_for_ptax = [pin_norm] + assoc_pins
+    pins_for_ptax = [pin_raw] + assoc_und
     seen = set()
     pins_for_ptax = [p for p in pins_for_ptax if not (p in seen or seen.add(p))][:20]
 
@@ -158,7 +171,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
     # Shape output based on config-driven sections
     payload = {
-        "pin": pin_norm,
+        "pin": pin_dash,
         "generated_at": now.isoformat() + "Z",
         "sections": {
             "property_info": _shape_property_info(bor, cv, assr_maildetail, assr_profile),
@@ -180,7 +193,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "permits": _shape_permits(permits),
             "hie_additions": assr_hie.get("normalized", {}),
             "ptax": {
-                "base_pin": pin_norm,
+                "base_pin": pin_raw,
                 "associated_pins": assoc_pins,
                 "pin_search_input": pins_for_ptax,
                 "by_declaration_id": bundle,
@@ -188,7 +201,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             },
             "recorder_of_deeds": (rod or {}).get("normalized", {}),
             "nearby": _shape_nearby(bor, cv),
-            "links": _shape_links(pin_norm),
+            "links": _shape_links(pin_raw),
             
         },
 
@@ -224,10 +237,21 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
     }
 
-    _CACHE[ck] = {
-        "data": payload,
-        "stamps": {k: now for k in TTL}
-    }
+    stamps = prev.get("stamps", {}).copy()
+    for key, obj in [
+        ("BOR", bor), ("CV", cv), ("SALES", sales), ("PERMITS", permits),
+        ("ASSR_VALUES", assr_vals), ("ASSR_PROFILE", assr_profile),
+        ("ASSR_MAILDETAIL", assr_maildetail), ("ASSR_EXEMPT", assr_exempt),
+        ("ASSR_LOCATION", assr_location), ("ASSR_LAND", assr_land),
+        ("ASSR_RESIDENTIAL", assr_res), ("ASSR_OBY", assr_oby),
+        ("ASSR_COMM_BLDG", comm_bldg), ("ASSR_PROP_ASSOCIATION", prop_assoc),
+        ("ASSR_SALES", assr_sales_dalet), ("ASSR_NOTICE_SUMMARY", notice_sum),
+        ("ASSR_APPEALS", appeals), ("ASSR_HIE_ADDN", assr_hie),
+        ("PTAX_MAIN", ptax_main), ("ROD", rod),
+    ]:
+        if obj and obj.get("_status", "ok") == "ok":
+            stamps[key] = now
+    _CACHE[ck] = {"data": payload, "stamps": stamps}
     return payload
 
 def _expired(prev, key: str, now) -> bool:
@@ -373,8 +397,8 @@ def _shape_nearby(bor, cv):
     # stub; wire your class+distance logic here later
     return {"rows": []}
 
-def _shape_links(pin_norm):
+def _shape_links(pin_raw):
     return {
-        "CookViewer": f"https://maps.cookcountyil.gov/cookviewer/?search={pin_norm}",
+        "CookViewer": f"https://maps.cookcountyil.gov/cookviewer/?search={pin_raw}",
         "PRC": f"https://data.cookcountyassessor.com/ (requires login)",
     }

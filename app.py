@@ -5,8 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import os
+from utils import normalize_pin, undashed_pin  # canonical helpers
 
 from orchestrator import get_pin_summary
+import json
+from utils import undashed_pin
+from assessor_assoc import get_associated_pins
+
 
 print("ILLINOIS_APP_TOKEN set:", bool(os.getenv("ILLINOIS_APP_TOKEN")))
 
@@ -15,7 +20,7 @@ app = FastAPI(title="PIN Tool API", version="0.1.0")
 # CORS (tighten later)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
     allow_credentials=False,
     allow_methods=["GET"],
     allow_headers=["*"],
@@ -33,55 +38,59 @@ def pin_summary(pin: str, fresh: int = Query(0, ge=0, le=1)):
     fresh=1 → bypass cache (always revalidate sources)
     fresh=0 → use smart revalidation and TTLs
     """
-    data = get_pin_summary(pin, fresh=bool(fresh))
-    return JSONResponse(data)
+    try:
+        # validate strictly; normalize once
+        pin_dash = normalize_pin(pin)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    try:
+        data = get_pin_summary(pin_dash, fresh=bool(fresh))
+        return JSONResponse(data)
+    except Exception as e:
+        # avoid leaking internals
+        raise HTTPException(status_code=502, detail="Failed to assemble PIN summary")
 
 # ---- Static docs (served at "/") ----
 STATIC_DIR = Path(__file__).parent / "docs"
 print("Serving docs from:", STATIC_DIR.resolve(), "exists:", STATIC_DIR.exists())
-app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+if STATIC_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+else:
+    print("Docs directory missing; static mount skipped.")
 
-# ---- Subscription: manifest & associations ----
-import psycopg2
-import psycopg2.extras
-
-def _db():
-    return psycopg2.connect(os.environ["DATABASE_URL"])
 
 @app.get("/subs/manifest")
 def subs_manifest():
-    sql = """
-      SELECT town_code, pass, last_update, head_pins_count, detail_pins_count
-      FROM assessor_manifest
-      ORDER BY town_code
-    """
-    with _db() as conn, conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        cur.execute(sql)
-        rows = cur.fetchall()
-        return [dict(r) for r in rows]
+    mpath = Path(__file__).parent / "data" / "manifest.json"
+    # If you use ASSESSOR_DATA_DIR:
+    # mpath = (Path(os.getenv("ASSESSOR_DATA_DIR")) / "manifest.json") if os.getenv("ASSESSOR_DATA_DIR") else mpath
+    if not mpath.exists():
+        return []
+    try:
+        data = json.loads(mpath.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    out = []
+    for town_code, row in (data.get("towns") or {}).items():
+        out.append({
+            "town_code": int(town_code),
+            "pass": None,
+            "last_update": row.get("last_update"),
+            "head_pins_count": row.get("head_pins"),
+            "detail_pins_count": row.get("detail_pins"),
+        })
+    out.sort(key=lambda r: r["town_code"])
+    return out
 
-def normalize_pin(pin: str) -> str:
-    only = "".join(ch for ch in pin if ch.isdigit())
-    return only.zfill(14)[:14]
+
 
 @app.get("/subs/associations/{pin}")
 def get_associations(pin: str):
-    p = normalize_pin(pin)
-    with _db() as conn, conn.cursor() as cur:
-        # 1) If pin appears as an associated child, resolve its key
-        cur.execute("SELECT key_pin FROM assessor_detail_v22 WHERE pin=%s", (p,))
-        row = cur.fetchone()
-        if row:
-            key = row[0]
-        else:
-            # 2) Maybe it is the key itself
-            cur.execute("SELECT key_pin FROM assessor_header_v22 WHERE key_pin=%s", (p,))
-            row2 = cur.fetchone()
-            if not row2:
-                raise HTTPException(status_code=404, detail="PIN not found in subscription tables")
-            key = row2[0]
+    p14 = undashed_pin(pin)
+    group = get_associated_pins(p14)  # returns [key, *children] (undashed 14)
+    if not group:
+        raise HTTPException(status_code=404, detail="PIN not found in local index")
+    key = group[0]
+    assoc = sorted(set(group[1:]))
+    return {"key_pin": key, "associated": assoc}
 
-        # 3) Pull the full group
-        cur.execute("SELECT pin FROM assessor_detail_v22 WHERE key_pin=%s ORDER BY pin", (key,))
-        assoc = [r[0] for r in cur.fetchall()]
-        return {"key_pin": key, "associated": assoc}

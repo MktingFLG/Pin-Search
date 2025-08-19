@@ -5,7 +5,8 @@ services:
     env: python
     plan: starter
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app:app --host 0.0.0.0 --port 10000
+    startCommand: uvicorn app:app --host 0.0.0.0 --port 10000 --workers 2 --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -28,12 +29,9 @@ services:
       #   value: your-user
       # - key: CCAO_PASS
       #   value: your-pass
+      # - key: ILLINOIS_APP_TOKEN
+      #   sync: false
+      # - key: ALLOWED_ORIGINS
+      #   value: https://your-frontend.example
 
-databases:
-  - name: pin-tool-db
 
-cronJobs:
-  - name: refresh-townships
-    schedule: "0 */4 * * *"
-    command: python -m subscription.refresh_all
-    service: pin-tool-refresh

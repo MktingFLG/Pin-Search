@@ -15,3 +15,12 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local caches & data
+raw_cache/
+data/*.zip
+data/*/_index/
+data/*/20??-??-??/
+
+# Secrets (if used locally)
+.env.local

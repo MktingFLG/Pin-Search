@@ -1,3 +1,4 @@
+#refresh_all.py
 """
 subscription/refresh_all.py
 - Scheduled job entrypoint (Render worker/cron)
@@ -42,12 +43,25 @@ def main():
         if not town_needs_update(r):
             continue
 
+        # Re-fetch tokens just before download to keep VIEWSTATE valid
+        tokens, _ = get_grid_and_tokens(sess)
         print(f"⏬ Downloading town {r['town_code']} ({r['township']}) …", flush=True)
-        zip_bytes = download_town_zip(sess, tokens, r["ctrl_name"])
+        try:
+            tokens, _ = get_grid_and_tokens(sess)
+            zip_bytes = download_town_zip(sess, tokens, r["ctrl_name"])
+        except Exception as e:
+            print(f"❌ Download failed for town {r['town_code']}: {e}", flush=True)
+            continue
         digest = sha256(zip_bytes)
+        # Optional: if manifest already has this hash, skip (in case last_update date didn’t change)
+        # (You can keep town_needs_update as-is; this is a belt-and-suspenders guard)
 
         print("🔓 Unzipping …", flush=True)
-        df_head, df_det = unzip_header_detail(zip_bytes)
+        try:
+            df_head, df_det = unzip_header_detail(zip_bytes)
+        except Exception as e:
+            print(f"❌ Unzip/parse failed for town {r['town_code']}: {e}", flush=True)
+            continue
 
         print("📥 Importing header/detail …", flush=True)
         bulk_upsert_header(df_head, r["town_code"])

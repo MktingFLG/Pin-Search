@@ -34,3 +34,11 @@ def undashed_pin(pin: str) -> str:
     if len(d) != _PIN_DIGITS:
         raise ValueError(f"PIN must have {_PIN_DIGITS} digits after stripping, got {len(d)}: {pin!r}")
     return d
+
+
+def try_normalize_pin(pin: str):
+    try:
+        dash = normalize_pin(pin)
+        return True, dash, undashed_pin(dash), None
+    except Exception as e:
+        return False, None, None, str(e)

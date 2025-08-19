@@ -1,4 +1,6 @@
 # scripts/check_index_coverage.py
+# this read the header and teh deatil files that was downloaded from the subscription and saved in teh git repo
+# built to check if all the pins from all the files were read to build the associated pins map
 # Reads index & manifest JSONs and detail XLSX files directly from GitHub (raw).
 # Prints coverage and consistency checks by township + overall.
 
