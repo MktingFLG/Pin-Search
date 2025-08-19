@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="format-detection" content="telephone=no">
+    <title>Property Records Search | Clerk's Recordings System</title>
+    <noscript>
+
+        <meta http-equiv="refresh" content="0;URL=http://crs.cookcountyclerkil.gov/Home/EnableJavascript" />
+        
+    </noscript>
+
+    <script src="/Scripts/popper.js"></script>
+    <script src="/bundles/modernizr?v=inCVuEFe6J4Q07A0AcRsbJic_UE5MwpRMNGcOtk94TE1"></script>
+
+    <script src="/bundles/jquery?v=8Oos0avDZyPg-cbyVzvkIfERIE1DGSe3sRQdCSYrgEQ1"></script>
+
+
+    <script src="/Scripts/bootstrap.js"></script>
+
+    
+
+    <link href="/Content/css?v=rsU2Eji0u9P2WvZEOnL1IuAZ4thNyibej24hJDWdkAY1" rel="stylesheet"/>
+
+
+    
+
+
+    <link href="/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+    <script src="/bundles/maskedinput?v=IndHTEQMh70Ra3yP5TZNrwDp50M1KbiN0kpoXmd4k_01"></script>
+
+
+    
+
+    
+    <script src="/Scripts/jquery.maskedinput-1.4.1.js"></script>
+
+
+
+    <link href="/Content/jquery-ui.css" rel="stylesheet" />
+    <link rel="icon" href="https://www.cookcountyclerkil.gov/themes/custom/clerk/cookcountyclerk.ico" />
+
+    <link href="/Content/Site.css?v=1" rel="stylesheet" />
+    <script type="text/javascript" src="/Scripts/jquery-ui.js"></script>
+
+    
+    
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.date').mask("99/99/9999");
+            //$('.phone_with_ddd').mask('000-000-0000');
+            $('.zip').mask('99999');
+
+
+        });
+        function clearForm(form) {
+            var $f = $(form);
+            var $f = $f.find(':input').not(':button, :submit, :reset, :hidden');
+            $f.val('').attr('value', '').removeAttr('checked').removeAttr('selected');
+
+        }
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!--<script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>-->
+    
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+</head>
+<body>
+    
+
+    <div class="bg-light container">
+        <div class="mRow">
+            <div class="Column" style="width:8%;">
+                <div class="nav-clerk-logo-link">
+                    <a href="/Search">
+                        <img src="/Images/seal.png" />
+                    </a>
+                </div>
+            </div>
+            <div class="Column p-0 m-0 pt-3" style="vertical-align:top;">
+                <div class="text-end" id="cartDisplay">
+                    <div class="shoppingCart ms-2">
+    <a href="/Cart" class="no-textdecoration" id="lnkCart">
+0    </a>
+</div>
+
+                </div>
+                <div class="font-weight-boldOld text-uppercase float-left" style="font-size:12px;">Recordings</div>
+
+                <div class="smallFont text-uppercase float-left">
+                    Cook County Clerk's Office
+                </div>
+
+                <hr class="w-100 float-left p-0 mt-0 mb-0" />
+
+                <div class="float-left">
+                    <span class="appTitle small"><small></small></span>
+
+                    <div class="text-end">
+
+                        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                            <div class="container-fluid ps-0">
+                                <div class="ms-auto">
+                                    <button class="navbar-toggler btn btn-primary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                        <span class="navbar-toggler-icon1"><i class="fa fa-bars fa-lg" style="background-color:#337AB7;color:white; "></i></span>
+                                    </button>
+                                </div>
+                                <div class="collapse navbar-collapse collapse w-100 order-3 dual-collapse2 text-end" id="navbarSupportedContent">
+                                    <ul class="navbar-nav ms-auto" style="font-size :15px;">
+                                        <li class="nav-item text-start">
+
+                                            <a href="/Search" class="nav-link menuActiveLink"><i class="fa fa-search"></i> Search</a>
+                                            
+                                        </li>
+                                        
+                                        <li class="nav-item text-start">
+                                            <a href="/Public" class="nav-link "><i class="fa fa-commenting-o"></i> Property Fraud Alert</a>
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/MailTracking?returnUrl=%2FSearch%2FResult%3Fid1%3D24171010750000" class="nav-link "><i class="fa fa-envelope-o"></i> Mail Tracking</a>
+
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/ChangeRequest" class="nav-link "><i class="fa fa-table"></i> Indexing Corrections</a>
+                                        </li>
+                                            <li class="nav-item text-start">
+                                                <a href="/Order/Search?column=OrderDate&amp;direction=desc" class="nav-link "><i class="fa fa-table"></i> Orders</a>
+                                            </li>
+                                                                                    <li class="nav-item text-start">
+                                                <a href="/Account/Login?returnUrl=%2FSearch%2FResult%3Fid1%3D24171010750000" class="nav-link "><i class="fa fa-sign-in"></i> Account</a>
+
+                                            </li>
+
+
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </nav>
+                        
+
+                    </div>
+
+
+
+                </div>
+            </div>
+
+            
+        </div>
+
+        
+
+
+    </div>
+
+
+
+
+
+    <div class="container">
+        <div class="row ">
+            <div class="breadcrumb container m-0 p-0">
+                <p class="float-right m-0">
+
+                    
+    <text>Search Results - Documents</text>
+
+                </p>
+            </div>
+            <div class="bg-white">
+                
+                
+
+
+                
+            </div>
+            
+            <div class="container mt-1">
+                
+                <div class="row container-box" style="padding:5px 20px;">
+                    
+
+
+
+
+<script src="/Scripts/Custom.js"></script>
+<input id="inputStr" name="inputStr" type="hidden" value="24171010750000" />
+<div class="row mt-2">
+    <div class="col-md-6">
+        
+        
+        <a href="/Search">Start a new Search</a>
+        
+    </div>
+</div>
+<form action="/Search?strAction=Result" method="post"><input name="__RequestVerificationToken" type="hidden" value="iqUDbHvV-f5Z7IUDvnuziSoGWgOfx6iKs9gJGiNo6XJtTC8EyOhUfQuaFTgjFFhvLOPJ-mHtQs7nV__yGMo2yYuJBK41" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div class="row pt-2">
+        <div class="col-md-8 mx-auto">
+            <div class="form-group input-group">
+
+                <input type="search" id="inputField" name="inputField"  placeholder="Enter Search Criteria Here" class="form-control fs-5" value="24171010750000" style="padding: 0.175rem 0.15rem;" />
+                <button type="submit" id="btnSearch" name="submitButton" value="FullSearch" class="btn btn-primary">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                </button>
+
+            </div>
+            
+        <div class="text-center small mt-1">
+            Documents Indexed Through: 08-06-2025
+                <span> | </span>
+            <a data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                <i class="fa fa-info-circle me-1" aria-hidden="true"></i>Search Tips
+            </a>
+            
+        </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="collapse small text-center" id="collapseExample">
+                <strong>
+                    Search by PIN:
+                </strong>  30-31-220-032-0000 or 30312200320000 <br />
+                <strong>
+                    Search by First Name, Last Name, and Street Address:
+                </strong>  John Smith 18058 Burnham <br />
+                <strong>
+                    Search by FirstName, Last Name, and House Number:
+                </strong>  John Smith 18058 <br />
+                <strong>
+                    Search by FirstName, Last Name, and Street Name:
+                </strong>  John Smith Burnham <br />
+                <strong>  Search by Document Number: </strong> 2222113250
+            </div>
+            
+        </div>
+    </div>
+</form><form action="/Cart/AddItem" id="__AjaxAntiForgeryForm" method="post"><input name="__RequestVerificationToken" type="hidden" value="hXdKJBqRQwNvWLr0IfSuLzshC2KQqJrgaEa1VT4UrESlEo55OePzxNEUPFVzKcofVISZkms_q3HJtX3E7QOqv2nYFsk1" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="hfd"></div>
+<div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="result">
+            <fieldset>
+                <legend class="border-bottom">Documents</legend>
+                <div class="row">
+                    <div class="col-md-12 mt-3">
+                        <p style="color:red;"><strong>No Document(s) found. </strong></p>
+                    </div>
+                </div>
+            </fieldset>
+    </div>
+</form>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            //Highlight();
+            var totalSelected = 0;
+            //var $dialog = $("#modaldiag");
+            var $dialog = $('<div class="modal fade" id="modaldiag" tabindex="-1" role="dialog" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered justify-content-center" role = "document"><span class="fa fa-spinner fa-spin fa-3x"></span></div></div>');
+            /*var mi = new bootstrap.Modal($dialog);*/
+
+            $(document).on('click', '#selectAll', function (e) {
+                $('input:checkbox').not(this).prop('checked', this.checked);
+                $("#totalSelected").empty();
+                totalSelected = 0;
+
+                $("table > tbody > tr").each(function () {
+                    $(this).removeClass("table-success");
+                });
+                if (this.checked) {
+                    $('input[type=checkbox][class=docitem]').each(function () {
+                        if (this.checked) {
+                            var arr = {};
+                            totalSelected = totalSelected + 1;
+                            $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>'); // <input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+                        }
+                    });
+                    $("table > tbody > tr").each(function () {
+                        $(this).addClass("table-success");
+                    });
+
+                }
+            });
+
+            $(document).on('click', 'input[type=checkbox][class=docitem]', function (e) {
+                $("#totalSelected").empty();
+                if (this.checked) {
+                    totalSelected = totalSelected + 1;
+                    $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    $(this).closest('tr').addClass("table-success");
+
+                }
+                else {
+                    $(this).closest('tr').removeClass("table-success");
+                    totalSelected = totalSelected - 1;
+                    if (totalSelected <= 0) {
+                        $("#totalSelected").empty();
+                    }
+                    else {
+                        $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    }
+                }
+            });
+
+            $(document).on('click', '#btnSearch', function (e) {
+                $dialog.modal('show');
+            });
+
+            $(document).on('click', '#btnAddDoc, #btnAddData,  #btnAddCert, #btnAllData', function (e) {
+
+
+                if (totalSelected > 0) {
+                    $dialog.modal('show');
+                    var obj = $(this).attr('href');
+                    var all = "";
+                    if ($(this).attr('id') == "btnAllData") {
+                        all = "all";
+                    }
+                    $dialog.on('shown.bs.modal', function (e) {
+                        var url = "/Cart/AddItem";
+                        loadData(obj, all, url, $dialog);
+
+                        $('#selectAll').prop('checked', false);
+                        $("#totalSelected").empty();
+                        $('input[type=checkbox][class=docitem]').prop('checked', false);
+                        $("table > tbody > tr").each(function () {
+                            $(this).removeClass("table-success");
+                            totalSelected = 0;
+                        });
+
+                    });
+                    $dialog.modal('hide');
+
+
+                }
+                else {
+                    alert("Select your documents before adding to the cart.");
+                }
+                e.preventDefault();
+                return false;
+            });
+
+            //$(window).on("beforeunload", function (e) {
+            //    window.setInterval(function () {
+            //        $dialog.modal('hide');
+            //    }, 3000);//Check if receive cookie from server by second
+
+            //});
+
+          if (isSafari) {
+            $(window).on('load', function () {
+                window.setInterval(function () {
+                    $dialog.modal('hide');
+                }, 1000);//Check if receive cookie from server by second
+            });
+        }
+        else {
+            $(window).on("beforeunload", function (e) {
+                window.setInterval(function () {
+
+                    var url = "/search/searchstatus";
+
+                    $.ajax({
+                        type: "GET",
+                        url: url,
+                        async: false,
+                        data: null,
+                        success: function (data) {
+                            if (data.Success == "true") {
+                                $dialog.modal('hide');
+                            }
+                        },
+                        error: function (xhr, staus, error) {
+
+                        }
+
+                    });
+
+                }, 1000);
+
+            });
+        }
+
+
+
+            $(document).on('click', '.searchresult', function (e) {
+
+                 $("#result").empty();
+
+                var href = $(this).attr('href');
+                var result = GetParam(href);
+
+                var url = "/search/sortresult";
+
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    async: false,
+                    data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    },
+                    error: function (xhr, staus, error) {
+
+                    }
+
+                });
+
+
+                e.preventDefault();
+                return false;
+
+            });
+            $(document).on('click', '#Paging a[href]', function (e) {
+                //debugger;
+                var href = $(this).attr('href');
+                //alert(href);
+                
+
+                var url = "/search/sortresult";
+                $.ajax({
+                    type: "GET",
+                    url:href,
+                    //data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    }
+                });
+
+                e.preventDefault();
+                return false;
+            });
+
+            window.onpopstate = function () {
+                $dialog.modal('hide');
+            }
+
+            //$(window).on('popstate', function () {
+            //    //alert('here');
+            //    $dialog.modal('hide');
+            //});
+
+
+
+            function Highlight() {
+
+                $("table > tbody > tr > td:find('2127')").css("color", "yellow");
+                $("table > tbody > tr > td > a:contains('2127')").css("color", "yellow");
+
+                /*var sourceText = $("#inputStr").val();*/
+                //var value = "2127";
+                //var arr = $("#inputStr").val().split(" ");
+                //var result = $("#tblData").html();
+                //var text = result;
+                //text = text.replace(value, "<mark>" + value + "</mark>");
+                ////$.each(arr, function (index, value) {
+                ////    text = text.replace(value, "<mark>" + value + "</mark > ");
+                ////});
+                //$("#tblData").html(text);
+            }
+
+            function GetParam(href) {
+                var result = {};
+                var pars = href.split("?")[1].split("&");
+
+                for (var i = 0; i < pars.length; i++) {
+                    var tmp = pars[i].split("=");
+                    result[tmp[0]] = tmp[1];
+                }
+                return result;
+            }
+
+
+            //$("#btnAddDoc, #btnAddData,  #btnAddCert").unbind().click(function () {
+
+            //});
+
+            //$(document).on('click', ''', function (e) {
+
+            //    e.preventDefault();
+            //    if (totalSelected > 0) {
+
+            //        $dialog.modal('show');
+            //        var obj = $(this).attr('class');
+            //        $dialog.on('shown.bs.modal', function (e) {
+            //            loadData(obj);
+
+            //        });
+            //        $dialog.modal('hide');
+            //    }
+            //    return false;
+            //});
+            //function testData(btn) {
+            //    var form = $('#__AjaxAntiForgeryForm');
+            //    var token = $('input[name="__RequestVerificationToken"]', form).val();
+            //    $('input[type=checkbox]').each(function () {
+            //        if (this.checked) {
+            //            var docId = $(this).attr("name");
+
+            //            $("#hfd").append('<input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+            //            index = index + 1;
+
+            //        }
+            //    });
+
+            //    var docs = [
+            //        { DocId: 25303231 },
+            //        { DocId: 36606619 },
+            //        { DocId: 26374988 }
+            //    ];
+            //}
+        });
+
+</script>
+
+
+                </div>
+            </div>
+        </div>
+        <hr />
+        <footer style="margin-top:10px;">
+           
+            <div class="footerLeft">
+                <p>&copy; Copyright 2025 Cook County Clerk's Office. All Rights Reserved.</p>
+
+            </div>
+            <div class="footerRight">
+                <p class="cookCounty"><a href="https://www.cookcountyclerkil.gov/recordings/search-recordings" target="_blank" class="cookCountyLink">Go To Cook County Clerk's Website</a></p>
+            </div>
+            <div class="clear">
+            </div>
+        </footer>
+    </div>
+
+</body>
+
+
+</html>

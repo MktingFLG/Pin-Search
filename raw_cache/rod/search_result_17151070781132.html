@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="format-detection" content="telephone=no">
+    <title>Property Records Search | Clerk's Recordings System</title>
+    <noscript>
+
+        <meta http-equiv="refresh" content="0;URL=http://crs.cookcountyclerkil.gov/Home/EnableJavascript" />
+        
+    </noscript>
+
+    <script src="/Scripts/popper.js"></script>
+    <script src="/bundles/modernizr?v=inCVuEFe6J4Q07A0AcRsbJic_UE5MwpRMNGcOtk94TE1"></script>
+
+    <script src="/bundles/jquery?v=8Oos0avDZyPg-cbyVzvkIfERIE1DGSe3sRQdCSYrgEQ1"></script>
+
+
+    <script src="/Scripts/bootstrap.js"></script>
+
+    
+
+    <link href="/Content/css?v=rsU2Eji0u9P2WvZEOnL1IuAZ4thNyibej24hJDWdkAY1" rel="stylesheet"/>
+
+
+    
+
+
+    <link href="/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+    <script src="/bundles/maskedinput?v=IndHTEQMh70Ra3yP5TZNrwDp50M1KbiN0kpoXmd4k_01"></script>
+
+
+    
+
+    
+    <script src="/Scripts/jquery.maskedinput-1.4.1.js"></script>
+
+
+
+    <link href="/Content/jquery-ui.css" rel="stylesheet" />
+    <link rel="icon" href="https://www.cookcountyclerkil.gov/themes/custom/clerk/cookcountyclerk.ico" />
+
+    <link href="/Content/Site.css?v=1" rel="stylesheet" />
+    <script type="text/javascript" src="/Scripts/jquery-ui.js"></script>
+
+    
+    
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.date').mask("99/99/9999");
+            //$('.phone_with_ddd').mask('000-000-0000');
+            $('.zip').mask('99999');
+
+
+        });
+        function clearForm(form) {
+            var $f = $(form);
+            var $f = $f.find(':input').not(':button, :submit, :reset, :hidden');
+            $f.val('').attr('value', '').removeAttr('checked').removeAttr('selected');
+
+        }
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!--<script async src="https://www.googletagmanager.com/gtag/js?id=G-1SM56R5RNE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-1SM56R5RNE');
+    </script>-->
+    
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+</head>
+<body>
+    
+
+    <div class="bg-light container">
+        <div class="mRow">
+            <div class="Column" style="width:8%;">
+                <div class="nav-clerk-logo-link">
+                    <a href="/Search">
+                        <img src="/Images/seal.png" />
+                    </a>
+                </div>
+            </div>
+            <div class="Column p-0 m-0 pt-3" style="vertical-align:top;">
+                <div class="text-end" id="cartDisplay">
+                    <div class="shoppingCart ms-2">
+    <a href="/Cart" class="no-textdecoration" id="lnkCart">
+0    </a>
+</div>
+
+                </div>
+                <div class="font-weight-boldOld text-uppercase float-left" style="font-size:12px;">Recordings</div>
+
+                <div class="smallFont text-uppercase float-left">
+                    Cook County Clerk's Office
+                </div>
+
+                <hr class="w-100 float-left p-0 mt-0 mb-0" />
+
+                <div class="float-left">
+                    <span class="appTitle small"><small></small></span>
+
+                    <div class="text-end">
+
+                        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                            <div class="container-fluid ps-0">
+                                <div class="ms-auto">
+                                    <button class="navbar-toggler btn btn-primary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                        <span class="navbar-toggler-icon1"><i class="fa fa-bars fa-lg" style="background-color:#337AB7;color:white; "></i></span>
+                                    </button>
+                                </div>
+                                <div class="collapse navbar-collapse collapse w-100 order-3 dual-collapse2 text-end" id="navbarSupportedContent">
+                                    <ul class="navbar-nav ms-auto" style="font-size :15px;">
+                                        <li class="nav-item text-start">
+
+                                            <a href="/Search" class="nav-link menuActiveLink"><i class="fa fa-search"></i> Search</a>
+                                            
+                                        </li>
+                                        
+                                        <li class="nav-item text-start">
+                                            <a href="/Public" class="nav-link "><i class="fa fa-commenting-o"></i> Property Fraud Alert</a>
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/MailTracking?returnUrl=%2FSearch%2FResult%3Fid1%3D17151070781132" class="nav-link "><i class="fa fa-envelope-o"></i> Mail Tracking</a>
+
+                                        </li>
+                                        <li class="nav-item text-start">
+                                            <a href="/ChangeRequest" class="nav-link "><i class="fa fa-table"></i> Indexing Corrections</a>
+                                        </li>
+                                            <li class="nav-item text-start">
+                                                <a href="/Order/Search?column=OrderDate&amp;direction=desc" class="nav-link "><i class="fa fa-table"></i> Orders</a>
+                                            </li>
+                                                                                    <li class="nav-item text-start">
+                                                <a href="/Account/Login?returnUrl=%2FSearch%2FResult%3Fid1%3D17151070781132" class="nav-link "><i class="fa fa-sign-in"></i> Account</a>
+
+                                            </li>
+
+
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </nav>
+                        
+
+                    </div>
+
+
+
+                </div>
+            </div>
+
+            
+        </div>
+
+        
+
+
+    </div>
+
+
+
+
+
+    <div class="container">
+        <div class="row ">
+            <div class="breadcrumb container m-0 p-0">
+                <p class="float-right m-0">
+
+                    
+    <text>Search Results - Documents</text>
+
+                </p>
+            </div>
+            <div class="bg-white">
+                
+                
+
+
+                
+            </div>
+            
+            <div class="container mt-1">
+                
+                <div class="row container-box" style="padding:5px 20px;">
+                    
+
+
+
+
+<script src="/Scripts/Custom.js"></script>
+<input id="inputStr" name="inputStr" type="hidden" value="17151070781132" />
+<div class="row mt-2">
+    <div class="col-md-6">
+        
+        
+        <a href="/Search">Start a new Search</a>
+        
+    </div>
+</div>
+<form action="/Search?strAction=Result" method="post"><input name="__RequestVerificationToken" type="hidden" value="Dzw6plxcxZM2PDf760wYuAs-m7R-RS4LtIV1hq1cgi1IvchaLyyv3aPw3kgwxqm8oY03XkvNdzAnwKVnv97Y3nwQ3uo1" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div class="row pt-2">
+        <div class="col-md-8 mx-auto">
+            <div class="form-group input-group">
+
+                <input type="search" id="inputField" name="inputField"  placeholder="Enter Search Criteria Here" class="form-control fs-5" value="17151070781132" style="padding: 0.175rem 0.15rem;" />
+                <button type="submit" id="btnSearch" name="submitButton" value="FullSearch" class="btn btn-primary">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                </button>
+
+            </div>
+            
+        <div class="text-center small mt-1">
+            Documents Indexed Through: 08-06-2025
+                <span> | </span>
+            <a data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                <i class="fa fa-info-circle me-1" aria-hidden="true"></i>Search Tips
+            </a>
+            
+        </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="collapse small text-center" id="collapseExample">
+                <strong>
+                    Search by PIN:
+                </strong>  30-31-220-032-0000 or 30312200320000 <br />
+                <strong>
+                    Search by First Name, Last Name, and Street Address:
+                </strong>  John Smith 18058 Burnham <br />
+                <strong>
+                    Search by FirstName, Last Name, and House Number:
+                </strong>  John Smith 18058 <br />
+                <strong>
+                    Search by FirstName, Last Name, and Street Name:
+                </strong>  John Smith Burnham <br />
+                <strong>  Search by Document Number: </strong> 2222113250
+            </div>
+            
+        </div>
+    </div>
+</form><form action="/Cart/AddItem" id="__AjaxAntiForgeryForm" method="post"><input name="__RequestVerificationToken" type="hidden" value="_gLojaKGmANgBnalW4SLHI7NfnTAUv6rELUOFLbc-GG9nURx7L6I4v6D-u6S6T-XT34blLqivayuUplqsRzwoQvp3d81" /><div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="hfd"></div>
+<div class="validation-summary-valid text-danger" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>    <div id="result">
+
+
+
+
+    <div class="row mb-2 mt-2">
+
+        <div class="col-md-6">
+            Total Documents : <span class="text-big-and-bold">30</span>         </div>
+    </div>
+
+<div>
+    <span class="fw-bold">Click the boxes to select your documents before adding to the cart.</span><br />
+        <span class="small">You may remove documents from your cart by clicking the “Shopping Cart”, which is located on the upper right corner of the page.</span>
+</div>
+<div class="row mb-1">
+            <div class="col-md-2 pt-2 productlist">
+                <a href="1" id="btnAddDoc" class="1 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Documents</a>
+            </div>
+            <div class="col-md-3 pt-2 productlist">
+                <a href="2" id="btnAddData" class="3 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Certified Documents</a>
+            </div>
+            <div class="col-md-3 pt-2 productlist">
+                <a href="3" id="btnAddData" class="3 CartItemButton" title="Select your documents"> <i class="fa fa-shopping-cart" style="color:lightblue;"></i> Buy Search Result (No Images)</a>
+            </div>
+    
+    
+
+    
+    
+</div>
+
+
+<div class="table-responsive">
+        <div id="totalSelected"></div>
+            <table id="tblData" class="table table-hover table-responsive tblfmt">
+                <thead>
+                    <tr>
+                        <td scope="col" class="align-middle"><input id="selectAll" name="selectAll" title="Select All" type="checkbox" value="true" /><input name="selectAll" type="hidden" value="false" /></td>
+                        <th scope="col" class="align-middle text-center">
+                            <span >View Doc</span>
+                        </th>
+                        <th scope="col"><a href='/Search/sortresult?id1=17151070781132&column=AlphaDocNumber&direction=asc&page=1' class='searchresult'> Doc Number</a></th>
+
+                        <th scope="col" class="text-center">
+                            <a href='/Search/sortresult?id1=17151070781132&column=DateRecorded&direction=asc&page=1' class='searchresult'><i class='fa fa-sort-up' style='color:orange;'></i> Doc Recorded</a>
+                        </th>
+                        <th scope="col" class="text-center">
+                            <a href='/Search/sortresult?id1=17151070781132&column=DateExecuted&direction=asc&page=1' class='searchresult'> Doc Executed</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17151070781132&column=DocTypeDescription&direction=asc&page=1' class='searchresult'> Doc Type</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17151070781132&column=FirstGrantor&direction=asc&page=1' class='searchresult'> 1st Grantor</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17151070781132&column=FirstGrantee&direction=asc&page=1' class='searchresult'> 1st Grantee</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17151070781132&column=RefDocNum&direction=asc&page=1' class='searchresult'> Assoc. Doc#</a>
+                        </th>
+                        <th scope="col">
+                            <a href='/Search/sortresult?id1=17151070781132&column=FirstPin&direction=asc&page=1' class='searchresult'> 1st PIN</a>
+                        </th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="45232649" type="checkbox" value="true" /><input name="45232649" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDUyMzI2NDk1&amp;hId=NGM0NThhODA3MjU3OGI3YzEwNzMzYThjYzNhNGZhZjNkNGFlMjczMTAwZjU2ZmNiMjU5YTI3OTU0MjdkNjIyYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2515328000</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/2/2025</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/27/2025</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTU2MjQwMDc1">AMERICAN COMM BK OF INDIANA</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTM5NTU0Ng2">VAUGHN CORLISS R</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDIyMjM5ODk1&amp;hId=NTVkODVmYjIxMmU3NjBkMGZjYmQ1ZTAzN2E5NWZjOWM2OGQ3ODg4MmZjZjhjN2NmNTcwNzRmZDY1YTM3OTA1Mw2">1929017059</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781016">17-15-107-078-1016</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="45220630" type="checkbox" value="true" /><input name="45220630" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDUyMjA2MzA1&amp;hId=NTA1NTlmZmFhYjg1NDg5NGVjZDY3NzgwZGE4NGQ2MmFhZWM5YzM1OGMyNTM2MmM1ZDM5YjY4NjhhYmIyMjhjZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2514222233</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/22/2025</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/16/2025</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTUzNjkyMDQ1">BOLDEN CARLOS R</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTAzNDU1MDM1">1ST SOURCE BK</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781016">17-15-107-078-1016</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="45220631" type="checkbox" value="true" /><input name="45220631" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDUyMjA2MzE1&amp;hId=YmQzNDQxMDI1MDg0NmJmYjJmMzQ0NTE1ZmRkZjc4M2U0ZTBlMGU0YWRmMmQ5M2U0MjI1ZjBiOGUzMWE0MDRlNw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2514222232</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/22/2025</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/16/2025</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>TRUSTEES DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTY3OTA1MDI1">LAND TRUST CO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTUzNjkyMDQ1">BOLDEN CARLOS R</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781016">17-15-107-078-1016</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="43864232" type="checkbox" value="true" /><input name="43864232" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDM4NjQyMzI1&amp;hId=NThlOTY0YjMyMjMxYTNjZGIxNDFiNGQ3ZmM5ODQ2MDUyZGM0ZDRiMWJiZGQyMTMwYjJlNjI5OTVlYWI4MTExYw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2207522039</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/16/2022</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/11/2019</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>DEED IN TRUST</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTY5NTYzMg2">VAUGHN THOMAS E</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTYwNzg4MzM1">CHICAGO TITLE LAND TRUST CO TR</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781016">17-15-107-078-1016</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="43535392" type="checkbox" value="true" /><input name="43535392" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDM1MzUzOTI1&amp;hId=YzM1ZTI5MjhmMzU1OTYxM2Y2ZDllOWVmNzUwYzQ4MWNiMmFhMWM2MTdhZjgzYzkzZTJlNDVlNDgyNTc5YWIyYg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2125942024</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/16/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/29/2021</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTU3MzgxNjc1">THE METRO TOWER CONDO ASSN</a>
+                            </td>
+                            <td class="align-middle">
+                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDAwNjE1NTg1&amp;hId=ODk3MTY4YmM3MjQ0YzllNzFiZGM5ZDFlNjJlZDYzZTkwMjExYTMzMzM5NDA5YzhjOWRhOWVmMGM4MjU4NjEyMw2">1611819107</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="43535391" type="checkbox" value="true" /><input name="43535391" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDM1MzUzOTE1&amp;hId=ZTc0MTc3YjUxMzhmZTk5N2QwODM1YzJlZmViZTU4Mzk1NmQzYTJjZjE1ZWRiMDJlNTQ2YzIyNDJhN2U2MjdmMA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>2125942023</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>9/16/2021</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/24/2021</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA3NTY3NDE1">METROPOLITAN TOWER CONDO ASSN</a>
+                            </td>
+                            <td class="align-middle">
+                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42223989" type="checkbox" value="true" /><input name="42223989" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDIyMjM5ODk1&amp;hId=NTVkODVmYjIxMmU3NjBkMGZjYmQ1ZTAzN2E5NWZjOWM2OGQ3ODg4MmZjZjhjN2NmNTcwNzRmZDY1YTM3OTA1Mw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1929017059</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/17/2019</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/11/2019</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MORTGAGE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTY5NTYzMg2">VAUGHN THOMAS E</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTU0MTM2NTc1">AMERICANH COMM BK INDIANA</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDUyMzI2NDk1&amp;hId=NGM0NThhODA3MjU3OGI3YzEwNzMzYThjYzNhNGZhZjNkNGFlMjczMTAwZjU2ZmNiMjU5YTI3OTU0MjdkNjIyYg2">2515328000</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781016">17-15-107-078-1016</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="42223988" type="checkbox" value="true" /><input name="42223988" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDIyMjM5ODg1&amp;hId=Y2YyZDBiMDNhYTg4MzYzM2E1MDVhZTRlMjk1Y2ZhYmI2YzUwYmQ4NjQyNTJkMDc1MjQzMTM4YmJiYWQxZDYwYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1929017058</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/17/2019</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>10/10/2019</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTE5MTA2NjY1">PONTERI JOSEPH</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=OTY5NTYzMg2">VAUGHN THOMAS E</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781016">17-15-107-078-1016</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="41531189" type="checkbox" value="true" /><input name="41531189" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDE1MzExODk1&amp;hId=Zjc5NThjMjRiMDQ0NTc5NThhMTRjOGNiYjcwMTI1NmI1MTc5MGIwZjYwOTM2NWM5YjFlYjRkY2JhZGEwMjI0YQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1819434071</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/13/2018</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/14/2018</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA3NTY3NDE1">METROPOLITAN TOWER CONDO ASSN</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="41531190" type="checkbox" value="true" /><input name="41531190" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDE1MzExOTA1&amp;hId=NTQwZTI1ZmI4NDQ3ZDkzM2Q5NjM0YjI1YmUwNzkzZGUwYTUzZTZkZWQxYzZjYzY3NjA4YjFiNzc3OGViNmMyMQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1819434072</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>7/13/2018</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/14/2018</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIwMjI4MDE1">METROPOLITAN TOWER CONDO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="40698900" type="checkbox" value="true" /><input name="40698900" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDA2OTg5MDA1&amp;hId=ODI0NTVlZTBiNzE0NGMxODM3OTVkOWUzNDcyMmI0NmY1OGViNjljMDhjNzZlMjcyMjAzOTgzN2MzZDhlMzY5Yw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1705442095</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/23/2017</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>11/21/2016</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>EASEMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI5MjcyMTc1">METROPOLITAN TOWER CONDOMINIUM ASSOCIATION</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTEwNDMzNzY1">COMCAST CHICAGO INC</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="40061558" type="checkbox" value="true" /><input name="40061558" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=NDAwNjE1NTg1&amp;hId=ODk3MTY4YmM3MjQ0YzllNzFiZGM5ZDFlNjJlZDYzZTkwMjExYTMzMzM5NDA5YzhjOWRhOWVmMGM4MjU4NjEyMw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1611819107</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>4/27/2016</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA3NTY3NDE1">METROPOLITAN TOWER CONDO ASSN</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDEzMzkwNjA1&amp;hId=MDg2NDI5ZTYyOTBhZGQzMmVhNmM4ODM4YjFiYWY2MmIwZmU1YThjOWZlYmNmMGI1ZGQ0ZjZhYzU2YjBjODlkYQ2">1807834088</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="38548101" type="checkbox" value="true" /><input name="38548101" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=Mzg1NDgxMDE1&amp;hId=NzJmY2Y5OTZhMTRkNDI0N2E3MzRjZDUyY2IwNGUxNzNiMmMxYmI0YWFkZmFkZWQ0MWRkNTM1OGNmYjljMDAyMg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1414339037</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/23/2014</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>5/15/2014</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA3NTY3NDE1">METROPOLITAN TOWER CONDO ASSN</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="35817969" type="checkbox" value="true" /><input name="35817969" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzU4MTc5Njk1&amp;hId=MjVmNWM2NTg0OWMxODU4NmE1OWE5YzJlZDUwZmVjOWU4ODYwMjE2NDU1YWU5M2Y0MGI4ODhlMmFhMzJjMmU3NQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1104829114</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/17/2011</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/28/2011</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIwMjI4MDE1">METROPOLITAN TOWER CONDO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="35817968" type="checkbox" value="true" /><input name="35817968" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzU4MTc5Njg1&amp;hId=NTA1OTRjNjE3Y2RiODE5MDViN2ExZmFjNjdjM2JiNzMwNmIxZDhlNDFlOTZkNWY2NTA1Njk2ZDUwNDQyMDhkZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1104829113</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/17/2011</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/25/2011</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI5MjcyMTc1">METROPOLITAN TOWER CONDOMINIUM ASSOCIATION</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="35671531" type="checkbox" value="true" /><input name="35671531" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzU2NzE1MzE1&amp;hId=YWE2ZWEyMDEzZGJlZTU0ODJhZDY0OThiYzQwMjYzODJkZDYyMzhiMWMyMTA0MTQzZmQ3YjQ3ODIyNWYwM2U4OQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1035631000</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/22/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/2/2010</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>LIEN</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTMwMzI3NDY1">BOARD MANAGERS OF METROPOLITAN TOWER CONDO ASSN</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIzODY5MjE1">PENTHOUSE PARTNERS LLC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=NDQxNzc2MjU1&amp;hId=M2UzY2M2YmIzMjJhN2M2YTFkZDRiYWQ1ZWViODJlYmNkODYwZGQ5OTYzMTBiN2QyYzM5MTFhMzA5YzgxMmE2Mw2">2228525018</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="35165694" type="checkbox" value="true" /><input name="35165694" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzUxNjU2OTQ1&amp;hId=MDRmMTM5NDY0YTRiNWEzZDE3ZDJmMmVmMjVlZjFhOGM1NmEwNzMxMzNhZjEzN2Q1ZGJlMjhjZjVlNmM4OTYwNg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1016118052</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/10/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>6/10/2010</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIwMjI4MDE1">METROPOLITAN TOWER CONDO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34989076" type="checkbox" value="true" /><input name="34989076" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ5ODkwNzY1&amp;hId=OGRjM2NjZDEyNGY3ZWQ0MTA5ZTAzMzYxYWY4NWFiNzc2NTI1ZDdlMjU3OTU2ZDQxODJlZjhlMmVmYzk1ZjBiNw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1009018100</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/31/2010</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI3MjcxMjg1">METROPOLITAN TOWER II LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34980068" type="checkbox" value="true" /><input name="34980068" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ5ODAwNjg1&amp;hId=NWM4N2VhOTU3Y2Y4ZTcwOWJhZjUzYTlkMDkwM2RlZWUwMDI0NDM3NGM3NWM1OWIwZmNjODAyY2Q0YjNlMzFmMA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1008529131</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/26/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/23/2010</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>ASSIGNMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTMxNjYyNw2">310 S MICHIGAN AVE LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTI3MjcxMjg1">METROPOLITAN TOWER II LLC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34965141" type="checkbox" value="true" /><input name="34965141" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ5NjUxNDE1&amp;hId=MzM1OWFjMmNiMmQ1ZmQ4NTc2MmVjMmI1MjBiNTNkZmMzYzRhMGEyMDExNmVmODQ2YjRhODEzZTJhNTY4NzhlMg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1008129063</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/22/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/22/2010</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA3NTY3NDE1">METROPOLITAN TOWER CONDO ASSN</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34961926" type="checkbox" value="true" /><input name="34961926" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ5NjE5MjY1&amp;hId=ZWU1MTI4NzhhNzg4OGE2NWI2NzI3ZmRkMjg2MGQxNWE4NmY5N2Q2ZjNlOWE3Yjg4MzhmZDJlOWE5NmZkMGM2Ng2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1007834017</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/19/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/17/2010</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTMxNjYyNw2">310 S MICHIGAN AVE LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34961925" type="checkbox" value="true" /><input name="34961925" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ5NjE5MjU1&amp;hId=NTFiNDZjYTZhNzc0NmM0OTY1YTUwNDMzYWI1ZWM2ZjExNGI2Y2YyODUzNTNkMmJlODcxYmYxOTg5NWQ2NmFhZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1007834016</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/19/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>3/17/2010</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTMxNjYyNw2">310 S MICHIGAN AVE LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34855565" type="checkbox" value="true" /><input name="34855565" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ4NTU1NjU1&amp;hId=MTZjZDkwNWVhNTIzZDMxMTNiM2RiMmEyMTVhOWFkZmQyNjE0Y2I1ODAyN2JmMTc2ZjNjODliY2YzYjNhMWRlNg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1004008041</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/9/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/25/2010</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT CONDO DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTIwMjI4MDE1">METROPOLITAN TOWER CONDO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2">0735103078</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781016">17-15-107-078-1016</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34844636" type="checkbox" value="true" /><input name="34844636" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ4NDQ2MzY1&amp;hId=YzEwOTY5Y2NlZDdlZjdlYTAxNGRkMjQ4NGM5ODBkMGRjOTYxZTg3NmVkNjdmYzdmMjYxNjYwMjRhYzBlNzBmMQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1003510034</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>2/4/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/26/2010</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>RELEASE</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTAyMDIwODY1">CHICAGO</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTMxNjYyNw2">310 S MICHIGAN AVE LLC</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34757986" type="checkbox" value="true" /><input name="34757986" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ3NTc5ODY1&amp;hId=OGU0YjllYWE1MTA1MTg5YTdkZGJkMmRhNDlkMDgwNDE2OTBkZjY2ZDJkM2FmODJkNzk4MDE5ZjE0NGZmNzVmZg2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1000425006</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/4/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                
+                            </td>
+                            <td class="align-middle">
+                                <span>NOTARIAL RECORD</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODQyMDk1">UNKNOWN</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODQyMDk1">UNKNOWN</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781016">17-15-107-078-1016</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="34759338" type="checkbox" value="true" /><input name="34759338" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzQ3NTkzMzg1&amp;hId=NGFmYTlhY2JjYTIyMDljNjNiMjYwYmNmYWFhZWE3YmJjZTAzNmI2YjFjNWZjNGIzOTg3YmViMzNkMDExYTI0Nw2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>1000444025</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/4/2010</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/17/2009</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTMxNjYyNw2">310 S MICHIGAN AVE LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTE5MTA2NjY1">PONTERI JOSEPH</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781016">17-15-107-078-1016</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33775928" type="checkbox" value="true" /><input name="33775928" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzM3NzU5Mjg1&amp;hId=ZTI0NDEyM2IwOGI0NmIxNmFjY2FhYjdkOTU3MDY5OWUzYWU2ZDFmMDM4YjlkNTE0NzI4ZjgzOTBmMDNlYzdiNQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0900529079</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>1/5/2009</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/31/2008</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>MEMORANDUM</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTMxNjYyNw2">310 S MICHIGAN AVE LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTE4NjYxODA1">ISTAR FM LOANS LLC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzAzMTI2MTA1&amp;hId=NmMyMjBlMjI3ZGEzMmE1MWEwZDI4N2I1ZWY5OTEwNTI1YTBiNDg3ODljYzQ3YTMyMmFiZGFkY2RmOGZlYWU4ZA2">0615110115</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="33480757" type="checkbox" value="true" /><input name="33480757" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzM0ODA3NTc1&amp;hId=NGMxYzI5NGI5MzRhOTMxNjI0YjZhNzA2MjAxM2UyZWFkMjliOTg0NTVmYTRlODZlMDkyNTUwNzYyOTFkZTMyYQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0824216033</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/29/2008</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>8/28/2008</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>AMENDMENT</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTMxNjYyNw2">310 S MICHIGAN AVE LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI2NTQyMTA1&amp;hId=ZDE1OGNmMmVlYTcxNDJlYmUzY2UyZjhkYzUyYWNjYjNhOGQ1YzYxM2E3ZmU2NmM3MmM3MWFmNmE4N2FiNWFmOA2">0735103077</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="32654206" type="checkbox" value="true" /><input name="32654206" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzI2NTQyMDY1&amp;hId=NWI4ZDVjMzFlNWRhNDI5MjBkOTY3ZjBkNTFkMGU4ZjlhOGMzNmRjYTdjMmQxNWEzNjMwOWQ4MWE0MjViYTU2MQ2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0735103073</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/17/2007</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/7/2007</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>WARRANTY DEED</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MjQ1NzQ0NQ2">318 S MICHIGAN AVE LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTMxNjYyNw2">310 S MICHIGAN AVE LLC</a>                            </td>
+                            <td class="align-middle">
+
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <input class="docitem" name="32654211" type="checkbox" value="true" /><input name="32654211" type="hidden" value="false" />
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="/Document/Detail?dId=MzI2NTQyMTE1&amp;hId=ODljMjI0ZGNmMjU1YTcyMjEwZmEzNDdlMjU0MTg2M2ViZGJhZjM5NDJkNmU0NTZmNGM4ZWY4NGUzODUzZjc0ZA2" style="display:block;" title="View Document Details">View</a> 
+                            </td>
+                            <td class="align-middle">
+                                <span x-ms-format-detection="none"><span>0735103078</span></span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/17/2007</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <span>12/17/2007</span>
+                            </td>
+                            <td class="align-middle">
+                                <span>CONDOMINIUM DECLARATION</span>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=NTMxNjYyNw2">310 S MICHIGAN AVE LLC</a>
+                            </td>
+                            <td class="align-middle">
+<a href="/Search/ResultByName?id1=MTA1ODA1NjE1">PUBLIC</a>                            </td>
+                            <td class="align-middle">
+<a href="/Document/Detail?dId=MzI3NzI5MDE1&amp;hId=YzBjZTBmZmMyYmIwM2E4YWMwMTI5YjM5YTc0NzdhMDgyM2ViMWFlZTcxYmY4Y2E1MWY4Mjg0MzMxMmNiMDc3OA2">0802515052</a>
+                            </td>
+                            <td class="align-middle">
+
+<a href="/Search/ResultByPin?id1=17151070781001">17-15-107-078-1001</a>                                <br />
+                                    <span class="small"><span>310 S MICHIGAN AVE, CHICAGO</span></span>
+
+
+
+                            </td>
+
+                        </tr>
+                </tbody>
+            </table>
+        <br />
+        <div id='Paging' style="text-align: left;">
+            Page 1 of 1 <span class="ml-2">Page Size: 100</span>
+            <div class="pagination-container"><ul class="pagination"><li class="active"><a>1</a></li></ul></div>
+        </div>
+        <p class="small">The CCCO indexes documents by Legal Description, grantor/grantee name, Property Index Number, and Document Number.   Address is only for informational purposes and should not be relied upon.   CCCO does not guarantee legality or accuracy of address information. CCCO accepts no liability for damages incurred directly, indirectly, incidental, punitive or consequential, as a result of address errors, omissions or discrepancies</p>
+<p class="text-start small mark">
+    <b> Please Note: </b> Annexations, Condominium declarations, Dedications, Easements, Highway plats, Monuments, Plats, Vacations/Dedications, and Real estate transfer declarations are not available for purchase on our website. If you would like a copy
+    of these document types, you may purchase them at our <a target="_blank" href="https://www.cookcountyclerkil.gov/about/locations/downtown-chicago-recordings">downtown office</a>.
+</p>
+</div>
+    </div>
+</form>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            //Highlight();
+            var totalSelected = 0;
+            //var $dialog = $("#modaldiag");
+            var $dialog = $('<div class="modal fade" id="modaldiag" tabindex="-1" role="dialog" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered justify-content-center" role = "document"><span class="fa fa-spinner fa-spin fa-3x"></span></div></div>');
+            /*var mi = new bootstrap.Modal($dialog);*/
+
+            $(document).on('click', '#selectAll', function (e) {
+                $('input:checkbox').not(this).prop('checked', this.checked);
+                $("#totalSelected").empty();
+                totalSelected = 0;
+
+                $("table > tbody > tr").each(function () {
+                    $(this).removeClass("table-success");
+                });
+                if (this.checked) {
+                    $('input[type=checkbox][class=docitem]').each(function () {
+                        if (this.checked) {
+                            var arr = {};
+                            totalSelected = totalSelected + 1;
+                            $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>'); // <input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+                        }
+                    });
+                    $("table > tbody > tr").each(function () {
+                        $(this).addClass("table-success");
+                    });
+
+                }
+            });
+
+            $(document).on('click', 'input[type=checkbox][class=docitem]', function (e) {
+                $("#totalSelected").empty();
+                if (this.checked) {
+                    totalSelected = totalSelected + 1;
+                    $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    $(this).closest('tr').addClass("table-success");
+
+                }
+                else {
+                    $(this).closest('tr').removeClass("table-success");
+                    totalSelected = totalSelected - 1;
+                    if (totalSelected <= 0) {
+                        $("#totalSelected").empty();
+                    }
+                    else {
+                        $("#totalSelected").html('<span>' + totalSelected + ' Selected <span>');
+                    }
+                }
+            });
+
+            $(document).on('click', '#btnSearch', function (e) {
+                $dialog.modal('show');
+            });
+
+            $(document).on('click', '#btnAddDoc, #btnAddData,  #btnAddCert, #btnAllData', function (e) {
+
+
+                if (totalSelected > 0) {
+                    $dialog.modal('show');
+                    var obj = $(this).attr('href');
+                    var all = "";
+                    if ($(this).attr('id') == "btnAllData") {
+                        all = "all";
+                    }
+                    $dialog.on('shown.bs.modal', function (e) {
+                        var url = "/Cart/AddItem";
+                        loadData(obj, all, url, $dialog);
+
+                        $('#selectAll').prop('checked', false);
+                        $("#totalSelected").empty();
+                        $('input[type=checkbox][class=docitem]').prop('checked', false);
+                        $("table > tbody > tr").each(function () {
+                            $(this).removeClass("table-success");
+                            totalSelected = 0;
+                        });
+
+                    });
+                    $dialog.modal('hide');
+
+
+                }
+                else {
+                    alert("Select your documents before adding to the cart.");
+                }
+                e.preventDefault();
+                return false;
+            });
+
+            //$(window).on("beforeunload", function (e) {
+            //    window.setInterval(function () {
+            //        $dialog.modal('hide');
+            //    }, 3000);//Check if receive cookie from server by second
+
+            //});
+
+          if (isSafari) {
+            $(window).on('load', function () {
+                window.setInterval(function () {
+                    $dialog.modal('hide');
+                }, 1000);//Check if receive cookie from server by second
+            });
+        }
+        else {
+            $(window).on("beforeunload", function (e) {
+                window.setInterval(function () {
+
+                    var url = "/search/searchstatus";
+
+                    $.ajax({
+                        type: "GET",
+                        url: url,
+                        async: false,
+                        data: null,
+                        success: function (data) {
+                            if (data.Success == "true") {
+                                $dialog.modal('hide');
+                            }
+                        },
+                        error: function (xhr, staus, error) {
+
+                        }
+
+                    });
+
+                }, 1000);
+
+            });
+        }
+
+
+
+            $(document).on('click', '.searchresult', function (e) {
+
+                 $("#result").empty();
+
+                var href = $(this).attr('href');
+                var result = GetParam(href);
+
+                var url = "/search/sortresult";
+
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    async: false,
+                    data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    },
+                    error: function (xhr, staus, error) {
+
+                    }
+
+                });
+
+
+                e.preventDefault();
+                return false;
+
+            });
+            $(document).on('click', '#Paging a[href]', function (e) {
+                //debugger;
+                var href = $(this).attr('href');
+                //alert(href);
+                
+
+                var url = "/search/sortresult";
+                $.ajax({
+                    type: "GET",
+                    url:href,
+                    //data: { id1: result.id1, column: result.column, direction: result.direction, page: result.page },
+                    success: function (data) {
+                        $("#result").html(data);
+                    }
+                });
+
+                e.preventDefault();
+                return false;
+            });
+
+            window.onpopstate = function () {
+                $dialog.modal('hide');
+            }
+
+            //$(window).on('popstate', function () {
+            //    //alert('here');
+            //    $dialog.modal('hide');
+            //});
+
+
+
+            function Highlight() {
+
+                $("table > tbody > tr > td:find('2127')").css("color", "yellow");
+                $("table > tbody > tr > td > a:contains('2127')").css("color", "yellow");
+
+                /*var sourceText = $("#inputStr").val();*/
+                //var value = "2127";
+                //var arr = $("#inputStr").val().split(" ");
+                //var result = $("#tblData").html();
+                //var text = result;
+                //text = text.replace(value, "<mark>" + value + "</mark>");
+                ////$.each(arr, function (index, value) {
+                ////    text = text.replace(value, "<mark>" + value + "</mark > ");
+                ////});
+                //$("#tblData").html(text);
+            }
+
+            function GetParam(href) {
+                var result = {};
+                var pars = href.split("?")[1].split("&");
+
+                for (var i = 0; i < pars.length; i++) {
+                    var tmp = pars[i].split("=");
+                    result[tmp[0]] = tmp[1];
+                }
+                return result;
+            }
+
+
+            //$("#btnAddDoc, #btnAddData,  #btnAddCert").unbind().click(function () {
+
+            //});
+
+            //$(document).on('click', ''', function (e) {
+
+            //    e.preventDefault();
+            //    if (totalSelected > 0) {
+
+            //        $dialog.modal('show');
+            //        var obj = $(this).attr('class');
+            //        $dialog.on('shown.bs.modal', function (e) {
+            //            loadData(obj);
+
+            //        });
+            //        $dialog.modal('hide');
+            //    }
+            //    return false;
+            //});
+            //function testData(btn) {
+            //    var form = $('#__AjaxAntiForgeryForm');
+            //    var token = $('input[name="__RequestVerificationToken"]', form).val();
+            //    $('input[type=checkbox]').each(function () {
+            //        if (this.checked) {
+            //            var docId = $(this).attr("name");
+
+            //            $("#hfd").append('<input type="hidden" name="Selecteditem[' + index + ']" value="' + docId + '"/>');
+            //            index = index + 1;
+
+            //        }
+            //    });
+
+            //    var docs = [
+            //        { DocId: 25303231 },
+            //        { DocId: 36606619 },
+            //        { DocId: 26374988 }
+            //    ];
+            //}
+        });
+
+</script>
+
+
+                </div>
+            </div>
+        </div>
+        <hr />
+        <footer style="margin-top:10px;">
+           
+            <div class="footerLeft">
+                <p>&copy; Copyright 2025 Cook County Clerk's Office. All Rights Reserved.</p>
+
+            </div>
+            <div class="footerRight">
+                <p class="cookCounty"><a href="https://www.cookcountyclerkil.gov/recordings/search-recordings" target="_blank" class="cookCountyLink">Go To Cook County Clerk's Website</a></p>
+            </div>
+            <div class="clear">
+            </div>
+        </footer>
+    </div>
+
+</body>
+
+
+</html>

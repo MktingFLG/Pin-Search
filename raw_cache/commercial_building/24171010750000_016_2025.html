@@ -1,0 +1,801 @@
+<!DOCTYPE HTML>
+<html lang='en-US' XMLNS:MPC><head runat='server'>
+	                            <title>Cook County, IL Property Tax Information</title>
+                                <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
+                                <meta http-equiv='X-UA-Compatible' content='IE=9' />
+	                            <meta http-equiv='Keywords' content='CAMA, Assessment Administration, Tax'>
+	                            <meta http-equiv='Description' content='iasWorld'>
+	                            <meta name='Copyright' content='Tyler Technologies Inc, Akanda Solutions, LLC'> 
+                                <link rel='icon' href='https://assessorpropertydetails.cookcountyil.govfavicon.ico' type='image/x-icon'>
+                                <link rel='shortcut icon' href='https://assessorpropertydetails.cookcountyil.govfavicon.ico' type='image/x-icon'>
+                                <meta http-equiv='pragma' content='no-cache'>
+                            </head><link rel='stylesheet' href='https://assessorpropertydetails.cookcountyil.gov/styles/font-awesome.min.css' type='text/css'><link rel='stylesheet' href='https://assessorpropertydetails.cookcountyil.gov/styles/styles.css' type='text/css'><link rel='stylesheet' href='https://assessorpropertydetails.cookcountyil.gov/styles/custom/override-CookIL.css' type='text/css'><body id='thebody' class='normalpage' ><div id='pagewrapper'><div id='divSMaint' style='display:none;border-bottom:2px solid red;width:780'><table role='presentation' cellpadding='0' cellspacing='0' width=780><tr id='trSMaint' class='MessageBar' style='height:21px;vertical-align:middle;'><td id='tdSMaint'>&nbsp;The System is currently unavailable due to maintenance.  Please check again later.</td><td id='tdTimer' align='right'></td><td align="right" valign="middle" onmouseout="ChangeImage('out')" onmouseover="ChangeImage('over')"><img id="CloseMsgBar" src="../images/icons/Set1/closeicon-normal.gif" height="14px" alt="Hide Bar" style="vertical-align:middle; border:solid 1px white; cursor:pointer" onclick="HideBar()"  />&nbsp;</td></tr></table></div><script type='text/javascript' language='javascript'>function HideBar() { document.getElementById('divSMaint').style.display='none';SoapInvokeService(WS_ACCESS_MANAGER, 'HideBar', null, false)}function ChangeImage(el) { var img = document.getElementById('CloseMsgBar'); if (el == 'out') img.src = img.src.replace('closeicon-mouseover.gif', 'closeicon-normal.gif');  else img.src = img.src.replace('closeicon-normal.gif', 'closeicon-mouseover.gif'); }</script><input type='hidden' id='hdDefHelp' value='0'><input type='hidden' id='hdThisFile' value='datalets/datalet.aspx'><div id='outerheader'><div id='middleheader'>
+
+<header>
+    <div id='header'>
+        <div class='sitelogocontainer'>
+            <a href="https://www.cookcountyassessor.com/" id="aIASWLink" target="_blank"><div class="sitelogo"></div></a>
+        </div>
+        <div class="HeaderSiteTitle"></div>
+        <div id='rightsection' class='HeaderLinks'>
+            <span id="RoleValue" class="HeaderLinks">
+                    </span><span id="lbRole"></span>
+            
+            <span id="contactUs"><A id="linkContactUs" class="HeaderLinks" href="../forms/htmlframe.aspx?mode=content/contactus.html" target="_self">CONTACT US</A>&nbsp;&nbsp;|&nbsp;&nbsp; </span>
+            <span id="lbHelp"><a class="Headerlinks Help" href="javascript:showHelp('')"
+                class='HeaderLinks'>
+                <img src='../images/common/icons/050.png' alt='Help' /></a> &nbsp;&nbsp; </span>
+            
+        </div>
+    </div>
+</header>
+
+<nav>
+       <div id='topmenu'><ul><li class='unsel'><a href='../forms/htmlframe.aspx?mode=content/home.htm' target=''><span>Home</span></a></li><li id='pd_Parent' class='sel' onmouseover='menuOver_pd("pd_2", event, this)' onmouseout='menuOut("pd_2", event, this)' onfocus='menuOver_pd("pd_2", event, this)' onfocusout='menuOut("pd_2", event, this)'><a href='../search/commonsearch.aspx?mode=address' target=''><span>Property Records<span style='font-size: 7'></span></span></a></li></ul></div>
+       <div id='secondarytopmenu'><ul></ul></div>
+   </nav>
+<script language='Javascript' src='../Script/Menu.js'></script>
+<div id='pd_2' class='PullDownMenuLayer' style='visibility:hidden; position: absolute; width:50; top:0; left:0' onmouseover='bMenuOn=true' onmouseout='menuOut(this.id)' onfocus='bMenuOn=true' onfocusout='menuOut(this.id)'>
+<div class='PullDownMenuItem'><a class='PullDownMenuItem' onclick='location="../search/commonsearch.aspx?mode=address"' onmouseover='this.className="MenuRowHL"' 
+onmouseout='menuLinkOut(this); this.className="PullDownMenuItem"' onfocus='this.className="MenuRowHL"' 
+onfocusout='menuLinkOut(this); this.className="PullDownMenuItem"' 
+onmousedown='this.className="MenuRowClicked"'>&nbsp;&nbsp;Address&nbsp;</a></div>
+<div class='PullDownMenuItem'><a class='PullDownMenuItem' onclick='location="../search/commonsearch.aspx?mode=parid"' onmouseover='this.className="MenuRowHL"' 
+onmouseout='menuLinkOut(this); this.className="PullDownMenuItem"' onfocus='this.className="MenuRowHL"' 
+onfocusout='menuLinkOut(this); this.className="PullDownMenuItem"' 
+onmousedown='this.className="MenuRowClicked"'>&nbsp;&nbsp;Parcel Number&nbsp;</a></div>
+<div class='PullDownMenuItem'><a class='PullDownMenuItem' onclick='javascript:window.open("../maps/mapadv.aspx");' onmouseover='this.className="MenuRowHL"' 
+onmouseout='menuLinkOut(this); this.className="PullDownMenuItem"' onfocus='this.className="MenuRowHL"' 
+onfocusout='menuLinkOut(this); this.className="PullDownMenuItem"' 
+onmousedown='this.className="MenuRowClicked"'>&nbsp;&nbsp;Map Search&nbsp;</a></div></div>
+<script type="text/javascript" src="../script/soap.js?220406114842"></script>
+<script type="text/javascript" src="../script/Common.js?220406114840"></script>
+<script type="text/javascript">
+
+    function HeaderClick(link) {
+        var par = window.parent;
+        if (par == window) return true;
+        var op = par.opener;
+        if (op == null) return true;
+        if (op.HeaderClick == null) return true;
+        var id = link.id;
+        var el = op.document.getElementById(id);
+        if (el == null) return true;
+        if (!confirm("This command will close the current window.\nDo you want to proceed?")) return false;
+
+        if (document.createEvent) {
+            var evt = document.createEvent('MouseEvents');
+            evt.initEvent('click', true, false);
+            el.dispatchEvent(evt);
+        } else if (typeof el.onclick == 'function') {
+            el.click();
+        }
+
+        par.close();
+        op.focus();
+        return false;
+    }
+
+    function SetMyHome(url) {
+        var DLG_SETMYHOME = "center:yes; dialogHeight:180px; dialogWidth:240px; help:no; resizable:no; status:no; title:no";
+        window.showModalDialog('../Forms/SetMyHome.aspx?url=' + url, null, DLG_SETMYHOME);
+    }
+
+
+    function ShowSimpleHelp(url) {
+        var DLG_POPUP = "scrollbar= yes, height=600, Width=800, resizable=yes, status=no, titlebar=no";
+        if (url.indexOf("?") > 0) {
+            url += "&";
+        } else {
+            url += "?";
+        }
+        window.open(url, null, DLG_POPUP);
+    }
+
+    function ViewCompleted() {
+        var url = "../Maintain/ReportSpool.aspx?simple=1&runningJobs=0&batchJobs=2";
+        window.open(url, "Reports", "status=1, toolbar=0, height=650px, width=1000px, resizable=1, scrollbars=yes");
+    }
+
+    function PopupWindow2(url) {
+        var DLG_POPUP = "dialogLeft:0; dialogTop: 0; edge: sunken; scroll: yes; center:yes; dialogHeight:750; dialogWidth:1028; help:no; resizable:yes; status:no; title:no";
+        if (url.indexOf("?") > 0) {
+            url += "&";
+        } else {
+            url += "?";
+        }
+        url += "frameset=1";
+        window.showModalDialog(url, null, DLG_POPUP);
+    }
+
+    var gLastPopup = parseInt(Math.random() * 10);
+
+    function PopupWindow(url, noToolbar, name) {
+        var win = null;
+
+        if (name == null)
+            name = "";
+        else
+            name = name.replace(' ', "");
+
+        if (win == null) {
+            if (name == null || name.length == 0) name = "popup" + (gLastPopup++ % 10);
+            var params;
+            if (noToolbar) {
+                params = "fullscreen=no, titlebar=no, location=no, menubar=no, toolbar=no, resizable=yes, scrollbars=yes, status=yes, titlebar=yes";
+            } else {
+                params = null;
+            }
+            win = window.open(url, name, params);
+        }
+        return win;
+    }
+
+    function setRole(val, form) {
+        var url = window.location.href;
+        url = url.replace("#", "");
+        var i = url.indexOf("&");
+        if (i != -1) {
+            url = url.substr(0, i);
+        }
+        var pars = SoapBuildInputParam("SelectedRole", val);
+        pars += SoapBuildInputParam("URL", url);
+        var res = SoapInvokeService(WS_PUBLIC, "AssignSelectedRole", pars);
+        if (res == -1) {
+            location.href = "../Main/Home.aspx";
+        }
+        else {
+            location.reload();
+        }
+    }
+</script>
+</div></div><div id='wrapper' class='center'><div id='sidemenu' valign='top' class='columns' style='width:200; '><nav><div class='contentpanel'><div id='sidemenu'><ul class='navigation'><li class='unsel'><a href='../datalets/datalet.aspx?mode=profileall_cc&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Profile</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=maildetail&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Taxpayer Data</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=exadmn2&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Exemption Status</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=curyear_asmt_values&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Values</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=value_summary_cc&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Value Summary</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=full_legal_cd&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Property Location</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=land_cc&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Land</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=residential_cc&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Residential Building</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=res_addn&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>HIE Additions</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=oby&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Other Structures</span></a></li><li class='sel'><a href='../datalets/datalet.aspx?mode=commercial_bldg_cc&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Commercial Building</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=permit_ck_cc&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Permits</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=prop_association&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Divisions & Consolidations</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=sales&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Sales</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=notice_summary_cc&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Notice Summary</span></a></li><li class='unsel'><a href='../datalets/datalet.aspx?mode=appeals_cc&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Appeals & COEs</span></a></li><li class='unsel'><a href='../maps/map.aspx?UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896' target=''><span>Map</span></a></li></ul></div></div></nav></div><section><div id='bodyarea' >
+
+<script>
+var bOnLoad = false;
+</script>
+ <script src="//code.jquery.com/jquery-3.5.1.js"></script>
+ <script src="//code.jquery.com/jquery-migrate-3.3.1.js"></script>
+<style>
+    .holder { /*width:400px;*/ position:relative; }
+    .columns { float: none !important; }
+</style>
+
+<form name="frmMain" method="POST" action="./datalet.aspx?mode=commercial_bldg_cc&amp;UseSearch=no&amp;pin=24171010750000&amp;jur=016&amp;taxyr=2025&amp;LMparent=896" id="frmMain" style="position:relative;&#32;top:-5px;">
+<div>
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__LASTFOCUS" id="__LASTFOCUS" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['frmMain'];
+if (!theForm) {
+    theForm = document.frmMain;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<div>
+
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="iOo/0CL3iZE2zdRGfoKg+nhT25581ufZfhJjQtE7J0kqArHnSDDSBHAUjBcJUGAm0Uu/+vPauP20f9hasO08HupQZGNgzZ/kyLB9jxHkdqw6ftrB9fg/RthmRSjp+ge+L9SUNmIgj/L7/Fag39vgbYsRnlXWe4dpSzeCcYLaI2mX3H0NgH97tWTy279r8vv4ayGo5mncqBjKuwH2YwpYH9th7LlVt3GQhYWYqUixhrLWIb347rwYuat2DRpiN2D9pYeVSLLloLFbL3vr5+sXT2LPkizWIScIlylHsIucjndsCqVu2TLPVjkNsfvA+zrV6dBJ7KtUTiU8UTCll72UM6PtCxcDmamGb4TtZ2ld8uoVfZeYAjfbqINZbLaUUSErCJRYycvQvHqNEfvzhb5nQGFjU0wXxiiUV4c7BJ+r3zYbYOvBtq8a81ypbkFI9EzStoyngZ4bOvy6NGUkwSkdcQ==" />
+</div>
+
+  <div style='position:relative; top: 5px;' class='columns'>
+  <div class='contentpanel'><div style="min-width:500px; min-height:450px;max-width:1600px;   vertical-align:top;">
+	 <!--Container for datalet-->  
+  <table style="vertical-align:top;" width=600px cellpadding="2" cellspacing="2">
+		<tr>
+			<td valign="top" width="80%">
+				<table border="0" cellpadding="0" cellspacing="0" width="100%" class="WidgetBar" align="center">
+					<tr id="datalet_header_row">
+						<td>
+							<?xml version="1.0" encoding="utf-16"?><table width="100%" border="0" cellspacing="0" cellpadding="0"><tr class="DataletHeaderTop" height="1"><td class="DataletHeaderTop" width="50%" align="left" valign="top" colspan="2" nowrap="1">Parcel #: 24171010750000</td><td class="DataletHeaderTop" width="50%" align="right" valign="top" colspan="2" nowrap="1">Neighborhood: 39151</td></tr><tr height="1" class="BannerTabs"><td colspan="4" height="1" valign="top" width="100%" /></tr><tr class="DataletHeaderTop" height="1"><td class="DataletHeaderBottom" width="50%" align="left" valign="top" colspan="2" nowrap="1">10334 KERRY RIDGE CT</td><td class="DataletHeaderBottom" width="50%" align="right" valign="top" colspan="2">ROLL: RP</td></tr><tr class="DataletHeaderTop" height="1"><td class="DataletHeaderTop" width="25%" align="left" valign="top" colspan="2" nowrap="1">Tax Year: 
+				2025 (Taxes Payable in 2026)
+			</td></tr><tr><td colspan="4" height="1" valign="top" width="100%" /></tr></table>
+
+						</td>
+					</tr> 
+					<tr>
+						<td>
+                            <div class="holder">
+						    	<table align=center _width='100%' border='0' cellPadding=0 cellSpacing=0><tr><td align=center><br><b>-- No Data --</b></td></tr></table>
+
+
+                            </div>
+						</td>
+					</tr>					
+					<tr>
+						<td align="center">
+							<div class="holder">
+                                
+                            </div>
+						</td>
+					</tr>
+					<tr>
+						<td align="center">
+                            <div class="holder">
+							    
+                            </div>
+						</td>
+					</tr>
+					<tr>
+						<td align="center">
+                            <div class="holder">
+							    
+                            </div>
+						</td>
+					</tr>
+					
+				</table>
+			</td>
+		
+		</tr>
+	</table>
+	
+</div></div>
+    </div>
+
+  <!--Column for Side Widget-->
+  
+        <div style='position:relative; top: 5px;' class='columns'>
+				<div class='contentpanel'><div style="align: left; vertical-align:top; width:160px; overflow:hidden;">
+	 <!--Container Right hand panel-->  
+                    <table border="0" cellpadding="0" cellspacing="0" class="WidgetBar" align="center">
+					<tr id="trTaxYear">
+		<td class="DataletHeader" align="right">
+							
+<!-- record navigator: start -->
+
+
+<script type="text/javascript">
+    (function (window) {
+        if (!Tyler) { var Tyler = {}; }
+        Tyler.SyncWindow = function (paramCallback) {
+            var m_isEnabled = ("False" == "True");
+            var m_winRef = null;
+            var m_paramCallback = paramCallback;
+            var m_winName = "SyncWindow_" + "assessorpropertydetailscookcountyilgov";
+            var m_url = "../Forms/SyncWindow.aspx";
+            var m_lastQueryString = "";
+            var me = this;
+
+            this.IsEnabled = function () {
+                /// <summary>returns true if SyncWindow feature is enabled, false otherwise</summary>
+                /// <returns>boolean</returns>
+                return m_isEnabled;
+            }
+
+            this.SetCallback = function (callback) {
+                /// <summary>Sets the parameter callback function to be called by the SyncWindow.Open method</summary>
+                /// <returns>void</returns>
+                m_paramCallback = callback;
+            }
+
+            this.Open = function () {
+                /// <summary>(re)loads the SyncWindow window by passing a URL to it containing qeurystring parameters
+                /// built using the parameter callback function</summary>
+                /// <returns>void</returns>
+                if (m_isEnabled) {
+                    var parms = null;
+                    if (m_paramCallback) parms = m_paramCallback();
+                    if (parms != null) {
+                        var qs = "";
+                        for (var key in parms) {
+                            if (qs.length > 0) qs += "&";
+                            qs += key + "=" + parms[key];
+                        }
+                        if ("#" + qs != m_lastQueryString) {
+                            m_winRef = window.open(m_url + "#" + qs, m_winName);
+                        }
+                    }
+                }
+            }
+
+            this.Listen = function (el, evt) {
+                /// <summary>Registers the SyncWindow object as a listener of an event</summary>
+                /// <param name='el'>HTML element</param>
+                /// <param name='evt'>string event name</param>
+                /// <returns>void</returns>
+                if (el.addEventListener) {
+                    el.addEventListener(evt, this.Open);
+                }
+                else {
+                    el.attachEvent("on" + evt, this.Open);
+                }
+            }
+
+            this.GetBrowserWindowRef = function () {
+                /// <summary>Returns a browser window refernce for the window that was created by the SyncWindow object</summary>
+                /// <returns>browser window ref</returns>
+                return m_winRef;
+            }
+        }
+        
+        window.SyncWindow = new Tyler.SyncWindow();
+    }) (window);
+</script>
+
+
+
+
+<input name="DTLNavigator$idx" type="hidden" id="DTLNavigator_idx" value="1" />
+<table class="WidgetBar" cellspacing="0" cellpadding="0" width="130" border="0">
+
+    <tr align="middle">
+        <td nowrap align="middle" width="130">
+            <table cellspacing="1" cellpadding="1" width="100%" align="center" border="0">
+                <tr valign="middle">
+                    <td valign="middle" align="middle" nowrap="noWrap" style="white-space:nowrap; width: 25px; vertical-align: middle;">
+                        
+                        
+                    </td>
+                    <td width="100%" valign="middle" align="center">
+                        <input name="DTLNavigator$txtFromTo" type="text" id="DTLNavigator_txtFromTo" style="font-size:&#32;11px;&#32;color:&#32;#3d6599;&#32;width:&#32;100%;&#32;border-top-style:&#32;groove;&#32;border-right-style:&#32;groove;&#32;border-left-style:&#32;groove;&#32;border-bottom-style:&#32;groove;&#32;border-bottom-width:&#32;1px;&#32;border-top-width:&#32;1px;&#32;border-right-width:&#32;1px;&#32;border-left-width:&#32;1px;&#32;border-bottom-color:&#32;#3d6599;&#32;border-top-color:&#32;#3d6599;&#32;border-right-color:&#32;#3d6599;&#32;border-left-color:&#32;#3d6599;&#32;height:&#32;100%;&#32;background-color:&#32;white;&#32;text-align:&#32;center;&#32;vertical-align:&#32;top;" readonly="READONLY" value="1&#32;of&#32;1" />
+                    </td>
+                    <td valign="middle" align="middle" nowrap="noWrap" style="white-space:nowrap; width: 25px; vertical-align: middle;">&nbsp;&nbsp;
+                        
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+
+    
+    
+
+    <tr style="height: 6px;">
+        <td></td>
+    </tr>
+    <tr>
+        <td>
+            <hr />
+        </td>
+    </tr>
+    <tr align="left" style="height: 25px;">
+        <td class="SideBarHeading" style="height: 8px; text-align: left;">Actions</td>
+        <br />
+    </tr>
+    <tr align="left">
+        <td></td>
+    </tr>
+
+
+    
+    <tr valign="middle">
+        <td id="DTLNavigator_lbNbhdSearchThis" align="left">
+            <a href="javascript: NBHDSearch('016:24171010750000')">
+                <image alt="Neighborhood Search" border="no" onclick=""
+                    src="../images/new/Parcel.png">
+                  </image>
+                <font class="SideBarTabs"><span style="vertical-align:top;" >Neighborhood Sales</span></font></a>
+        </td>
+		
+    </tr>
+    
+    <tr valign="middle">
+        
+    </tr>
+    
+    <tr>
+        <td id="DTLNavigator_lbPrintAll" align="left">
+            <a href="javascript:PrintDatalet('all')">
+                <image alt="Show all data in a printer friendly version" border="no"
+                    onclick="PrintDatalet()" src="../images/new/print.png" alt="Print">
+                    <font class="SideBarTabs" valign="middle" ><span style="vertical-align:top;" >Printable Summary</span></font></image>
+            </a>
+        </td>
+		
+    </tr>
+    
+    <tr>
+        <td id="DTLNavigator_lbPrintThis" valign="middle" align="left">
+            <a href="javascript:PrintDatalet()">
+                <image alt="Show this page in a printer friendly version" border="no" onclick="PrintDatalet()" alt="Print" src="../images/new/print.png">
+                    <font class="SideBarTabs"><span style="vertical-align:top;" >Printable Version</span></font></image>
+            </a>
+        </td>
+		
+    </tr>
+    
+
+    <!--new workflow stuff starts here-->
+    
+    <tr>
+        <td>
+            
+        </td>
+    </tr>
+    <tr align="left">
+        <td align="left">
+            
+        </td>
+    </tr>
+    
+
+</table>
+<input name="DTLNavigator$hdRecCount" type="hidden" id="DTLNavigator_hdRecCount" value="0" />
+<input type="hidden" id="hdXPin" name="hdXPin" value="24171010750000" />
+<input type="hidden" id="hdXJur" name="hdXJur" value="016" />
+<input type="hidden" id="hdXTaxYr" name="hdXTaxYr" value="" />
+<input name="DTLNavigator$hdTaxYear" type="hidden" id="DTLNavigator_hdTaxYear" />
+<input type="hidden" id="hdXUserName" name="hdXUserName" value="Default" />
+
+<script> 
+
+ var customReportBuilderRows= 0;
+ var bImplementsAjaxRecordNavigator = false;
+ var hasCustomReportBuilder = false;
+   
+    function OpenContactUs(id) {
+    var parid = document.getElementById("hdXPin").value;
+    var jur = document.getElementById("hdXJur").value;
+    var taxyr = document.getElementById("hdXTaxYr").value;
+    var ddtaxyr = document.getElementById("ddTaxYear");
+    if (ddtaxyr != null) {
+        taxyr = ddtaxyr.value;
+    }
+
+    var url = 'http://server.domain.com//contactus/#/contact/'+id + '/' + jur + "/" + parid + "/" + taxyr+ "/W1t7IndpZHRoIjozMCwibGFiZWwiOiJQYXJjZWwgSUQiLCJ2YWx1ZSI6IjI0MTcxMDEwNzUwMDAwIn0seyJ3aWR0aCI6MzAsImxhYmVsIjoiT3duZXIiLCJ2YWx1ZSI6IkxFTk5BUiBDT01NVU5JVElFUyBPRiAifSx7IndpZHRoIjozMCwibGFiZWwiOiJMb2NhdGlvbiIsInZhbHVlIjoiMTAzMzQgS0VSUlkgUklER0UgQ1QifV1d";
+
+
+    window.open(url,"_blank");
+}
+
+
+function CheckSyncWindow() {
+    if (window.SyncWindow.IsEnabled()) {
+        window.SyncWindow.SetCallback(GetSyncWindowParams);
+        window.SyncWindow.Open();
+        if (bImplementsAjaxRecordNavigator) {
+            el = document.getElementById("DTLNavigator_imageFirst");
+            if (el!=null) window.SyncWindow.Listen(el, "click");
+            el = document.getElementById("DTLNavigator_imagePrevious");
+            if (el!=null) window.SyncWindow.Listen(el, "click");
+            el = document.getElementById("DTLNavigator_imageNext");
+            if (el!=null) window.SyncWindow.Listen(el, "click");
+            el = document.getElementById("DTLNavigator_imageLast");
+            if (el!=null) window.SyncWindow.Listen(el, "click");
+
+        }
+    }
+}
+
+function GetSyncWindowParams() {
+    //debugger;
+    var sPinVal = document.getElementById("hdXPin").value;
+    if (sPinVal != "") {
+        var sUserNameVal = document.getElementById("hdXUserName").value;
+        var sJurVal = document.getElementById("hdXJur").value;
+        var sTaxYearVal = document.getElementById("hdXTaxYr").value;
+        var parms = {
+            "USERNAME": sUserNameVal,
+            "JUR": sJurVal,
+            "PARID": sPinVal,
+            "TAXYR": sTaxYearVal
+        };
+        return parms;
+    }
+    else {
+        return null;
+    }
+}
+
+//window.attachEvent("onload", CheckSyncWindow);
+
+function OpenIMEdit(param) {
+    var url = "../Maintain/SelectTransForEdit.aspx?frameset=1&" + param;
+    var dlg = "center:yes; dialogHeight:500px; dialogWidth:500px; help:no; resizable:yes; status:no; title:no";
+    var iMUrl = window.showModalDialog(url, null, dlg);
+    if (iMUrl != null) {
+        var name = "iMaintainTransaction";
+        var s = "location=no, resizable=yes, status=yes, menubar=no"
+        window.open(iMUrl, name, s);
+    }
+}
+
+function EditThis() {
+    var parid = document.getElementById("hdXPin").value;
+    var jur = document.getElementById("hdXJur").value;
+    var taxyr = document.getElementById("hdXTaxYr").value;
+    var ddtaxyr = document.getElementById("DTLNavigator_ddTaxYear");
+    if (ddtaxyr != null) {
+        taxyr = ddtaxyr.value;
+    }
+
+    OpenIMEdit("pin=" + parid + "&jur=" + jur + "&taxyr=" + taxyr);
+}
+function CreateWorkflow() {
+  var WS_WF = "../ActivityCenter/Services/WF.asmx";
+
+  var pars = SoapBuildInputParam("recordCount", 1);
+  var ret = SoapInvokeService(WS_WF, "CanUserCreateWorkflow", pars, false);
+  if (ret) {
+      ret = ret.replace("[br]", "\n");
+      ret = ret.replace("[br]", "\n");
+      ret = ret.replace("[br][br]", "\n\n");
+      alert(ret);
+      return;  // user is not allowed to create workflow
+  }
+
+  var parid = document.getElementById("hdXPin").value;
+  var jur = document.getElementById("hdXJur").value;
+  var taxyr = document.getElementById("hdXTaxYr").value;
+  var ddtaxyr = document.getElementById("ddTaxYear");
+  if (ddtaxyr != null) {
+      taxyr = ddtaxyr.value;
+  }
+  //var url = "../activitycenter/eventpublisher/publishevents.aspx?parid=" + parid + "&jur=" + jur + "&taxyear=" + taxyr;
+  var url = "../activitycenter/eventpublisher/publishevents.aspx?parid=" + jur + ":" + parid + ":" + taxyr;
+  var dlg = "center:yes; dialogHeight:800px; dialogWidth:500px; help:no; resizable:no; status:no; title:no; scroll:off;";
+  window.showModalDialog(url, null, dlg);
+}
+//scripts for Action Links **********************************
+function NBHDSearch(pin) {
+  var url = "../Search/NbhdSearch.aspx?pin=" + pin + "&fromDL=yes";
+  url += "&idx=" + sIdx + "&sIndex=" + sIndex;
+  //	alert(url);
+  document.frmMain.hdSkip.value = 1;
+  document.location.href = url;
+}
+function ProximitySearch(pin) {
+    var url = "../Search/proximitysearch.aspx?pin=" + pin + "&fromDL=yes";
+    url += "&idx=" + sIdx + "&sIndex=" + sIndex;    
+    document.frmMain.hdSkip.value = 1;
+    document.location.href = url;
+}
+function PrintDatalet(val) {
+  var doc = document.frmMain;
+  var url = '../Datalets/PrintDatalet.aspx?pin=' + doc.hdPin.value +
+		'&gsp=' + doc.hdMode.value + '&taxyear=' + doc.hdTaxYear.value +
+		'&jur=' + doc.hdJur.value + '&ownseq=' + doc.hdOwnSeq.value +
+		'&card=' + doc.hdCard.value + '&roll=' + roll +
+		'&State=' + doc.hdMask.value + '&item=' + doc.hdItem.value +
+		'&items=' + doc.hdItems.value + '&all=' + val + "&ranks=" + ranks;
+  window.open(url, 'Print', "location=no, scrollbars=yes, menubar=yes, resizable=yes, width=900");
+}
+
+function CreateComparables() {
+    var url = "../Forms/Comparables.aspx?showSearch=1&sIndex=" + sIndex + "&idx=" + sIdx;
+    window.location.href = url;
+}
+
+$(document).ready(function () {
+
+    if(hasCustomReportBuilder)
+    {
+        getLeftMenuLinks();
+    }       
+});    
+
+function getLeftMenuLinks(){    
+    
+    var links = [];
+    if($('#sidemenu')){
+        
+        $('#sidemenu').find('a').each(function() {
+        
+            var href = $(this).attr('href');
+            var dataletLabel = $(this).find('span').text();        
+            if(href.indexOf('datalet.aspx') != -1)
+            {
+                var stringArray  = href.split("=");
+                var idx = stringArray[1].indexOf('&');
+                if(idx != -1)
+                {
+                    var dataletName = stringArray[1].substr(0, idx);
+                    links.push({ Name: dataletName, Label: dataletLabel, Position: 0})                  
+                }
+            }
+        
+            if(href.indexOf('photoview.aspx' ) != -1 || href.indexOf('photoviewfixed.aspx') != -1){
+                links.push({ Name: "PHOTO", Label: dataletLabel })   
+            }
+            if(href.indexOf('map.aspx') != -1){
+                links.push({ Name: "MAP", Label: dataletLabel })   
+            }
+            if(href.indexOf('sketchframe.aspx') != -1){
+                links.push({ Name: "SKETCH", Label: dataletLabel })   
+            }
+            if(href.indexOf('pictometryipa.aspx') != -1){
+                links.push({ Name: "PICTOMETRY", Label: dataletLabel })   
+            }
+        });
+    
+        customReportBuilderRows = links.length;
+ 
+        var request = $.ajax({
+            dataType: "json",
+            url: "../api/printformdata/links",
+            method: "POST",
+            data: { '': links },
+            //success: openCustomReportBuilderWindow()        
+        });
+    }    
+}
+
+function openCustomReportBuilderWindow(){
+
+    var doc = document.frmMain;   
+
+    var url = '../Datalets/CustomReportBuilder/printForm.html?pin=' + doc.hdPin.value +
+          '&gsp=' + doc.hdMode.value + '&taxyear=' + doc.hdTaxYear.value +
+          '&jur=' + doc.hdJur.value + '&ownseq=' + doc.hdOwnSeq.value +
+          '&card=' + doc.hdCard.value + '&roll=' + roll +
+          '&State=' + doc.hdMask.value + '&item=' + doc.hdItem.value +
+          '&items=' + doc.hdItems.value + '&all=' + "" + "&ranks=" + ranks;  
+    
+    var windowHeight = customReportBuilderRows*25 + 200;
+    
+    var options = "location=no, scrollbars=yes, menubar=yes, resizable=yes, width=500, height="+ windowHeight;
+
+    window.open(url, 'CustomReportBuilder', options);
+}
+
+//END Action Links ******************************************
+
+</script>
+
+
+<!-- record navigator: end -->
+
+						</td>
+	</tr>
+					     
+				    </table>
+               
+</div></div>
+        </div>
+	
+
+  </tr> 
+  </table>
+
+	
+	<input name="hdIDX" type="hidden" id="hdIDX" />
+	<input name="hdPin" type="hidden" id="hdPin" value="24171010750000" />
+    <input name="hdItemKey" type="hidden" id="hdItemKey" />
+	<input name="hdTaxYear" type="hidden" id="hdTaxYear" value="2025" />
+	<input name="hdJur" type="hidden" id="hdJur" value="016" />
+	<input name="hdOwnSeq" type="hidden" id="hdOwnSeq" value="0" />
+	<input name="hdMode" type="hidden" id="hdMode" value="COMMERCIAL_BLDG_CC" />
+	<input name="hdCard" type="hidden" id="hdCard" value="1" />
+	<input name="hdRoll" type="hidden" id="hdRoll" />
+	<input name="hdItem" type="hidden" id="hdItem" value="1" />
+	<input name="hdItems" type="hidden" id="hdItems" value="-1" />
+	<input name="hdMask" type="hidden" id="hdMask" value="1" />
+	<input name="hdsIndex" type="hidden" id="hdsIndex" value="-1" />
+	<input type="hidden" id="hdSkip" name="hdSkip">
+
+</td>
+</tr>
+</table>
+</form>
+
+
+<script >
+//    alert("onload");
+    //window.attachEvent("onload", WindowOnLoad);
+    //window.addEventListener("onload", WindowOnLoad);
+    window.onload=function(){
+        
+        var skip = document.frmMain.hdSkip;
+        if (skip != null && skip.value == "1") {
+            frmMain.submit();
+        }
+	
+        //added for map
+        //alert(bOnLoad);
+        if (bOnLoad) body_onload();
+        if (newPinFromMap) updateFrmPinParam();
+    };
+        
+</script>
+
+<script>
+
+var gPin = "24171010750000";
+var thisURL = "https://assessorpropertydetails.cookcountyil.gov/datalets/datalet.aspx?mode=commercial_bldg_cc&UseSearch=no&pin=24171010750000&jur=016&taxyr=2025&LMparent=896";
+var sIndex	= "-1";
+var sIdx	= "1";
+var ranks	= "Datalet";
+var DLG_EMAIL = "center:yes; dialogHeight:300px; dialogWidth:600px; help:no; resizable:no; status:no; title:no";
+var roll = "RP";
+var newPinFromMap = false;
+
+function showReport(el)
+{
+	var report = document.getElementById("Reports_currentrecs");
+	var val = trim(report.value);
+	if (val.length == 0)
+	{
+		alert("Please select report");
+		return;
+	}
+	var url = "../Reports/ReportAV2.aspx?Pin=" + gPin + "&Report=" + val;
+	window.open(url, 'w1', 'width=800, height=600');
+}
+
+function OpenIRIncident(id)
+{
+	var url = '../Respond/IncidentDetail.aspx?id=' + id + '&mode=link';
+	
+		var s;
+		s = "fullscreen=no, titlebar=no, location=no, menubar=no, toolbar=no, resizable=yes, scrollbars=yes, status=yes, titlebar=yes"; 
+		return window.open(url, 'OpenIRIncident', s);
+}
+
+window.focus();
+
+</script>
+
+
+</div></section></div></div><footer><div id='footerarea' ><div id='footercontent' ><div id="dvFooter" style="clear:both;&#32;text-align:center;"><head>
+
+</head>
+<hr/>
+<table border="0" width="920px" id="Table1" align="center">
+	<tr>
+		<td width="40%">
+			<table border="0" id="Table2">
+				<tr>
+					<td style="width: 10px; " class="auto-style12">
+						<span class="auto-style14"><br>
+							<img src="../images/custom/logo_ccao.png" alt="CCAO logo" style="width:251px;height:71px;">
+						</span>
+					</td>
+				</tr>
+			</table />
+		</td>
+
+		<td width='60%'>
+			<table border="0" id="Table3" width="50%"  align="center">
+				<tr>
+					<span style="font-family:'Arial',sans-serif;color:#2a418b; font-size:40px;text-align: left;width: 100%; ">We're here to
+						help</span>
+				</tr>
+
+				<tr>
+					<td style="font-weight:bold;" class="col-first">By email.</td>
+					<td class="col-last"><a href="https://www.cookcountyassessor.com/contact">Send us a message</a></td>
+				</tr>
+				<tr>
+					<td style="font-weight:bold;" class="col-first">By phone.</td>
+					<td class="col-last"><a href="tel:1-312-443-7550">(312) 443-7550</a></td>
+				</tr>
+				<tr>
+					<td style="font-weight:bold;" class="col-first">On Facebook.</td>
+					<td class="col-last"><a href="https://www.facebook.com/CookCountyAssessorsOffice">Send us a
+							message</a></td>
+				</tr>
+				<tr>
+					<td style="font-weight:bold;" class="col-first">In-person.</td>
+					<td class="col-last"><a href="https://www.cookcountyassessor.com/appt">Schedule an appointment</a>
+					</td>
+				</tr>
+
+			</table />
+		</td>
+	</tr>
+</table></div>
+<script>
+var tmpLate = "../images/cur_template";
+function getTmpLate(par)
+{
+	return tmpLate + par;
+}
+</script>
+
+
+</div></div></footer></body><script language=JavaScript>window.setTimeout("window.location.replace('../forms/htmlframe.aspx?mode=content/home.htm')", 3590000);</script></html>

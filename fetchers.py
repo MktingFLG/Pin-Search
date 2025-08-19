@@ -18,6 +18,186 @@ from pathlib import Path
 import urllib.parse
 import re
 
+
+# ================= Assessor Detail (DT_PIN ⇄ DT_KEY_PIN) ======================
+from pathlib import Path
+from functools import lru_cache
+import pandas as _pd
+import re as _re
+
+_DATA_DIR = Path("data")
+
+from functools import lru_cache
+from utils import normalize_pin, undashed_pin
+
+@lru_cache(maxsize=256)
+def _rod_assoc_for(pin14: str) -> list[str]:
+    try:
+        bundle = fetch_recorder_bundle(pin14)  # <-- your function below
+        dashed = bundle.get("normalized", {}).get("associated_pins_dashed") or []
+        und    = bundle.get("normalized", {}).get("associated_pins_undashed") or []
+        # normalize to dashed for display, but keep 14-digit under the hood
+        out = []
+        seen = set()
+        for u in und:
+            u14 = undashed_pin(u)
+            if u14 and u14 not in seen:
+                seen.add(u14); out.append(u14)
+        for d in dashed:
+            u14 = undashed_pin(d)
+            if u14 and u14 not in seen:
+                seen.add(u14); out.append(u14)
+        return out
+    except Exception:
+        return []
+
+
+def _read_any_table(path: Path) -> _pd.DataFrame:
+    if path.suffix.lower() == ".csv":
+        return _pd.read_csv(path, dtype=str, keep_default_na=False)
+    # Excel
+    return _pd.read_excel(path, dtype=str, engine="openpyxl")
+
+def _pick_col(df: _pd.DataFrame, options: list[str]) -> str | None:
+    cols = {c.strip().upper(): c for c in df.columns}
+    for name in options:
+        if name.upper() in cols:
+            return cols[name.upper()]
+    return None
+
+def _find_detail_files() -> list[Path]:
+    """
+    For each township under data/<Township>/<YYYY-MM-DD>/,
+    pick only the newest date folder.
+    Prefer normalized Detail.* in that folder; if none, fall back to NLTWND*.(xlsx|xls|csv).
+    """
+    from datetime import datetime
+
+    latest_dir_by_town: dict[str, Path] = {}
+    for dated in _DATA_DIR.glob("*/20??-??-??"):
+        town = dated.parent.name
+        try:
+            dt = datetime.fromisoformat(dated.name)
+        except ValueError:
+            continue
+        prev = latest_dir_by_town.get(town)
+        if not prev or dt > datetime.fromisoformat(prev.name):
+            latest_dir_by_town[town] = dated
+
+    files: list[Path] = []
+    for town, ddir in latest_dir_by_town.items():
+        # Prefer Detail.* if present
+        detail = sorted(ddir.glob("Detail.*"))
+        if detail:
+            files.extend(detail)
+            continue
+        # Else fall back to NLTWND* in common extensions
+        found = []
+        for ext in ("xlsx", "xls", "csv"):
+            found.extend(ddir.glob(f"NLTWND*.{ext}"))
+        files.extend(sorted(found))
+
+    return [p.resolve() for p in files]
+
+
+@lru_cache(maxsize=1)
+def _build_assoc_index() -> tuple[dict[str, list[str]], dict[str, str]]:
+    """
+    Returns (key_to_children, child_to_key).
+      key_to_children: { <DT_KEY_PIN>: [child_pin, ...] }
+      child_to_key:    { <child_pin>:  <DT_KEY_PIN> }
+    All pins are 14-digit strings (no dashes).
+    """
+    key_to_children: dict[str, set[str]] = {}
+    child_to_key: dict[str, str] = {}
+
+    for f in _find_detail_files():
+        try:
+            df = _read_any_table(f)
+        except Exception:
+            continue
+
+        pin_col = _pick_col(df, ["DT_PIN", "PIN", "PIN_NUM"])
+        key_col = _pick_col(df, ["DT_KEY_PIN", "DT_KEY_P", "KEY_PIN"])
+        if not pin_col or not key_col:
+            continue
+
+        # normalize to 14-digit undashed strings
+        def _norm_pin14(s: str) -> str:
+            s = (s or "").strip()
+            s = _re.sub(r"\D", "", s)
+            return s if len(s) == 14 else "" 
+        
+        def _norm_any_pin(s: str) -> str:
+            s = (s or "").strip()
+            s = _re.sub(r"\D", "", s)
+            return s.zfill(14)[:14] if s else ""  
+
+        pins = df[pin_col].astype(str).map(_norm_any_pin)
+        keys = df[key_col].astype(str).map(_norm_pin14)
+
+        assoc_rows = df[(keys != "") & keys.notna()]
+        for i, row in assoc_rows.iterrows():
+            child = _norm_any_pin(row.get(pin_col, ""))
+            key   = _norm_pin14(row.get(key_col, ""))
+            if not child or not key:
+                continue
+            key_to_children.setdefault(key, set()).add(child)
+            child_to_key[child] = key
+
+        # ensure keys exist even if no child in that file
+        for k in keys.unique():
+            if k:
+                key_to_children.setdefault(k, set())
+
+    # freeze sets to sorted lists for stable outputs
+    ktc = {k: sorted(list(v)) for k, v in key_to_children.items()}
+    return ktc, child_to_key
+
+def refresh_assessor_assoc_index() -> None:
+    """Force rebuild the cached index (call this if you add new Detail files)."""
+    _build_assoc_index.cache_clear()  # type: ignore[attr-defined]
+    _build_assoc_index()
+
+def get_assessor_associated_pins(pin: str) -> list[str]:
+    p = undashed_pin(pin)
+    key_to_children, child_to_key = _build_assoc_index()
+
+    group = []
+    if p in key_to_children:
+        group = [p] + key_to_children[p]
+    elif p in child_to_key:
+        k = child_to_key[p]
+        group = [k] + key_to_children.get(k, [])
+    else:
+        group = [p]  # no assoc from Detail
+
+    # ---- Fallback to ROD if Detail gave us nothing meaningful
+    # 'meaningful' = group has more than just the input
+    if len(set(group)) <= 1:
+        rod14s = _rod_assoc_for(p)
+        if rod14s:
+            # Make the first PIN the 'key' (stable) and merge
+            merged = []
+            seen = set()
+            for x in rod14s:
+                if x and x not in seen:
+                    seen.add(x); merged.append(x)
+            if p not in seen:
+                merged.insert(0, p)
+            group = merged
+
+    # Deduplicate, keep order, ensure 14-digit
+    seen, out = set(), []
+    for x in group:
+        x14 = undashed_pin(x)
+        if x14 and x14 not in seen:
+            seen.add(x14); out.append(x14)
+    return out
+
+# ==============================================================================
+
+
 _S3_ENABLED = os.getenv("S3_ENABLED", "").lower() in {"1","true","yes","on"}
 _S3_BUCKET = os.getenv("S3_BUCKET", "")
 _S3_CLIENT = None
@@ -2119,73 +2299,6 @@ def _select_latest_deed(all_deeds: list[dict]) -> list[dict]:
     latest.pop("executed", None)
     return [latest]
 
-def _parse_assoc_pins_from_detail_soup(soup: BeautifulSoup) -> dict:
-    """
-    On Document Detail pages, find the table whose header includes
-    'Property Index # (PIN)' and extract the first-column PIN links.
-    Returns: {"rows":[...], "unique_dashed":[...], "unique_undashed":[...]}
-    """
-    import re, urllib.parse
-
-    target = None
-    for tbl in soup.find_all("table"):
-        header_row = tbl.find("thead") or tbl.find("tr")
-        if not header_row:
-            continue
-        hdr = header_row.get_text(" ", strip=True).upper()
-        if "PROPERTY INDEX" in hdr and "PIN" in hdr:
-            target = tbl
-            break
-    if target is None:
-        return {"rows": [], "unique_dashed": [], "unique_undashed": []}
-
-    # header map (optional)
-    keys = []
-    if target.find("thead"):
-        ths = target.find("thead").find_all(["th", "td"])
-    else:
-        first_tr = target.find("tr")
-        ths = first_tr.find_all(["th", "td"]) if first_tr else []
-    for th in ths:
-        txt = th.get_text(" ", strip=True).strip().lower()
-        if "property index" in txt and "pin" in txt:
-            keys.append("pin")
-        elif "address" in txt:
-            keys.append("address")
-        else:
-            keys.append(re.sub(r"\W+", "_", txt) or "col")
-
-    body = target.find("tbody") or target
-    rows_out, u_dashed, u_und = [], [], []
-    seen_d, seen_u = set(), set()
-
-    for tr in body.find_all("tr"):
-        tds = tr.find_all("td")
-        if not tds:
-            continue
-        a = tds[0].find("a", href=True)
-        txt = (a.get_text(" ", strip=True) if a else tds[0].get_text(" ", strip=True)).strip()
-        und = ""
-        if a:
-            try:
-                q = urllib.parse.urlparse(a["href"]).query
-                und = (urllib.parse.parse_qs(q).get("id1", [""])[0] or "").strip()
-            except Exception:
-                und = re.sub(r"\D", "", txt)
-        else:
-            und = re.sub(r"\D", "", txt)
-
-        row = {"pin": txt, "pin_undashed": und}
-        if len(tds) > 1:
-            row["address"] = tds[1].get_text(" ", strip=True)
-        rows_out.append(row)
-
-        if "-" in txt and txt not in seen_d:
-            u_dashed.append(txt); seen_d.add(txt)
-        if und and und not in seen_u:
-            u_und.append(und); seen_u.add(und)
-
-    return {"rows": rows_out, "unique_dashed": u_dashed, "unique_undashed": u_und}
 
 
 def fetch_rod_deed_detail(deed_url: str) -> dict:
