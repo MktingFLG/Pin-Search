@@ -3,6 +3,7 @@ services:
     name: pin-tool-web
     env: docker
     plan: starter
+    dockerfilePath: ./Dockerfile
     startCommand: uvicorn app:app --host 0.0.0.0 --port 10000 --workers 2 --proxy-headers --forwarded-allow-ips="*"
     healthCheckPath: /api/health
     envVars:
@@ -15,6 +16,7 @@ services:
     name: pin-tool-refresh
     env: docker
     plan: starter
+    dockerfilePath: ./Dockerfile
     startCommand: python -m subscription.refresh_all
     envVars:
       - key: DATABASE_URL
