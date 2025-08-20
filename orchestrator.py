@@ -17,7 +17,8 @@ from fetchers import (
     fetch_ptax_additional_buyers, fetch_ptax_additional_sellers,
     fetch_ptax_additional_pins, fetch_ptax_personal_property,
     fetch_recorder_bundle,fetch_ptax_main_multi,
-    merge_ptax_by_declaration,
+    merge_ptax_by_declaration, fetch_ptab_by_pin,
+    fetch_ccao_permits, 
 )
 
 from datetime import datetime
@@ -53,6 +54,8 @@ TTL = {
     "PTAX_ADDL_PINS": timedelta(hours=12),
     "PTAX_PERS": timedelta(hours=12),
     "ROD": timedelta(hours=6),
+    "PTAB": timedelta(hours=24), 
+    "PERMITS_CCAO": timedelta(hours=24),
 }
 
 TTL.pop("ASSR_MAIL", None)
@@ -108,6 +111,11 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     notice_sum = fetch_assessor_notice_summary(pin_raw, force=fresh or _expired(prev, "ASSR_NOTICE_SUMMARY", now))
     appeals = fetch_assessor_appeals_coes(pin_raw, force=fresh or _expired(prev, "ASSR_APPEALS", now))
     assr_hie = fetch_assessor_hie_additions(pin_raw, force=fresh or _expired(prev, "ASSR_HIE_ADDN", now))
+    ptab = fetch_ptab_by_pin(pin_raw, years=None, expand_associated=True)
+    permits_ccao = fetch_ccao_permits(pin_raw) if fresh or _expired(prev, "PERMITS_CCAO", now) else prev["data"]["sections"].get("permits_ccao", {})
+
+
+
     # --- Associated PINs: Detail index first; ROD fallback if trivial ---
     from fetchers import get_assessor_associated_pins
     assoc_und = get_assessor_associated_pins(pin_raw)  # undashed 14-digit list
@@ -200,8 +208,10 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
                 "rows": ptax_summary_rows,
             },
             "recorder_of_deeds": (rod or {}).get("normalized", {}),
+            "ptab": ptab.get("rows", []), 
             "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_raw),
+            "ptab": (ptab.get("normalized", {}) or {}).get("rows", []),
             
         },
 
@@ -233,6 +243,8 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "PTAX_ADDL_PINS": ptax_pins.get("_status", "ok"),
             "PTAX_PERS": ptax_personal.get("_status", "ok"),
             "ROD": rod.get("_status", "ok"),
+            "PTAB": ptab.get("_status", "ok"),
+            "PERMITS_CCAO": permits_ccao.get("_status", "ok"),
         }
 
     }
@@ -247,7 +259,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
         ("ASSR_COMM_BLDG", comm_bldg), ("ASSR_PROP_ASSOCIATION", prop_assoc),
         ("ASSR_SALES", assr_sales_dalet), ("ASSR_NOTICE_SUMMARY", notice_sum),
         ("ASSR_APPEALS", appeals), ("ASSR_HIE_ADDN", assr_hie),
-        ("PTAX_MAIN", ptax_main), ("ROD", rod),
+        ("PTAX_MAIN", ptax_main), ("ROD", rod),("PTAB", ptab),("PERMITS_CCAO", permits_ccao),
     ]:
         if obj and obj.get("_status", "ok") == "ok":
             stamps[key] = now

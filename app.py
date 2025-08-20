@@ -12,6 +12,12 @@ import json
 from utils import undashed_pin
 from assessor_assoc import get_associated_pins
 
+from fastapi import Request
+# import fetch_ptab_by_pin from the correct module
+from fetchers import fetch_ptab_by_pin   
+
+from fetchers import fetch_ccao_permits
+
 
 print("ILLINOIS_APP_TOKEN set:", bool(os.getenv("ILLINOIS_APP_TOKEN")))
 
@@ -93,4 +99,25 @@ def get_associations(pin: str):
     key = group[0]
     assoc = sorted(set(group[1:]))
     return {"key_pin": key, "associated": assoc}
+
+@app.get("/ptab/pin/{pin}")
+def ptab_pin(pin: str, years: str = None):
+    """
+    Get PTAB data by PIN.
+    years: comma-separated list of years, e.g. "2022,2023"
+    """
+    try:
+        year_list = [int(y) for y in years.split(",")] if years else None
+        res = fetch_ptab_by_pin(pin, years=year_list, expand_associated=True)
+        return JSONResponse(content=res)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch PTAB data: {e}")
+    
+
+@app.get("/permits/{pin}")
+def api_ccao_permits(pin: str, year_min: int | None = None, year_max: int | None = None):
+    res = fetch_ccao_permits(pin, year_min=year_min, year_max=year_max)
+    if res.get("_status") != "ok":
+        raise HTTPException(status_code=502, detail="Permit fetch failed")
+    return JSONResponse(res)
 

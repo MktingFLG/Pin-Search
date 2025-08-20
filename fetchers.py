@@ -17,12 +17,84 @@ import os
 import urllib.parse
 import re, urllib.parse
 
+# --- PTAB scraper imports ---
+from urllib.parse import urljoin
+
+# typing + requests retry bits
+from typing import Any, Dict, List, Optional, Tuple, Iterable
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 # ================= Assessor Detail (DT_PIN ⇄ DT_KEY_PIN) ======================
 from functools import lru_cache
 import pandas as _pd
 import re as _re
 
 _DATA_DIR = Path("data")
+
+# --- PTAB config ---
+PTAB_BASE = "https://www.ptab.illinois.gov/asi"
+PTAB_TIMEOUT = 25
+PTAB_WAIT_SECONDS = 0.8  # gentle delay between requests to be polite
+
+def _retrying_session(
+    total: int = 5,
+    backoff_factor: float = 0.4,
+    status_forcelist: Tuple[int, ...] = (429, 500, 502, 503, 504),
+    allowed_methods: Tuple[str, ...] = ("HEAD", "GET", "OPTIONS"),
+) -> requests.Session:
+    """
+    Requests session with retry/backoff for idempotent GETs.
+    """
+    sess = requests.Session()
+    retry = Retry(
+        total=total,
+        read=total,
+        connect=total,
+        status=total,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+        allowed_methods=set(allowed_methods),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    sess.mount("http://", adapter)
+    sess.mount("https://", adapter)
+    sess.headers.update({"User-Agent": "Mozilla/5.0"})
+    return sess
+
+
+def _coerce_int(v) -> Optional[int]:
+    try:
+        return int(str(v).strip())
+    except Exception:
+        return None
+
+
+def _ok(meta: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Standard success envelope (matches the rest of your fetchers).
+    """
+    return {
+        "_status": "ok",
+        "_meta": meta,
+        "rows": rows,
+        "count": len(rows),
+    }
+
+
+def _err(meta: Dict[str, Any], message: str) -> Dict[str, Any]:
+    """
+    Standard error envelope.
+    """
+    return {
+        "_status": "error",
+        "_meta": {**meta, "error": str(message)},
+        "rows": [],
+        "count": 0,
+    }
+
+
 
 from functools import lru_cache
 
@@ -188,6 +260,32 @@ def get_assessor_associated_pins(pin: str) -> list[str]:
     return out
 
 # ==============================================================================
+
+def _ptab_session() -> requests.Session:
+    s = _retrying_session()
+    s.headers.update({"User-Agent": "Mozilla/5.0"})
+    return s
+
+def _clean_money_to_float(val: str) -> float:
+    if val is None:
+        return 0.0
+    s = str(val)
+    s = re.sub(r"[^\d.\-]", "", s)  # keep digits, dot, minus
+    if s == "" or s == "." or s == "-":
+        return 0.0
+    try:
+        return float(s)
+    except Exception:
+        return 0.0
+
+def _parse_row_pairs(tr) -> list[tuple[str, str]]:
+    cells = tr.find_all(["th", "td"])
+    out = []
+    for i in range(0, len(cells) - 1, 2):
+        L = cells[i].get_text(strip=True).replace(u' ', ' ').rstrip(":")
+        V = cells[i + 1].get_text(strip=True)
+        out.append((L, V))
+    return out
 
 
 _S3_ENABLED = os.getenv("S3_ENABLED", "").lower() in {"1","true","yes","on"}
@@ -2415,6 +2513,474 @@ def fetch_recorder_bundle(pin: str, top_n: int = 3) -> dict:
     except Exception as e:
         return {"_status": "error", "normalized": {}, "raw": {}, "_meta": {"error": str(e)}}
 # ======================================================================
+
+#=========PTAB==========================================================
+
+def _ptab_get_docket_list_from_pin(sess: requests.Session, pin14: str) -> list[tuple[str, str]]:
+    """
+    Returns a list of (short_docket, full_docket) for a 14-digit PIN.
+    short like '14-24172', full like '2014-024172'
+    """
+    url = f"{PTAB_BASE}/PropertyPIN.asp?PropPin={pin14}&button=Submit"
+    r = sess.get(url, timeout=PTAB_TIMEOUT)
+    soup = BeautifulSoup(r.text, "html.parser")
+    dockets: list[tuple[str, str]] = []
+    for tr in soup.select("tr"):
+        tds = tr.find_all("td")
+        if len(tds) >= 2:
+            a = tds[0].find("a", href=True)
+            if a and "docketno=" in a["href"].lower():
+                m = re.search(r"docketno=(\d+-\d+)", a["href"], re.I)
+                if not m:
+                    continue
+                short_ = m.group(1)              # e.g., 14-24172
+                full   = tds[1].get_text(strip=True)  # e.g., 2014-024172
+                dockets.append((short_, full))
+    return dockets
+
+def _ptab_get_associated_pins(sess: requests.Session, short_d: str) -> list[str]:
+    """
+    Returns every PIN listed in the 'Property Details' table for a given short docket (e.g., '14-24172').
+    """
+    url = f"{PTAB_BASE}/property.asp?docketno={short_d}"
+    r = sess.get(url, timeout=PTAB_TIMEOUT)
+    soup = BeautifulSoup(r.text, "html.parser")
+    h3 = next((h for h in soup.find_all("h3") if "Property Details" in h.get_text()), None)
+    if not h3:
+        return []
+    tbl = h3.find_parent("table")
+    pins: list[str] = []
+    for tr in tbl.find_all("tr")[1:]:
+        a = tr.find("a", href=re.compile(r"PropertyDetails\.asp"))
+        if a:
+            pins.append(a.get_text(strip=True))
+    return pins
+
+def _ptab_extract_details(sess: requests.Session, pin_text: str, short_d: str, full_d: str) -> dict:
+    """
+    Fetches appeal page + property detail page (+ intervenor page if present),
+    and extracts all fields into a flat dict. pin_text can be dashed or 14-digit.
+    """
+    cols = [
+        "PIN No","Docket No",
+        "First Name","Last Name","Street 1","Street 2","City, State","ZIP Code",
+        "County","Township","Type","Class",
+        "Transaction Date","Transaction Description","Received/Letter Date",
+        "Attorney First Name","Attorney Last Name","Attorney Firm Name",
+        "Attorney Street 1","Attorney Street 2","Attorney City","Attorney State",
+        "Attorney ZIP Code","Attorney Phone",
+        "Intervenor Name","Intervenor Street 1","Intervenor Street 2",
+        "Intervenor City","Intervenor State","Intervenor ZIP Code","Intervenor Phone",
+        "Intervenor Owner","Intervenor Confirmed",
+        "Intervenor Resolution Required","Intervenor Resolution Received",
+        "Int Attorney First Name","Int Attorney Last Name","Int Attorney Firm Name",
+        "Int Attorney Street 1","Int Attorney Street 2","Int Attorney City",
+        "Int Attorney State","Int Attorney ZIP Code","Int Attorney Phone",
+        "Int Hist Txn Date","Int Hist Description","Int Hist Received Date",
+        "Board of Review Land","Board of Review Improvements","Board of Review Farm Land",
+        "Board of Review Farm Building","Board of Review Total",
+        "Appellant Land","Appellant Improvements","Appellant Farm Land",
+        "Appellant Farm Building","Appellant Total",
+        "PTAB Land","PTAB Improvements","PTAB Farm Land","PTAB Farm Building","PTAB Total",
+        "County Status","Decision Type","Close Date","Reason Closed","Hearing Status",
+        "Hearing Date","Hearing Time","Hearing Site","Meeting ID","Meeting Password",
+    ]
+    data = {c: "" for c in cols}
+    data["PIN No"] = pin_text
+    data["Docket No"] = full_d
+
+    appeal_url  = f"{PTAB_BASE}/property.asp?docketno={short_d}"
+    appeal_resp = sess.get(appeal_url, timeout=PTAB_TIMEOUT)
+    appeal_soup = BeautifulSoup(appeal_resp.text, "html.parser")
+
+    # Find the property detail link for this PIN (or fallback)
+    detail_href = None
+    for tbl in appeal_soup.find_all("table"):
+        rows = tbl.find_all("tr")
+        if len(rows) < 3:
+            continue
+        hdr = [cell.get_text(strip=True).lower() for cell in rows[1].find_all(["th","td"])]
+        if "pin" not in hdr:
+            continue
+        for data_row in rows[2:]:
+            a = data_row.find("a", href=True)
+            if not a:
+                continue
+            pin_text_row = a.get_text(strip=True)
+            if not pin_text or pin_text_row == pin_text:
+                data["PIN No"] = pin_text_row
+                detail_href = a["href"]
+                break
+        if detail_href:
+            break
+    if not detail_href:
+        detail_href = f"PropertyDetails.asp?proppin={data['PIN No']}&docketno={full_d}"
+
+    detail_url = urljoin(appeal_url, detail_href)
+    p_resp     = sess.get(detail_url, timeout=PTAB_TIMEOUT)
+    p_soup     = BeautifulSoup(p_resp.text, "html.parser")
+
+    # a) Header table on appeal page (owner/contact/township/type/class)
+    hdr_tbls = appeal_soup.find_all("table")
+    if hdr_tbls:
+        hdr = hdr_tbls[0]
+        for tr in hdr.find_all("tr"):
+            for L, V in _parse_row_pairs(tr):
+                if   L == "First Name":   data["First Name"] = V
+                elif L == "Last Name":    data["Last Name"]  = V
+                elif L == "Street 1":     data["Street 1"]   = V
+                elif L == "Street 2":     data["Street 2"]   = V
+                elif L == "City, State":  data["City, State"] = V
+                elif "ZIP" in L:          data["ZIP Code"]   = V
+                elif L == "County":       data["County"]     = V
+                elif L == "Township":     data["Township"]   = V
+                elif L == "Type":         data["Type"]       = V
+                elif L == "Class":        data["Class"]      = V
+
+    # b) Last case history on appeal page
+    if len(hdr_tbls) > 1:
+        rows = hdr_tbls[1].find_all("tr")[1:]
+        if rows:
+            last = rows[-1].find_all("td")
+            if len(last) >= 3:
+                data["Transaction Date"]        = last[0].get_text(strip=True)
+                data["Transaction Description"] = last[1].get_text(strip=True)
+                data["Received/Letter Date"]    = last[2].get_text(strip=True)
+
+    # c) Appellant attorney info (own table with <h3>)
+    atty_table = None
+    for tbl in appeal_soup.find_all("table"):
+        h3 = tbl.find("h3")
+        if h3 and "Appellant Attorney Information" in h3.get_text(strip=True):
+            atty_table = tbl
+            break
+    if atty_table:
+        for tr in atty_table.find_all("tr")[1:]:
+            for L, V in _parse_row_pairs(tr):
+                if   L == "First Name": data["Attorney First Name"] = V
+                elif L == "Last Name":  data["Attorney Last Name"]  = V
+                elif L == "Firm Name":  data["Attorney Firm Name"]  = V
+                elif L == "Street 1":   data["Attorney Street 1"]   = V
+                elif L == "Street 2":   data["Attorney Street 2"]   = V
+                elif L == "City":       data["Attorney City"]       = V
+                elif L == "State":      data["Attorney State"]      = V
+                elif "ZIP" in L:        data["Attorney ZIP Code"]   = V
+                elif L == "Phone":      data["Attorney Phone"]      = V
+
+    # d) Intervenor (follows link from appeal page)
+    link = appeal_soup.find("a", href=re.compile(r"intervenor\.asp", re.I))
+    if link:
+        iv_url  = urljoin(appeal_url, link["href"])
+        iv_resp = sess.get(iv_url, timeout=PTAB_TIMEOUT)
+        iv_soup = BeautifulSoup(iv_resp.text, "html.parser")
+        iv_tbls = iv_soup.find_all("table")
+
+        if iv_tbls:
+            # Intervenor info
+            for tr in iv_tbls[0].find_all("tr")[1:]:
+                for L, V in _parse_row_pairs(tr):
+                    if   L == "Name":     data["Intervenor Name"] = V
+                    elif L == "Street 1": data["Intervenor Street 1"] = V
+                    elif L == "Street 2": data["Intervenor Street 2"] = V
+                    elif L == "City, State, Zip":
+                        # format: "City, ST 60606"
+                        city, rest = V.split(",", 1)
+                        data["Intervenor City"] = city.strip()
+                        st, zp = rest.strip().split(None, 1)
+                        data["Intervenor State"]    = st
+                        data["Intervenor ZIP Code"] = zp
+                    elif L == "Phone":     data["Intervenor Phone"] = V
+                    elif L == "Owner":     data["Intervenor Owner"] = V
+                    elif L == "Confirmed": data["Intervenor Confirmed"] = V
+                    elif L == "Resolution Required": data["Intervenor Resolution Required"] = V
+                    elif L == "Resolution Received": data["Intervenor Resolution Received"] = V
+
+        if len(iv_tbls) > 1:
+            # Intervenor attorney
+            for tr in iv_tbls[1].find_all("tr")[1:]:
+                for L, V in _parse_row_pairs(tr):
+                    if   L == "First Name": data["Int Attorney First Name"] = V
+                    elif L == "Last Name":  data["Int Attorney Last Name"]  = V
+                    elif L == "Firm Name":  data["Int Attorney Firm Name"]  = V
+                    elif L == "Street 1":   data["Int Attorney Street 1"]   = V
+                    elif L == "Street 2":   data["Int Attorney Street 2"]   = V
+                    elif L == "City, State, Zip":
+                        city, rest = V.split(",", 1)
+                        data["Int Attorney City"] = city.strip()
+                        st, zp = rest.strip().split(None, 1)
+                        data["Int Attorney State"]    = st
+                        data["Int Attorney ZIP Code"] = zp
+                    elif L == "Phone":        data["Int Attorney Phone"]      = V
+
+        if len(iv_tbls) > 2:
+            # Intervenor history (last row)
+            hist = iv_tbls[2].find_all("tr")[1:]
+            if hist:
+                last = hist[-1].find_all("td")
+                if len(last) >= 3:
+                    data["Int Hist Txn Date"]      = last[0].get_text(strip=True)
+                    data["Int Hist Description"]   = last[1].get_text(strip=True)
+                    data["Int Hist Received Date"] = last[2].get_text(strip=True)
+
+    # e) Property details sections on detail page
+    sections = {
+        "Board of Review": {
+            "Land":"Board of Review Land","Improvements":"Board of Review Improvements",
+            "Farm Land":"Board of Review Farm Land","Farm Building":"Board of Review Farm Building",
+            "BOR Total":"Board of Review Total"},
+        "Appellant": {
+            "Land":"Appellant Land","Improvements":"Appellant Improvements",
+            "Farm Land":"Appellant Farm Land","Farm Building":"Appellant Farm Building",
+            "Appellant Total":"Appellant Total"},
+        "PTAB Assessed Value": {
+            "Land":"PTAB Land","Improvements":"PTAB Improvements",
+            "Farm Land":"PTAB Farm Land","Farm Building":"PTAB Farm Building",
+            "PTAB Total":"PTAB Total"},
+        "PTAB Information": {
+            "County Status":"County Status","Decision Type":"Decision Type",
+            "Close Date":"Close Date","Reason Closed":"Reason Closed",
+            "Hearing Status":"Hearing Status"},
+    }
+    for title, mapping in sections.items():
+        h3 = next((h for h in p_soup.find_all("h3") if title.lower() in h.get_text(strip=True).lower()), None)
+        if not h3:
+            continue
+        tbl = h3.find_parent("table")
+        for tr in tbl.find_all("tr")[1:]:
+            for L, V in _parse_row_pairs(tr):
+                if L in mapping:
+                    data[mapping[L]] = V
+
+    # f) Hearing Information section (date/time/site/zoom)
+    hearing_h3 = next((h for h in p_soup.find_all("h3") if "Hearing Information" in h.get_text(strip=True)), None)
+    if hearing_h3:
+        hearing_table = hearing_h3.find_parent("table")
+        for tr in hearing_table.find_all("tr")[1:]:
+            th = tr.find("th"); td = tr.find("td")
+            if not th or not td:
+                continue
+            label = th.get_text(strip=True).rstrip(":")
+            txt = td.get_text(separator="\n", strip=True)
+            if "Hearing Date/Time" in label:
+                m = re.match(r"(.+?)\s+at\s+(.+)", txt)
+                if m:
+                    data["Hearing Date"] = m.group(1)
+                    data["Hearing Time"] = m.group(2)
+                else:
+                    data["Hearing Date"] = txt
+            elif "Hearing Site/Location" in label:
+                a = td.find("a", href=True)
+                if a:
+                    data["Hearing Site"] = a["href"]
+                for line in txt.splitlines():
+                    if line.startswith("Meeting ID"):
+                        data["Meeting ID"] = line.split(":", 1)[1].strip()
+                    elif line.startswith("Meeting Password"):
+                        data["Meeting Password"] = line.split(":", 1)[1].strip()
+
+    return data
+
+
+def _ptab_consolidate_totals(rows: list[dict]) -> list[dict]:
+    """
+    Adds Consolidated BOR/Appellant/PTAB totals per Docket No across all its PIN rows.
+    """
+    # Ensure numeric
+    for r in rows:
+        r.setdefault("Board of Review Total", 0.0)
+        r.setdefault("Appellant Total", 0.0)
+        r.setdefault("PTAB Total", 0.0)
+        r["Board of Review Total"] = _clean_money_to_float(r["Board of Review Total"])
+        r["Appellant Total"] = _clean_money_to_float(r["Appellant Total"])
+        r["PTAB Total"] = _clean_money_to_float(r["PTAB Total"])
+
+    sums: dict[str, dict[str, float]] = {}
+    for r in rows:
+        d = r.get("Docket No", "")
+        if d not in sums:
+            sums[d] = {"BOR": 0.0, "APP": 0.0, "PTAB": 0.0}
+        sums[d]["BOR"] += r["Board of Review Total"]
+        sums[d]["APP"] += r["Appellant Total"]
+        sums[d]["PTAB"] += r["PTAB Total"]
+
+    for r in rows:
+        d = r.get("Docket No", "")
+        agg = sums.get(d, {"BOR": 0.0, "APP": 0.0, "PTAB": 0.0})
+        r["Consolidated BOR Total"] = agg["BOR"]
+        r["Consolidated Appellant Total"] = agg["APP"]
+        r["Consolidated PTAB Total"] = agg["PTAB"]
+    return rows
+
+def _dedupe_dict_rows(rows: list[dict], keys: tuple[str, ...]) -> list[dict]:
+    seen = set()
+    out = []
+    for r in rows:
+        k = tuple(r.get(x) for x in keys)
+        if k in seen:
+            continue
+        seen.add(k)
+        out.append(r)
+    return out
+
+
+def fetch_ptab_by_pin(
+    pin: str,
+    years: list[int] | None = None,
+    expand_associated: bool = True,
+    compute_consolidated: bool = True,
+) -> Dict[str, Any]:
+    """
+    Pulls PTAB results starting from a PIN. If expand_associated=True:
+      PIN -> all dockets -> each docket's associated PINs -> full detail rows
+    Returns one row per (PIN No × Docket No).
+    """
+    meta = {"source": "PTAB", "pin": pin, "years": years or [], "expand_associated": expand_associated, "fetched_at": _now_iso()}
+    sess = _ptab_session()
+    try:
+        pin14 = undashed_pin(pin)
+        all_rows: list[dict] = []
+
+        # 1) find dockets for this PIN
+        dockets = _ptab_get_docket_list_from_pin(sess, pin14)
+        if years:
+            ys = {int(y) for y in years}
+            # full is like 2014-024172 => first 4 digits are the year
+            dockets = [(short_, full) for (short_, full) in dockets if _coerce_int(str(full)[:4]) in ys]
+
+        # 2) for each docket, either:
+        #    a) expand to all associated pins, or
+        #    b) just fetch details for the original PIN (if site includes it)
+        for short_d, full_d in dockets:
+            if expand_associated:
+                assoc_pins = _ptab_get_associated_pins(sess, short_d) or [pin14]
+                for p2 in assoc_pins:
+                    rows_for_pin = _ptab_extract_details(sess, p2, short_d, full_d)
+                    all_rows.append(rows_for_pin)
+                    time.sleep(PTAB_WAIT_SECONDS)
+            else:
+                rows_for_pin = _ptab_extract_details(sess, pin14, short_d, full_d)
+                all_rows.append(rows_for_pin)
+                time.sleep(PTAB_WAIT_SECONDS)
+
+        # de-dup (PIN No + Docket No)
+        all_rows = _dedupe_dict_rows(all_rows, ("PIN No", "Docket No"))
+
+        # consolidated sums
+        if compute_consolidated and all_rows:
+            all_rows = _ptab_consolidate_totals(all_rows)
+
+        return _ok(meta, all_rows)
+    except Exception as e:
+        return _err(meta, f"fetch_ptab_by_pin failed: {e}")
+
+def fetch_ptab_by_docket(
+    docket_no: str,
+    expand_associated: bool = True,
+    compute_consolidated: bool = True,
+) -> Dict[str, Any]:
+    """
+    Pulls PTAB results starting from a full docket number (e.g., '2019-012345').
+    We normalize to short form and proceed similar to by-PIN flow.
+    """
+    meta = {"source": "PTAB", "docket_no": docket_no, "expand_associated": expand_associated, "fetched_at": _now_iso()}
+    sess = _ptab_session()
+    try:
+        # normalize '2019-012345' -> '19-12345'
+        year, num = docket_no.split("-", 1)
+        short_d = f"{year[-2:]}-{num.lstrip('0') or '0'}"
+        full_d  = docket_no
+
+        all_rows: list[dict] = []
+        if expand_associated:
+            assoc_pins = _ptab_get_associated_pins(sess, short_d)
+            if not assoc_pins:
+                assoc_pins = []
+        else:
+            assoc_pins = []
+
+        if assoc_pins:
+            for p2 in assoc_pins:
+                all_rows.append(_ptab_extract_details(sess, p2, short_d, full_d))
+                time.sleep(PTAB_WAIT_SECONDS)
+        else:
+            # still try to extract using the docket; PIN may be discovered on the page
+            all_rows.append(_ptab_extract_details(sess, "", short_d, full_d))
+
+        all_rows = _dedupe_dict_rows(all_rows, ("PIN No", "Docket No"))
+
+        if compute_consolidated and all_rows:
+            all_rows = _ptab_consolidate_totals(all_rows)
+
+        return _ok(meta, all_rows)
+    except Exception as e:
+        return _err(meta, f"fetch_ptab_by_docket failed: {e}")
+    
+
+# ======================= CCAO Permits (Socrata: 6yjf-dfxs) =======================
+# Table docs: https://datacatalog.cookcountyil.gov/resource/6yjf-dfxs
+# Uses 14-digit UNDASHED PIN in the "pin" column.
+
+def fetch_ccao_permits(pin: str, year_min: int | None = None, year_max: int | None = None,
+                       dataset_id: str = "6yjf-dfxs") -> dict:
+    """
+    Fetch ALL columns for a single PIN from CCAO permits (undashed 14-digit).
+    Optional year_min/year_max to constrain by 'year'.
+    Returns: {"_status","normalized":{"rows":[...]}, "_meta":{...}}
+    """
+    p = undashed_pin(pin)  # ensure 14-digit
+    where_parts = ["pin = :p"]
+    params = {"p": p, "$limit": "5000", "$order": "year DESC, date_issued DESC"}
+
+    if year_min is not None:
+        where_parts.append("year >= :ymin")
+        params["ymin"] = str(int(year_min))
+    if year_max is not None:
+        where_parts.append("year <= :ymax")
+        params["ymax"] = str(int(year_max))
+
+    try:
+        rows = _socrata_get(dataset_id, {"$where": " AND ".join(where_parts), **params})
+        return {
+            "_status": "ok",
+            "normalized": {"rows": rows},   # every column comes back as-is
+            "_meta": {"dataset": dataset_id, "count": len(rows), "pin": p}
+        }
+    except Exception as e:
+        return {"_status": "error", "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "pin": p, "error": str(e)}}
+
+
+def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_max: int | None = None,
+                             dataset_id: str = "6yjf-dfxs") -> dict:
+    """
+    Fetch ALL columns for MANY pins (<= ~50 recommended). Pins may be dashed/undashed.
+    """
+    und = [undashed_pin(p) for p in (pins or []) if undashed_pin(p)]
+    incl = _ids_in_clause(und)  # ('123...','456...')
+    if not incl:
+        return {"_status": "ok", "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "count": 0}}
+
+    where_parts = [f"pin IN {incl}"]
+    params = {"$limit": "5000", "$order": "pin ASC, year DESC, date_issued DESC"}
+
+    if year_min is not None:
+        where_parts.append("year >= :ymin")
+        params["ymin"] = str(int(year_min))
+    if year_max is not None:
+        where_parts.append("year <= :ymax")
+        params["ymax"] = str(int(year_max))
+
+    try:
+        rows = _socrata_get(dataset_id, {"$where": " AND ".join(where_parts), **params})
+        return {
+            "_status": "ok",
+            "normalized": {"rows": rows},
+            "_meta": {"dataset": dataset_id, "count": len(rows), "pins": und[:]}
+        }
+    except Exception as e:
+        return {"_status": "error", "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "pins": und[:], "error": str(e)}}
 
 
 
