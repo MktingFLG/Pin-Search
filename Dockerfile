@@ -1,6 +1,5 @@
-# Use an official Python 3.12 slim image
-FROM python:3.11-slim
-
+# Use Python 3.12 slim (stable + supported by pandas/numpy)
+FROM python:3.12-slim
 
 # Set working directory
 WORKDIR /app
@@ -23,4 +22,4 @@ RUN pip install -r requirements.txt
 # Copy the rest of your code
 COPY . .
 
-# No CMD here — Render will set startCommand
+# Don’t set CMD here — Render will override with startCommand
