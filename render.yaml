@@ -1,10 +1,8 @@
 services:
   - type: web
     name: pin-tool-web
-    env: python
+    env: docker
     plan: starter
-    pythonVersion: 3.11.9
-    buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app:app --host 0.0.0.0 --port 10000 --workers 2 --proxy-headers --forwarded-allow-ips="*"
     healthCheckPath: /api/health
     envVars:
@@ -15,22 +13,11 @@ services:
 
   - type: worker
     name: pin-tool-refresh
-    env: python
+    env: docker
     plan: starter
-    pythonVersion: 3.11.9
-    buildCommand: pip install -r requirements.txt
     startCommand: python -m subscription.refresh_all
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: pin-tool-db
           property: connectionString
-      # uncomment if your tenant requires explicit login
-      # - key: CCAO_USER
-      #   value: your-user
-      # - key: CCAO_PASS
-      #   value: your-pass
-      # - key: ILLINOIS_APP_TOKEN
-      #   sync: false
-      # - key: ALLOWED_ORIGINS
-      #   value: https://your-frontend.example

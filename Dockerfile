@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements if you have them
+# Copy requirements
 COPY requirements.txt .
 
 # Install Python dependencies
@@ -22,5 +22,4 @@ RUN pip install -r requirements.txt
 # Copy the rest of your code
 COPY . .
 
-# Default command (adjust to your app)
-CMD ["python", "orchestrator.py"]
+# No CMD here — Render will set startCommand
