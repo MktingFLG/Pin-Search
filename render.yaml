@@ -4,6 +4,7 @@ services:
     env: docker
     plan: starter
     dockerfilePath: ./Dockerfile
+    buildCommand: ""
     startCommand: uvicorn app:app --host 0.0.0.0 --port 10000 --workers 2 --proxy-headers --forwarded-allow-ips="*"
     healthCheckPath: /api/health
     envVars:
@@ -17,6 +18,7 @@ services:
     env: docker
     plan: starter
     dockerfilePath: ./Dockerfile
+    buildCommand: ""
     startCommand: python -m subscription.refresh_all
     envVars:
       - key: DATABASE_URL
