@@ -2983,6 +2983,35 @@ def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_
                 "_meta": {"dataset": dataset_id, "pins": und[:], "error": str(e)}}
 
 
+# ================= Delinquent Taxes ======================
+import pandas as pd
+
+def fetch_delinquent(pin: str, csv_path: str = "delinquencies_master.csv.gz"):
+    """
+    Lookup a PIN in the delinquency master file.
+    Returns a DataFrame with matches or a string message if not found.
+    """
+    from utils import normalize_pin  # use your existing helper
+
+    pin_norm = normalize_pin(pin)
+
+    try:
+        df = pd.read_csv(
+            csv_path,
+            dtype=str,
+            compression="gzip",
+            low_memory=False
+        )
+    except FileNotFoundError:
+        return f"❌ Master file not found at {csv_path}"
+
+    matches = df[df["pin"] == pin_norm]
+
+    if matches.empty:
+        return f"ℹ️ No delinquencies found for PIN {pin}"
+    else:
+        return matches.reset_index(drop=True)
+
 
 def fetch_bor(pin: str, force: bool = False) -> dict:
     # TODO: Replace with your real BOR dataset fetch

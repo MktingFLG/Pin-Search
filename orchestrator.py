@@ -18,7 +18,7 @@ from fetchers import (
     fetch_ptax_additional_pins, fetch_ptax_personal_property,
     fetch_recorder_bundle,fetch_ptax_main_multi,
     merge_ptax_by_declaration, fetch_ptab_by_pin,
-    fetch_ccao_permits, 
+    fetch_ccao_permits, fetch_delinquent,
 )
 
 from datetime import datetime
@@ -56,6 +56,7 @@ TTL = {
     "ROD": timedelta(hours=6),
     "PTAB": timedelta(hours=24), 
     "PERMITS_CCAO": timedelta(hours=24),
+    "DELINQUENT": timedelta(hours=24),
 }
 
 TTL.pop("ASSR_MAIL", None)
@@ -113,6 +114,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     assr_hie = fetch_assessor_hie_additions(pin_raw, force=fresh or _expired(prev, "ASSR_HIE_ADDN", now))
     ptab = fetch_ptab_by_pin(pin_raw, years=None, expand_associated=True)
     permits_ccao = fetch_ccao_permits(pin_raw) if fresh or _expired(prev, "PERMITS_CCAO", now) else prev["data"]["sections"].get("permits_ccao", {})
+    delinquent = fetch_delinquent(pin_raw)
 
 
 
@@ -212,7 +214,11 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_raw),
             "ptab": (ptab.get("normalized", {}) or {}).get("rows", []),
-            
+            "delinquent": (
+                delinquent if isinstance(delinquent, str)
+                else delinquent.to_dict(orient="records")
+            ),
+
         },
 
 
@@ -245,6 +251,8 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "ROD": rod.get("_status", "ok"),
             "PTAB": ptab.get("_status", "ok"),
             "PERMITS_CCAO": permits_ccao.get("_status", "ok"),
+            "DELINQUENT": "ok" if not isinstance(delinquent, str) else "empty",
+
         }
 
     }
