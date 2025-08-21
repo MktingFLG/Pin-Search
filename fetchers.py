@@ -3046,10 +3046,10 @@ def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_
 
 
 # ================= Delinquent Taxes ======================
-import os
-import re
+import os, re, tempfile
 from pathlib import Path
 import pandas as pd
+import requests
 
 def _digits_only(s: str) -> str:
     return re.sub(r"\D", "", str(s or ""))
@@ -3057,15 +3057,17 @@ def _digits_only(s: str) -> str:
 def fetch_delinquent(pin: str, csv_path: str | None = None):
     """
     Lookup a PIN in the delinquency master file.
-    Searches these in order:
-      1) explicit csv_path (if given)
+
+    Search order:
+      1) explicit csv_path
       2) ASSESSOR_PASSES_FILE (exact file path)
       3) ASSESSOR_PASSES_DIR/delinquencies_master.csv.gz
       4) CWD/assessor-passes-data/delinquencies_master.csv.gz
       5) CWD/delinquencies_master.csv.gz
-      6) MODULE_DIR/assessor-passes-data/delinquencies_master.csv.gz
-      7) MODULE_DIR/delinquencies_master.csv.gz
-    Compares on digits-only to tolerate dashed vs undashed PINs.
+      6) sibling-of-CWD: ../assessor-passes-data/delinquencies_master.csv.gz
+      7) MODULE_DIR/assessor-passes-data/delinquencies_master.csv.gz
+      8) MODULE_DIR/delinquencies_master.csv.gz
+      9) GitHub raw via GITHUB_TOKEN (DELINQ_REPO/BRANCH/PATH)
     """
     FNAME = "delinquencies_master.csv.gz"
     here = Path(__file__).parent.resolve()
@@ -3077,56 +3079,66 @@ def fetch_delinquent(pin: str, csv_path: str | None = None):
     if csv_path:
         candidates.append(Path(csv_path))
 
-    # 2) ASSESSOR_PASSES_FILE (exact)
+    # 2) env: exact file
     env_file = os.getenv("ASSESSOR_PASSES_FILE")
     if env_file:
         candidates.append(Path(env_file))
 
-    # 3) ASSESSOR_PASSES_DIR + filename
+    # 3) env: directory
     env_dir = os.getenv("ASSESSOR_PASSES_DIR")
     if env_dir:
         candidates.append(Path(env_dir) / FNAME)
 
-    # 4) repo-root guess: CWD/assessor-passes-data/FNAME
+    # 4–8) common dev/layout guesses
     candidates.append(cwd / "assessor-passes-data" / FNAME)
-
-    # 5) CWD/FNAME
     candidates.append(cwd / FNAME)
-
-    # 6) alongside module: MODULE_DIR/assessor-passes-data/FNAME
+    candidates.append(cwd.parent / "assessor-passes-data" / FNAME)   # sibling-of-CWD
     candidates.append(here / "assessor-passes-data" / FNAME)
-
-    # 7) MODULE_DIR/FNAME
     candidates.append(here / FNAME)
 
     target = next((p for p in candidates if p.exists()), None)
+
+    # 9) GitHub raw fallback (private OK with token)
     if not target:
-        tried = " | ".join(str(p) for p in candidates)
-        return f"❌ Master file not found. Tried: {tried}"
+        repo   = os.getenv("DELINQ_REPO",   "MktingFLG/assessor-passes-data")
+        branch = os.getenv("DELINQ_BRANCH", "main")
+        path   = os.getenv("DELINQ_PATH",   "delinquencies_master.csv.gz")
+        token  = os.getenv("GITHUB_TOKEN", "").strip()
 
-    # detect compression by suffix
+        url = f"https://raw.githubusercontent.com/{repo}/{branch}/{path}"
+        try:
+            tmp = Path(tempfile.gettempdir()) / Path(path).name
+            if not tmp.exists():
+                headers = {"Authorization": f"Bearer {token}"} if token else {}
+                r = requests.get(url, headers=headers, timeout=60)
+                r.raise_for_status()
+                tmp.write_bytes(r.content)
+            target = tmp
+        except Exception as e:
+            tried = " | ".join(str(p) for p in candidates)
+            return f"❌ Master file not found locally (tried: {tried}) and GitHub fetch failed: {e}"
+
+    # Read (auto detect gzip)
     compression = "gzip" if str(target).lower().endswith(".gz") else None
-
     try:
         df = pd.read_csv(target, dtype=str, compression=compression, low_memory=False)
     except Exception as e:
         return f"❌ Failed to read {target}: {e}"
 
+    # Normalize PIN and match
     pin_d = _digits_only(pin)
     if not pin_d:
         return f"ℹ️ Invalid PIN input: {pin!r}"
 
-    # column name tolerance
-    col = next((c for c in ("pin", "PIN", "Pin") if c in df.columns), None)
+    # Accept a few possible column names
+    col = next((c for c in ("pin", "PIN", "Pin", "PIN (14)", "pin14") if c in df.columns), None)
     if not col:
         return f"❌ 'pin' column not found in {target}"
 
     comp = df[col].astype(str).str.replace(r"\D", "", regex=True)
     matches = df[comp == pin_d]
+    return matches.reset_index(drop=True) if not matches.empty else f"ℹ️ No delinquencies found for PIN {pin}"
 
-    if matches.empty:
-        return f"ℹ️ No delinquencies found for PIN {pin}"
-    return matches.reset_index(drop=True)
 
 
 
