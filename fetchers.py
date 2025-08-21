@@ -3054,12 +3054,17 @@ import pandas as pd
 from functools import lru_cache
 
 # ---- config (override via env if needed) ----
-GITHUB_TOKEN   = os.getenv("GITHUB_TOKEN", "").strip()
-PASSES_REPO    = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")  # owner/name
-PASSES_BRANCH  = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
-PASSES_PATH    = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")     # path in repo (root by default)
+GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "").strip()
+PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")   # owner/name
+PASSES_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
+# file is at repo root in your case:
+PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")
 
-RAW_URL = f"https://raw.githubusercontent.com/{PASSES_REPO}/{PASSES_BRANCH}/{PASSES_PATH}"
+# use GitHub “raw/refs/heads” form (works with Authorization header)
+RAW_URL = os.getenv(
+    "ASSESSOR_PASSES_RAW_URL",
+    f"https://github.com/{PASSES_REPO}/raw/refs/heads/{PASSES_BRANCH}/{PASSES_PATH}"
+)
 HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
 
 def _digits_only(s: str) -> str:
@@ -3067,30 +3072,19 @@ def _digits_only(s: str) -> str:
 
 @lru_cache(maxsize=1)
 def _load_delinquencies_df() -> pd.DataFrame:
-    """
-    Always fetch from the private GitHub repo using GITHUB_TOKEN.
-    Cached in-memory per process to avoid repeated downloads.
-    """
     if not GITHUB_TOKEN:
         raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
-
-    r = requests.get(RAW_URL, headers=HEADERS, timeout=60)
+    r = requests.get(RAW_URL, headers=HEADERS, timeout=60, allow_redirects=True)
     if r.status_code == 404:
         raise RuntimeError(f"GitHub 404 for {RAW_URL}")
     r.raise_for_status()
-
-    # gzip content -> pandas
+    # raw bytes -> pandas (gzip)
     return pd.read_csv(io.BytesIO(r.content), dtype=str, compression="gzip", low_memory=False)
 
 def fetch_delinquent(pin: str):
-    """
-    Lookup PIN in the GitHub-hosted delinquency master file.
-    Returns a DataFrame of matches, or an error/empty message string.
-    """
     pin_d = _digits_only(pin)
     if not pin_d:
         return f"ℹ️ Invalid PIN input: {pin!r}"
-
     try:
         df = _load_delinquencies_df()
     except Exception as e:
@@ -3103,10 +3097,10 @@ def fetch_delinquent(pin: str):
 
     comp = df[col].astype(str).str.replace(r"\D", "", regex=True)
     matches = df[comp == pin_d]
-
     if matches.empty:
         return f"ℹ️ No delinquencies found for PIN {pin}"
     return matches.reset_index(drop=True)
+
 
 
 

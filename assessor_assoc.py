@@ -18,13 +18,18 @@ INDEX_DIR = DATA_DIR / "_index"
 PIN_TO_KEY_JSON   = INDEX_DIR / "pin_to_key.json"
 KEY_TO_CHILD_JSON = INDEX_DIR / "key_to_children.json"
 
-# Option B: GitHub fallback (private repo raw access)
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
-GITHUB_REPO  = os.getenv("ASSESSOR_DATA_REPO", "MktingFLG/assessor-passes-data")  # owner/name
+# Option B: GitHub fallback (private repo) — use GitHub “raw/refs/heads” URLs
+GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "").strip()
+GITHUB_REPO   = os.getenv("ASSESSOR_DATA_REPO", "MktingFLG/assessor-passes-data")   # owner/name
 GITHUB_BRANCH = os.getenv("ASSESSOR_DATA_BRANCH", "main")
 
-RAW_BASE = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/data/_index"
+# Allow full override (lets you paste an exact base if needed)
+RAW_BASE = os.getenv(
+    "ASSESSOR_INDEX_RAW_BASE",
+    f"https://github.com/{GITHUB_REPO}/raw/refs/heads/{GITHUB_BRANCH}/data/_index"
+)
 AUTH_HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
+
 # -----------------------------------
 
 @lru_cache(maxsize=1)
