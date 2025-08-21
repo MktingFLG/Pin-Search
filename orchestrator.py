@@ -210,7 +210,6 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
                 "rows": ptax_summary_rows,
             },
             "recorder_of_deeds": (rod or {}).get("normalized", {}),
-            "ptab": ptab.get("rows", []), 
             "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_raw),
             "ptab": (ptab.get("normalized", {}) or {}).get("rows", []),
