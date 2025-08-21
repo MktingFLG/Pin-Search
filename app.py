@@ -7,9 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from utils import normalize_pin, undashed_pin
-from orchestrator import get_pin_summary
+
 from assessor_assoc import get_associated_pins
-from fetchers import fetch_ptab_by_pin, fetch_ccao_permits
+
 
 print("ILLINOIS_APP_TOKEN set:", bool(os.getenv("ILLINOIS_APP_TOKEN")))
 APP_VERSION = "2025-08-14-01"
@@ -35,26 +35,44 @@ def pin_summary(pin: str, fresh: int = Query(0, ge=0, le=1)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     try:
+        # LAZY import here
+        from orchestrator import get_pin_summary
         data = get_pin_summary(pin_dash, fresh=bool(fresh))
         return JSONResponse(data)
-    except Exception:
+    except Exception as e:
+        # log the actual error for debugging
+        print("pin_summary error:", repr(e))
         raise HTTPException(status_code=502, detail="Failed to assemble PIN summary")
 
 @app.get("/ptab/pin/{pin}")
 def ptab_pin(pin: str, years: str | None = None):
     try:
         year_list = [int(y) for y in years.split(",")] if years else None
+        # LAZY import here
+        from fetchers import fetch_ptab_by_pin
         res = fetch_ptab_by_pin(pin, years=year_list, expand_associated=True)
         return JSONResponse(content=res)
     except Exception as e:
+        print("ptab_pin error:", repr(e))
         raise HTTPException(status_code=500, detail=f"Failed to fetch PTAB data: {e}")
 
 @app.get("/permits/{pin}")
 def api_ccao_permits(pin: str, year_min: int | None = None, year_max: int | None = None):
-    res = fetch_ccao_permits(pin, year_min=year_min, year_max=year_max)
-    if res.get("_status") != "ok":
-        raise HTTPException(status_code=502, detail="Permit fetch failed")
-    return JSONResponse(res)
+    try:
+        # LAZY import here
+        from fetchers import fetch_ccao_permits
+        res = fetch_ccao_permits(pin, year_min=year_min, year_max=year_max)
+        if res.get("_status") != "ok":
+            raise HTTPException(status_code=502, detail="Permit fetch failed")
+        return JSONResponse(res)
+    except Exception as e:
+        print("permits error:", repr(e))
+        raise
+
+@app.get("/api/ping")
+def api_ping():
+    return {"ok": True}
+
 
 @app.get("/subs/associations/{pin}")
 def get_associations(pin: str):
