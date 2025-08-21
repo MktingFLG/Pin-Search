@@ -32,22 +32,20 @@ def health():
 @app.get("/api/pin/{pin}")
 def pin_summary(pin: str, fresh: int = Query(0, ge=0, le=1)):
     from utils import normalize_pin
+    pin_dash = normalize_pin(pin)
+    print("[PIN] start", pin_dash)
     try:
-        pin_dash = normalize_pin(pin)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    try:
-        # lazy import to avoid heavy work at startup
         from orchestrator import get_pin_summary
         data = get_pin_summary(pin_dash, fresh=bool(fresh))
+        print("[PIN] done")
         return JSONResponse(data)
     except MemoryError:
-        # clear message + no restart
+        print("[PIN] MemoryError")
         raise HTTPException(status_code=503, detail="Out of memory while building summary")
     except Exception as e:
-        print("pin_summary error:", repr(e))
+        print("[PIN] error:", repr(e))
         raise HTTPException(status_code=502, detail="Failed to assemble PIN summary")
+
 
 
 @app.get("/ptab/pin/{pin}")
@@ -119,4 +117,5 @@ if STATIC_DIR.exists():
 # --- SINGLE root route: send users to Swagger ---
 @app.get("/")
 def root():
-    return RedirectResponse(url="/swagger")
+    return {"ok": True}
+

@@ -3047,8 +3047,8 @@ def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_
 
 
 # ================= Delinquent Taxes (GitHub Contents API) ======================
-# fetchers_delinquent.py
-import io, os, re, requests, pandas as pd
+# fetchers_delinquent.py (drop pandas; pure csv)
+import io, os, re, csv, gzip, requests
 from functools import lru_cache
 
 GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "").strip()
@@ -3057,70 +3057,50 @@ PASSES_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
 PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")
 
 API_URL = f"https://api.github.com/repos/{PASSES_REPO}/contents/{PASSES_PATH}?ref={PASSES_BRANCH}"
-API_HEADERS = {
-    "Authorization": f"Bearer {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.raw",
-    "User-Agent": "pin-tool/1.0",
-}
-
-PIN_COL_CANDIDATES = ("pin", "PIN", "Pin")
+API_HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github.raw", "User-Agent": "pin-tool/1.0"}
+PIN_COL_CANDIDATES = ("pin","PIN","Pin")
 
 def _digits(s: str) -> str:
-    return re.sub(r"\D", "", str(s or ""))
+    return re.sub(r"\D","", s or "")
 
 @lru_cache(maxsize=1)
 def _delinq_index() -> dict[str, dict]:
-    """Return a compact mapping {pin14: rowdict} to minimize RAM."""
     if not GITHUB_TOKEN:
         raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
-
     r = requests.get(API_URL, headers=API_HEADERS, timeout=20)
-    if r.status_code == 401:
-        raise RuntimeError("401 Unauthorized: bad/expired token.")
-    if r.status_code == 403:
-        raise RuntimeError("403 Forbidden: token lacks contents:read.")
-    if r.status_code == 404:
-        raise RuntimeError(f"404 Not Found: {PASSES_BRANCH}/{PASSES_PATH}")
+    if r.status_code == 401: raise RuntimeError("401 Unauthorized: bad/expired token.")
+    if r.status_code == 403: raise RuntimeError("403 Forbidden: token lacks contents:read.")
+    if r.status_code == 404: raise RuntimeError(f"404 Not Found: {PASSES_BRANCH}/{PASSES_PATH}")
     r.raise_for_status()
 
-    # Load only the columns you actually use. Add more if needed.
-    df = pd.read_csv(
-        io.BytesIO(r.content),
-        compression="gzip",
-        dtype=str,
-        low_memory=False,
-        usecols=lambda c: c in PIN_COL_CANDIDATES or c in {
-            # <-- keep just the fields you need in responses:
-            "tax_year", "amount_due", "sale_status", "last_update"
-        },
-    )
+    index: dict[str, dict] = {}
+    with gzip.GzipFile(fileobj=io.BytesIO(r.content)) as gz:
+        reader = csv.DictReader(io.TextIOWrapper(gz, encoding="utf-8", newline=""))
+        # Detect pin column
+        header = [h.strip() for h in reader.fieldnames or []]
+        pin_col = next((c for c in PIN_COL_CANDIDATES if c in header), None)
+        if not pin_col:
+            raise RuntimeError(f"'pin' column not found in {PASSES_PATH}")
 
-    # Normalize and drop rows without a valid PIN
-    pin_col = next((c for c in PIN_COL_CANDIDATES if c in df.columns), None)
-    if not pin_col:
-        raise RuntimeError(f"'pin' column not found in {PASSES_PATH}")
-    df["pin14"] = df[pin_col].astype(str).map(_digits)
-    df = df[df["pin14"].str.len() == 14].copy()
-
-    # Convert to a compact dict keyed by pin (dedupe by last row wins)
-    keep_cols = [c for c in df.columns if c not in (pin_col,)]
-    index = {row["pin14"]: {k: (row[k] if pd.notna(row[k]) else None) for k in keep_cols}
-             for _, row in df.iterrows()}
-
-    # Optional: free memory
-    del df
+        keep = {"tax_year","amount_due","sale_status","last_update"}
+        for row in reader:
+            pin14 = _digits(row.get(pin_col, ""))
+            if len(pin14) != 14:
+                continue
+            out = {k: (row.get(k) or None) for k in keep if k in row}
+            index[pin14] = out  # last one wins
     return index
 
 def fetch_delinquent(pin: str):
     try:
         pin14 = _digits(pin)
         if len(pin14) != 14:
-            return {"status": "ok", "data": []}
-        idx = _delinq_index()
-        row = idx.get(pin14)
-        return {"status": "ok", "data": [row | {"pin14": pin14}] if row else []}
+            return {"status":"ok","data":[]}
+        row = _delinq_index().get(pin14)
+        return {"status":"ok","data":[(row | {"pin14": pin14})] if row else []}
     except Exception as e:
-        return {"status": "error", "error": f"delinquency fetch failed: {e}"}
+        return {"status":"error","error": f"delinquency fetch failed: {e}"}
+
 
 
 

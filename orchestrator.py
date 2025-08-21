@@ -26,15 +26,15 @@ from datetime import datetime
 from utils import normalize_pin, undashed_pin
 
 # orchestrator.py
-import os, psutil, time
-from functools import lru_cache
+import os
+try:
+    import psutil
+    def _mb():
+        return int(psutil.Process(os.getpid()).memory_info().rss / (1024*1024))
+except Exception:
+    def _mb():
+        return -1
 
-def _mb():
-    p = psutil.Process(os.getpid())
-    return int(p.memory_info().rss / (1024*1024))
-
-def _mark(stage):
-    print(f"[ORCH] {stage} | RSS={_mb()} MB")
 
 
 # Simple in-memory cache (works fine on one dyno). You can swap to Redis later.
