@@ -3047,7 +3047,7 @@ def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_
 
 
 # ================= Delinquent Taxes (GitHub Contents API) ======================
-
+# fetchers_delinquent.py
 import io, os, re, requests, pandas as pd
 from functools import lru_cache
 
@@ -3063,38 +3063,65 @@ API_HEADERS = {
     "User-Agent": "pin-tool/1.0",
 }
 
-def _digits_only(s: str) -> str:
+PIN_COL_CANDIDATES = ("pin", "PIN", "Pin")
+
+def _digits(s: str) -> str:
     return re.sub(r"\D", "", str(s or ""))
 
 @lru_cache(maxsize=1)
-def _load_delinquencies_df() -> pd.DataFrame:
+def _delinq_index() -> dict[str, dict]:
+    """Return a compact mapping {pin14: rowdict} to minimize RAM."""
     if not GITHUB_TOKEN:
         raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
+
     r = requests.get(API_URL, headers=API_HEADERS, timeout=20)
     if r.status_code == 401:
         raise RuntimeError("401 Unauthorized: bad/expired token.")
     if r.status_code == 403:
         raise RuntimeError("403 Forbidden: token lacks contents:read.")
     if r.status_code == 404:
-        raise RuntimeError(f"404 Not Found: branch '{PASSES_BRANCH}' or path '{PASSES_PATH}' wrong.")
+        raise RuntimeError(f"404 Not Found: {PASSES_BRANCH}/{PASSES_PATH}")
     r.raise_for_status()
-    return pd.read_csv(io.BytesIO(r.content), dtype=str, compression="gzip", low_memory=False)
+
+    # Load only the columns you actually use. Add more if needed.
+    df = pd.read_csv(
+        io.BytesIO(r.content),
+        compression="gzip",
+        dtype=str,
+        low_memory=False,
+        usecols=lambda c: c in PIN_COL_CANDIDATES or c in {
+            # <-- keep just the fields you need in responses:
+            "tax_year", "amount_due", "sale_status", "last_update"
+        },
+    )
+
+    # Normalize and drop rows without a valid PIN
+    pin_col = next((c for c in PIN_COL_CANDIDATES if c in df.columns), None)
+    if not pin_col:
+        raise RuntimeError(f"'pin' column not found in {PASSES_PATH}")
+    df["pin14"] = df[pin_col].astype(str).map(_digits)
+    df = df[df["pin14"].str.len() == 14].copy()
+
+    # Convert to a compact dict keyed by pin (dedupe by last row wins)
+    keep_cols = [c for c in df.columns if c not in (pin_col,)]
+    index = {row["pin14"]: {k: (row[k] if pd.notna(row[k]) else None) for k in keep_cols}
+             for _, row in df.iterrows()}
+
+    # Optional: free memory
+    del df
+    return index
 
 def fetch_delinquent(pin: str):
     try:
-        pin_d = _digits_only(pin)
-        if not pin_d:
-            return {"status":"ok","data":[]}
-        df = _load_delinquencies_df()
-        col = next((c for c in ("pin","PIN","Pin") if c in df.columns), None)
-        if not col:
-            return {"status":"error","error": f"'pin' column not found in {PASSES_PATH}"}
-        comp = df[col].astype(str).str.replace(r"\D","", regex=True)
-        out = df[comp == pin_d].reset_index(drop=True)
-        return {"status":"ok","data": out.to_dict(orient="records")}
+        pin14 = _digits(pin)
+        if len(pin14) != 14:
+            return {"status": "ok", "data": []}
+        idx = _delinq_index()
+        row = idx.get(pin14)
+        return {"status": "ok", "data": [row | {"pin14": pin14}] if row else []}
     except Exception as e:
-        # Do not crash the app; return a safe payload
-        return {"status":"error","error": f"delinquency fetch failed: {e}"}
+        return {"status": "error", "error": f"delinquency fetch failed: {e}"}
+
 
 
 
