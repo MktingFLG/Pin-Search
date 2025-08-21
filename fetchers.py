@@ -3046,33 +3046,82 @@ def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_
 
 
 # ================= Delinquent Taxes ======================
+import os
+import re
+from pathlib import Path
 import pandas as pd
 
-def fetch_delinquent(pin: str, csv_path: str = "delinquencies_master.csv.gz"):
+def _digits_only(s: str) -> str:
+    return re.sub(r"\D", "", str(s or ""))
+
+def fetch_delinquent(
+    pin: str,
+    csv_path: str | None = None,
+):
     """
     Lookup a PIN in the delinquency master file.
     Returns a DataFrame with matches or a string message if not found.
+    - Searches for the file in several sensible locations.
+    - Compares PINs on digits-only to tolerate dashed/undashed inputs.
     """
-    from utils import normalize_pin  # use your existing helper
+    # Build candidate paths
+    here = Path(__file__).parent
+    candidates: list[Path] = []
 
-    pin_norm = normalize_pin(pin)
+    # 1) explicit
+    if csv_path:
+        candidates.append(Path(csv_path))
 
+    # 2) env var directory
+    env_dir = os.getenv("ASSESSOR_PASSES_DIR")
+    if env_dir:
+        candidates.append(Path(env_dir) / "delinquencies_master.csv.gz")
+
+    # 3) repo-relative default
+    candidates.append(here.parent / "assessor-passes-data" / "delinquencies_master.csv.gz")
+
+    # 4) module-relative fallback
+    candidates.append(here / "delinquencies_master.csv.gz")
+
+    target = next((p for p in candidates if p.exists()), None)
+    if not target:
+        # For easier debugging, tell where we looked
+        tried = " | ".join(str(p) for p in candidates)
+        return f"❌ Master file not found. Tried: {tried}"
+
+    # Load once
     try:
         df = pd.read_csv(
-            csv_path,
+            target,
             dtype=str,
             compression="gzip",
             low_memory=False
         )
-    except FileNotFoundError:
-        return f"❌ Master file not found at {csv_path}"
+    except Exception as e:
+        return f"❌ Failed to read {target}: {e}"
 
-    matches = df[df["pin"] == pin_norm]
+    # Normalize both sides to digits-only
+    pin_d = _digits_only(pin)
+    if pin_d == "":
+        return f"ℹ️ Invalid PIN input: {pin!r}"
+
+    # Some files may name the column "pin" or "PIN" etc.
+    col = None
+    for c in ("pin", "PIN", "Pin"):
+        if c in df.columns:
+            col = c
+            break
+    if not col:
+        return f"❌ 'pin' column not found in {target}"
+
+    # Build a normalized comparison column without mutating the original
+    comp = df[col].astype(str).str.replace(r"\D", "", regex=True)
+    matches = df[comp == pin_d]
 
     if matches.empty:
         return f"ℹ️ No delinquencies found for PIN {pin}"
-    else:
-        return matches.reset_index(drop=True)
+    return matches.reset_index(drop=True)
+
 
 
 def fetch_bor(pin: str, force: bool = False) -> dict:
