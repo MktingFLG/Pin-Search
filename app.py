@@ -28,21 +28,27 @@ app.add_middleware(
 def health():
     return {"status": "ok", "version": APP_VERSION}
 
+# app.py
 @app.get("/api/pin/{pin}")
 def pin_summary(pin: str, fresh: int = Query(0, ge=0, le=1)):
+    from utils import normalize_pin
     try:
         pin_dash = normalize_pin(pin)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
     try:
-        # LAZY import here
+        # lazy import to avoid heavy work at startup
         from orchestrator import get_pin_summary
         data = get_pin_summary(pin_dash, fresh=bool(fresh))
         return JSONResponse(data)
+    except MemoryError:
+        # clear message + no restart
+        raise HTTPException(status_code=503, detail="Out of memory while building summary")
     except Exception as e:
-        # log the actual error for debugging
         print("pin_summary error:", repr(e))
         raise HTTPException(status_code=502, detail="Failed to assemble PIN summary")
+
 
 @app.get("/ptab/pin/{pin}")
 def ptab_pin(pin: str, years: str | None = None):
