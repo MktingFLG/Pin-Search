@@ -3045,101 +3045,68 @@ def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_
                 "_meta": {"dataset": dataset_id, "pins": und[:], "error": str(e)}}
 
 
-# ================= Delinquent Taxes ======================
-import os, re, tempfile
-from pathlib import Path
-import pandas as pd
+# ================= Delinquent Taxes (GitHub-only) ======================
+import io
+import os
+import re
 import requests
+import pandas as pd
+from functools import lru_cache
+
+# ---- config (override via env if needed) ----
+GITHUB_TOKEN   = os.getenv("GITHUB_TOKEN", "").strip()
+PASSES_REPO    = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")  # owner/name
+PASSES_BRANCH  = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
+PASSES_PATH    = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")     # path in repo (root by default)
+
+RAW_URL = f"https://raw.githubusercontent.com/{PASSES_REPO}/{PASSES_BRANCH}/{PASSES_PATH}"
+HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
 
 def _digits_only(s: str) -> str:
     return re.sub(r"\D", "", str(s or ""))
 
-def fetch_delinquent(pin: str, csv_path: str | None = None):
+@lru_cache(maxsize=1)
+def _load_delinquencies_df() -> pd.DataFrame:
     """
-    Lookup a PIN in the delinquency master file.
-
-    Search order:
-      1) explicit csv_path
-      2) ASSESSOR_PASSES_FILE (exact file path)
-      3) ASSESSOR_PASSES_DIR/delinquencies_master.csv.gz
-      4) CWD/assessor-passes-data/delinquencies_master.csv.gz
-      5) CWD/delinquencies_master.csv.gz
-      6) sibling-of-CWD: ../assessor-passes-data/delinquencies_master.csv.gz
-      7) MODULE_DIR/assessor-passes-data/delinquencies_master.csv.gz
-      8) MODULE_DIR/delinquencies_master.csv.gz
-      9) GitHub raw via GITHUB_TOKEN (DELINQ_REPO/BRANCH/PATH)
+    Always fetch from the private GitHub repo using GITHUB_TOKEN.
+    Cached in-memory per process to avoid repeated downloads.
     """
-    FNAME = "delinquencies_master.csv.gz"
-    here = Path(__file__).parent.resolve()
-    cwd  = Path.cwd().resolve()
+    if not GITHUB_TOKEN:
+        raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
 
-    candidates: list[Path] = []
+    r = requests.get(RAW_URL, headers=HEADERS, timeout=60)
+    if r.status_code == 404:
+        raise RuntimeError(f"GitHub 404 for {RAW_URL}")
+    r.raise_for_status()
 
-    # 1) explicit
-    if csv_path:
-        candidates.append(Path(csv_path))
+    # gzip content -> pandas
+    return pd.read_csv(io.BytesIO(r.content), dtype=str, compression="gzip", low_memory=False)
 
-    # 2) env: exact file
-    env_file = os.getenv("ASSESSOR_PASSES_FILE")
-    if env_file:
-        candidates.append(Path(env_file))
-
-    # 3) env: directory
-    env_dir = os.getenv("ASSESSOR_PASSES_DIR")
-    if env_dir:
-        candidates.append(Path(env_dir) / FNAME)
-
-    # 4–8) common dev/layout guesses
-    candidates.append(cwd / "assessor-passes-data" / FNAME)
-    candidates.append(cwd / FNAME)
-    candidates.append(cwd.parent / "assessor-passes-data" / FNAME)   # sibling-of-CWD
-    candidates.append(here / "assessor-passes-data" / FNAME)
-    candidates.append(here / FNAME)
-
-    target = next((p for p in candidates if p.exists()), None)
-
-    # 9) GitHub raw fallback (private OK with token)
-    if not target:
-        repo   = os.getenv("DELINQ_REPO",   "MktingFLG/assessor-passes-data")
-        branch = os.getenv("DELINQ_BRANCH", "main")
-        path   = os.getenv("DELINQ_PATH",   "delinquencies_master.csv.gz")
-        token  = os.getenv("GITHUB_TOKEN", "").strip()
-
-        url = f"https://raw.githubusercontent.com/{repo}/{branch}/{path}"
-        try:
-            tmp = Path(tempfile.gettempdir()) / Path(path).name
-            if not tmp.exists():
-                headers = {"Authorization": f"Bearer {token}"} if token else {}
-                r = requests.get(url, headers=headers, timeout=60)
-                r.raise_for_status()
-                tmp.write_bytes(r.content)
-            target = tmp
-        except Exception as e:
-            tried = " | ".join(str(p) for p in candidates)
-            return f"❌ Master file not found locally (tried: {tried}) and GitHub fetch failed: {e}"
-
-    # Read (auto detect gzip)
-    compression = "gzip" if str(target).lower().endswith(".gz") else None
-    try:
-        df = pd.read_csv(target, dtype=str, compression=compression, low_memory=False)
-    except Exception as e:
-        return f"❌ Failed to read {target}: {e}"
-
-    # Normalize PIN and match
+def fetch_delinquent(pin: str):
+    """
+    Lookup PIN in the GitHub-hosted delinquency master file.
+    Returns a DataFrame of matches, or an error/empty message string.
+    """
     pin_d = _digits_only(pin)
     if not pin_d:
         return f"ℹ️ Invalid PIN input: {pin!r}"
 
-    # Accept a few possible column names
-    col = next((c for c in ("pin", "PIN", "Pin", "PIN (14)", "pin14") if c in df.columns), None)
+    try:
+        df = _load_delinquencies_df()
+    except Exception as e:
+        return f"❌ Failed to fetch delinquency CSV from GitHub: {e}"
+
+    # tolerate column casing
+    col = next((c for c in ("pin", "PIN", "Pin") if c in df.columns), None)
     if not col:
-        return f"❌ 'pin' column not found in {target}"
+        return f"❌ 'pin' column not found in {PASSES_PATH}"
 
     comp = df[col].astype(str).str.replace(r"\D", "", regex=True)
     matches = df[comp == pin_d]
-    return matches.reset_index(drop=True) if not matches.empty else f"ℹ️ No delinquencies found for PIN {pin}"
 
-
+    if matches.empty:
+        return f"ℹ️ No delinquencies found for PIN {pin}"
+    return matches.reset_index(drop=True)
 
 
 
