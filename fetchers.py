@@ -2562,22 +2562,35 @@ def _ptab_get_docket_list_from_pin(sess: requests.Session, pin14: str) -> list[t
     Returns a list of (short_docket, full_docket) for a 14-digit PIN.
     short like '14-24172', full like '2014-024172'
     """
-    url = f"{PTAB_BASE}/PropertyPIN.asp?PropPin={pin14}&button=Submit"
-    r = sess.get(url, timeout=PTAB_TIMEOUT)
-    soup = BeautifulSoup(r.text, "html.parser")
-    dockets: list[tuple[str, str]] = []
-    for tr in soup.select("tr"):
-        tds = tr.find_all("td")
-        if len(tds) >= 2:
-            a = tds[0].find("a", href=True)
-            if a and "docketno=" in a["href"].lower():
-                m = re.search(r"docketno=(\d+-\d+)", a["href"], re.I)
-                if not m:
-                    continue
-                short_ = m.group(1)              # e.g., 14-24172
-                full   = tds[1].get_text(strip=True)  # e.g., 2014-024172
-                dockets.append((short_, full))
-    return dockets
+    def _parse(html: str) -> list[tuple[str, str]]:
+        soup = BeautifulSoup(html, "html.parser")
+        out: list[tuple[str, str]] = []
+        for tr in soup.select("tr"):
+            tds = tr.find_all("td")
+            if len(tds) >= 2:
+                a = tds[0].find("a", href=True)
+                if a and "docketno=" in a["href"].lower():
+                    m = re.search(r"docketno=(\d+-\d+)", a["href"], re.I)
+                    if not m:
+                        continue
+                    short_ = m.group(1)                  # e.g., 14-24172
+                    full   = tds[1].get_text(strip=True) # e.g., 2014-024172
+                    out.append((short_, full))
+        return out
+
+    # 1) try undashed (current behavior)
+    url_und = f"{PTAB_BASE}/PropertyPIN.asp?PropPin={pin14}&button=Submit"
+    r = sess.get(url_und, timeout=PTAB_TIMEOUT)
+    dockets = _parse(r.text)
+    if dockets:
+        return dockets
+
+    # 2) retry with dashed format if nothing came back
+    dashed = f"{pin14[0:2]}-{pin14[2:4]}-{pin14[4:7]}-{pin14[7:11]}" if len(pin14) == 14 else pin14
+    url_dsh = f"{PTAB_BASE}/PropertyPIN.asp?PropPin={dashed}&button=Submit"
+    r2 = sess.get(url_dsh, timeout=PTAB_TIMEOUT)
+    return _parse(r2.text)
+
 
 def _ptab_get_associated_pins(sess: requests.Session, short_d: str) -> list[str]:
     """

@@ -213,7 +213,8 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
                 "rows": ptax_summary_rows,
             },
             "recorder_of_deeds": (rod or {}).get("normalized", {}),
-            "ptab": ptab.get("rows", []), 
+            "ptab": ptab_rows,
+
             "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_raw),
             "delinquent": (
@@ -251,7 +252,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "PTAX_ADDL_PINS": ptax_pins.get("_status", "ok"),
             "PTAX_PERS": ptax_personal.get("_status", "ok"),
             "ROD": rod.get("_status", "ok"),
-            "PTAB": ptab.get("_status", "ok"),
+            "PTAB_COUNT": len(ptab_rows or []),
             "PERMITS_CCAO": permits_ccao.get("_status", "ok"),
             "DELINQUENT": "ok" if not isinstance(delinquent, str) else "empty",
 
