@@ -178,7 +178,10 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
     # Derived metrics (keep simple; expand as needed)
     derived = _compute_derived(bor, cv, sales)
-
+    
+    ptab_rows = (ptab.get("normalized", {}) or {}).get("rows")
+    if ptab_rows is None:
+        ptab_rows = ptab.get("rows", [])
     # Shape output based on config-driven sections
     payload = {
         "pin": pin_dash,
@@ -210,9 +213,9 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
                 "rows": ptax_summary_rows,
             },
             "recorder_of_deeds": (rod or {}).get("normalized", {}),
+            "ptab": ptab.get("rows", []), 
             "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_raw),
-            "ptab": (ptab.get("normalized", {}) or {}).get("rows", []),
             "delinquent": (
                 delinquent if isinstance(delinquent, str)
                 else delinquent.to_dict(orient="records")
