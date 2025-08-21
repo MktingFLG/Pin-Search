@@ -1,10 +1,9 @@
-# Use Python 3.12 slim (stable + supported by pandas/numpy)
-FROM python:3.12-slim
+# --- Stage 1: Builder (compile heavy deps like numpy/pandas) ---
+FROM python:3.12-slim AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies needed for pandas/numpy
+# Install build tools only in this stage
 RUN apt-get update && apt-get install -y \
     build-essential \
     gcc \
@@ -12,14 +11,30 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Upgrade pip/setuptools/wheel to fixed versions (avoid random breakage)
+RUN pip install --upgrade pip==24.0 setuptools==70.0.0 wheel==0.43.0
+
+# Install dependencies into a /wheels dir
 COPY requirements.txt .
+RUN pip wheel --wheel-dir=/wheels -r requirements.txt
 
-# Install Python dependencies
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install -r requirements.txt
 
-# Copy the rest of your code
+# --- Stage 2: Runtime (lighter final image) ---
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install only minimal runtime deps (no compilers here)
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy prebuilt wheels from builder
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/*
+
+# Copy app code
 COPY . .
 
-# Don’t set CMD here — Render will override with startCommand
+# Default command (Render overrides this with render.yaml anyway)
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "10000"]
