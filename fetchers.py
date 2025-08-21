@@ -3054,73 +3054,80 @@ import pandas as pd
 def _digits_only(s: str) -> str:
     return re.sub(r"\D", "", str(s or ""))
 
-def fetch_delinquent(
-    pin: str,
-    csv_path: str | None = None,
-):
+def fetch_delinquent(pin: str, csv_path: str | None = None):
     """
     Lookup a PIN in the delinquency master file.
-    Returns a DataFrame with matches or a string message if not found.
-    - Searches for the file in several sensible locations.
-    - Compares PINs on digits-only to tolerate dashed/undashed inputs.
+    Searches these in order:
+      1) explicit csv_path (if given)
+      2) ASSESSOR_PASSES_FILE (exact file path)
+      3) ASSESSOR_PASSES_DIR/delinquencies_master.csv.gz
+      4) CWD/assessor-passes-data/delinquencies_master.csv.gz
+      5) CWD/delinquencies_master.csv.gz
+      6) MODULE_DIR/assessor-passes-data/delinquencies_master.csv.gz
+      7) MODULE_DIR/delinquencies_master.csv.gz
+    Compares on digits-only to tolerate dashed vs undashed PINs.
     """
-    # Build candidate paths
-    here = Path(__file__).parent
+    FNAME = "delinquencies_master.csv.gz"
+    here = Path(__file__).parent.resolve()
+    cwd  = Path.cwd().resolve()
+
     candidates: list[Path] = []
 
     # 1) explicit
     if csv_path:
         candidates.append(Path(csv_path))
 
-    # 2) env var directory
+    # 2) ASSESSOR_PASSES_FILE (exact)
+    env_file = os.getenv("ASSESSOR_PASSES_FILE")
+    if env_file:
+        candidates.append(Path(env_file))
+
+    # 3) ASSESSOR_PASSES_DIR + filename
     env_dir = os.getenv("ASSESSOR_PASSES_DIR")
     if env_dir:
-        candidates.append(Path(env_dir) / "delinquencies_master.csv.gz")
+        candidates.append(Path(env_dir) / FNAME)
 
-    # 3) repo-relative default
-    candidates.append(here.parent / "assessor-passes-data" / "delinquencies_master.csv.gz")
+    # 4) repo-root guess: CWD/assessor-passes-data/FNAME
+    candidates.append(cwd / "assessor-passes-data" / FNAME)
 
-    # 4) module-relative fallback
-    candidates.append(here / "delinquencies_master.csv.gz")
+    # 5) CWD/FNAME
+    candidates.append(cwd / FNAME)
+
+    # 6) alongside module: MODULE_DIR/assessor-passes-data/FNAME
+    candidates.append(here / "assessor-passes-data" / FNAME)
+
+    # 7) MODULE_DIR/FNAME
+    candidates.append(here / FNAME)
 
     target = next((p for p in candidates if p.exists()), None)
     if not target:
-        # For easier debugging, tell where we looked
         tried = " | ".join(str(p) for p in candidates)
         return f"❌ Master file not found. Tried: {tried}"
 
-    # Load once
+    # detect compression by suffix
+    compression = "gzip" if str(target).lower().endswith(".gz") else None
+
     try:
-        df = pd.read_csv(
-            target,
-            dtype=str,
-            compression="gzip",
-            low_memory=False
-        )
+        df = pd.read_csv(target, dtype=str, compression=compression, low_memory=False)
     except Exception as e:
         return f"❌ Failed to read {target}: {e}"
 
-    # Normalize both sides to digits-only
     pin_d = _digits_only(pin)
-    if pin_d == "":
+    if not pin_d:
         return f"ℹ️ Invalid PIN input: {pin!r}"
 
-    # Some files may name the column "pin" or "PIN" etc.
-    col = None
-    for c in ("pin", "PIN", "Pin"):
-        if c in df.columns:
-            col = c
-            break
+    # column name tolerance
+    col = next((c for c in ("pin", "PIN", "Pin") if c in df.columns), None)
     if not col:
         return f"❌ 'pin' column not found in {target}"
 
-    # Build a normalized comparison column without mutating the original
     comp = df[col].astype(str).str.replace(r"\D", "", regex=True)
     matches = df[comp == pin_d]
 
     if matches.empty:
         return f"ℹ️ No delinquencies found for PIN {pin}"
     return matches.reset_index(drop=True)
+
 
 
 
