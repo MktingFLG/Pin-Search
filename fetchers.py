@@ -3046,7 +3046,7 @@ def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_
 
 
 
-# ================= Delinquent Taxes (GitHub RAW) ======================
+# ================= Delinquent Taxes (GitHub Contents API) ======================
 import io
 import os
 import re
@@ -3055,13 +3055,16 @@ import pandas as pd
 from functools import lru_cache
 
 GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "").strip()
-PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")  # owner/repo
+PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")   # owner/repo
 PASSES_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
-PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")     # file path in repo
+PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")      # path in repo
 
-# ✅ Correct raw endpoint for programmatic access
-RAW_URL = f"https://raw.githubusercontent.com/{PASSES_REPO}/{PASSES_BRANCH}/{PASSES_PATH}"
-HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
+API_URL = f"https://api.github.com/repos/{PASSES_REPO}/contents/{PASSES_PATH}?ref={PASSES_BRANCH}"
+API_HEADERS = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}",
+    "Accept": "application/vnd.github.raw",   # <-- returns raw bytes
+    "User-Agent": "pin-tool/1.0"
+}
 
 def _digits_only(s: str) -> str:
     return re.sub(r"\D", "", str(s or ""))
@@ -3070,9 +3073,17 @@ def _digits_only(s: str) -> str:
 def _load_delinquencies_df() -> pd.DataFrame:
     if not GITHUB_TOKEN:
         raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
-    r = requests.get(RAW_URL, headers=HEADERS, timeout=60)
+
+    r = requests.get(API_URL, headers=API_HEADERS, timeout=60)
+
+    # Helpful errors by status
+    if r.status_code == 401:
+        raise RuntimeError("401 Unauthorized: token missing/invalid/expired.")
+    if r.status_code == 403:
+        raise RuntimeError("403 Forbidden: token lacks 'contents:read' for this repo.")
     if r.status_code == 404:
-        raise RuntimeError(f"GitHub 404 for {RAW_URL}")
+        raise RuntimeError(f"404 Not Found: check branch '{PASSES_BRANCH}' and path '{PASSES_PATH}'.")
+
     r.raise_for_status()
     return pd.read_csv(io.BytesIO(r.content), dtype=str, compression="gzip", low_memory=False)
 
@@ -3090,6 +3101,7 @@ def fetch_delinquent(pin: str):
     comp = df[col].astype(str).str.replace(r"\D", "", regex=True)
     matches = df[comp == pin_d]
     return matches.reset_index(drop=True) if not matches.empty else f"ℹ️ No delinquencies found for PIN {pin}"
+
 
 
 
