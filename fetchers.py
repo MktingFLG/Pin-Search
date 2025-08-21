@@ -2366,6 +2366,31 @@ def _parse_rod_deed_rows(html: str) -> list[dict]:
         })
     return out
 
+def _select_top_deeds(all_deeds: list[dict], n: int) -> list[dict]:
+    """
+    Return top-N deeds by executed date (desc). Ensures 'executed_str' is set
+    and drops the raw datetime for JSON cleanliness.
+    """
+    if not all_deeds:
+        return []
+    # sort newest first
+    ranked = sorted(
+        all_deeds,
+        key=lambda d: (d.get("executed") or datetime.min),
+        reverse=True
+    )
+    picked = []
+    for d in ranked[:max(1, n)]:
+        dd = dict(d)  # shallow copy
+        if not dd.get("executed_str"):
+            if dd.get("executed") and dd["executed"] != datetime.min:
+                dd["executed_str"] = dd["executed"].strftime("%m/%d/%Y")
+            else:
+                dd["executed_str"] = ""
+        dd.pop("executed", None)
+        picked.append(dd)
+    return picked
+
 
 def _select_latest_deed(all_deeds: list[dict]) -> list[dict]:
     """
@@ -2465,7 +2490,21 @@ def fetch_recorder_bundle(pin: str, top_n: int = 3) -> dict:
 
         assoc = _parse_rod_associated_pins(html)
         all_deeds = _parse_rod_deed_rows(html)
-        top = _select_latest_deed(all_deeds)
+
+        # Build an "all_deeds" flat list for the UI/history (lightweight, no extra HTTP)
+        all_deeds_out = []
+        for d in all_deeds:
+            row = {
+                "type": d.get("type", ""),
+                "executed": (d["executed"].strftime("%m/%d/%Y")
+                             if d.get("executed") and d["executed"] != datetime.min else ""),
+                "url": d.get("url", ""),
+            }
+            all_deeds_out.append(row)
+
+        # Enrich ONLY the top-N most recent deeds (default 3 via function arg)
+        top = _select_top_deeds(all_deeds, top_n or 1)
+
 
         enriched = []
         for d in top:
@@ -2498,9 +2537,11 @@ def fetch_recorder_bundle(pin: str, top_n: int = 3) -> dict:
                 "associated_pins_dashed": pins_dashed,
                 "associated_pins_undashed": assoc.get("unique_undashed", []),
                 "associated_count": len(pins_dashed),
-                "top_deeds": enriched,
+                "all_deeds": all_deeds_out,        # NEW: lightweight list of every deed row
+                "top_deeds": enriched,             # Enriched details for top-N
                 "latest_deed": (enriched[0] if enriched else {}),
             },
+
             "raw": page["raw"],
             "_meta": {
                 "searched_pin": undashed_pin(pin),
