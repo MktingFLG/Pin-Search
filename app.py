@@ -135,3 +135,10 @@ def api_ccao_permits(pin: str, year_min: int | None = None, year_max: int | None
         raise HTTPException(status_code=502, detail="Permit fetch failed")
     return JSONResponse(res)
 
+# app.py (FastAPI)
+from fastapi import FastAPI
+app = FastAPI()
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}

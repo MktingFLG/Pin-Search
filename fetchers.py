@@ -3047,23 +3047,20 @@ def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_
 
 
 # ================= Delinquent Taxes (GitHub Contents API) ======================
-import io
-import os
-import re
-import requests
-import pandas as pd
+
+import io, os, re, requests, pandas as pd
 from functools import lru_cache
 
 GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "").strip()
-PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")   # owner/repo
+PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")
 PASSES_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
-PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")      # path in repo
+PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")
 
 API_URL = f"https://api.github.com/repos/{PASSES_REPO}/contents/{PASSES_PATH}?ref={PASSES_BRANCH}"
 API_HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.raw",   # <-- returns raw bytes
-    "User-Agent": "pin-tool/1.0"
+    "Accept": "application/vnd.github.raw",
+    "User-Agent": "pin-tool/1.0",
 }
 
 def _digits_only(s: str) -> str:
@@ -3073,34 +3070,32 @@ def _digits_only(s: str) -> str:
 def _load_delinquencies_df() -> pd.DataFrame:
     if not GITHUB_TOKEN:
         raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
-
-    r = requests.get(API_URL, headers=API_HEADERS, timeout=60)
-
-    # Helpful errors by status
+    r = requests.get(API_URL, headers=API_HEADERS, timeout=20)
     if r.status_code == 401:
-        raise RuntimeError("401 Unauthorized: token missing/invalid/expired.")
+        raise RuntimeError("401 Unauthorized: bad/expired token.")
     if r.status_code == 403:
-        raise RuntimeError("403 Forbidden: token lacks 'contents:read' for this repo.")
+        raise RuntimeError("403 Forbidden: token lacks contents:read.")
     if r.status_code == 404:
-        raise RuntimeError(f"404 Not Found: check branch '{PASSES_BRANCH}' and path '{PASSES_PATH}'.")
-
+        raise RuntimeError(f"404 Not Found: branch '{PASSES_BRANCH}' or path '{PASSES_PATH}' wrong.")
     r.raise_for_status()
     return pd.read_csv(io.BytesIO(r.content), dtype=str, compression="gzip", low_memory=False)
 
 def fetch_delinquent(pin: str):
-    pin_d = _digits_only(pin)
-    if not pin_d:
-        return f"ℹ️ Invalid PIN input: {pin!r}"
     try:
+        pin_d = _digits_only(pin)
+        if not pin_d:
+            return {"status":"ok","data":[]}
         df = _load_delinquencies_df()
+        col = next((c for c in ("pin","PIN","Pin") if c in df.columns), None)
+        if not col:
+            return {"status":"error","error": f"'pin' column not found in {PASSES_PATH}"}
+        comp = df[col].astype(str).str.replace(r"\D","", regex=True)
+        out = df[comp == pin_d].reset_index(drop=True)
+        return {"status":"ok","data": out.to_dict(orient="records")}
     except Exception as e:
-        return f"❌ Failed to fetch delinquency CSV from GitHub: {e}"
-    col = next((c for c in ("pin", "PIN", "Pin") if c in df.columns), None)
-    if not col:
-        return f"❌ 'pin' column not found in {PASSES_PATH}"
-    comp = df[col].astype(str).str.replace(r"\D", "", regex=True)
-    matches = df[comp == pin_d]
-    return matches.reset_index(drop=True) if not matches.empty else f"ℹ️ No delinquencies found for PIN {pin}"
+        # Do not crash the app; return a safe payload
+        return {"status":"error","error": f"delinquency fetch failed: {e}"}
+
 
 
 
