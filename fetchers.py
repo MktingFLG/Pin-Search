@@ -2586,7 +2586,7 @@ def _ptab_get_docket_list_from_pin(sess: requests.Session, pin14: str) -> list[t
         return dockets
 
     # 2) retry with dashed format if nothing came back
-    dashed = f"{pin14[0:2]}-{pin14[2:4]}-{pin14[4:7]}-{pin14[7:11]}" if len(pin14) == 14 else pin14
+    dashed = f"{pin14[0:2]}-{pin14[2:4]}-{pin14[4:7]}-{pin14[7:10]}-{pin14[10:14]}" if len(pin14) == 14 else pin14
     url_dsh = f"{PTAB_BASE}/PropertyPIN.asp?PropPin={dashed}&button=Submit"
     r2 = sess.get(url_dsh, timeout=PTAB_TIMEOUT)
     return _parse(r2.text)
@@ -2923,7 +2923,11 @@ def fetch_ptab_by_pin(
         if compute_consolidated and all_rows:
             all_rows = _ptab_consolidate_totals(all_rows)
 
-        return _ok(meta, all_rows)
+        return {
+            "_status": "ok",
+            "normalized": {"rows": all_rows},
+            "_meta": meta,
+        }
     except Exception as e:
         return _err(meta, f"fetch_ptab_by_pin failed: {e}")
 
@@ -2965,7 +2969,11 @@ def fetch_ptab_by_docket(
         if compute_consolidated and all_rows:
             all_rows = _ptab_consolidate_totals(all_rows)
 
-        return _ok(meta, all_rows)
+        return {
+            "_status": "ok",
+            "normalized": {"rows": all_rows},
+            "_meta": meta,
+        }
     except Exception as e:
         return _err(meta, f"fetch_ptab_by_docket failed: {e}")
     
