@@ -59,10 +59,24 @@ def pin_summary(pin: str, fresh: int = Query(0, ge=0, le=1)):
 # ---- Static docs (served at "/") ----
 STATIC_DIR = Path(__file__).parent / "docs"
 print("Serving docs from:", STATIC_DIR.resolve(), "exists:", STATIC_DIR.exists())
+from fastapi.responses import RedirectResponse
+
+STATIC_DIR = Path(__file__).parent / "docs"
+print("Serving docs from:", STATIC_DIR.resolve(), "exists:", STATIC_DIR.exists())
+
+@app.get("/")
+def root():
+    # simple landing or redirect to docs
+    if STATIC_DIR.exists():
+        return RedirectResponse(url="/docs/index.html")
+    return {"message": "PIN Tool API. See /api/health"}
+
 if STATIC_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+    # move static mount off root to /docs
+    app.mount("/docs", StaticFiles(directory=str(STATIC_DIR), html=True), name="static-docs")
 else:
     print("Docs directory missing; static mount skipped.")
+
 
 
 @app.get("/subs/manifest")
