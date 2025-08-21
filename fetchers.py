@@ -3045,7 +3045,7 @@ def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_
                 "_meta": {"dataset": dataset_id, "pins": und[:], "error": str(e)}}
 
 
-# ================= Delinquent Taxes (GitHub-only) ======================
+# ================= Delinquent Taxes (GitHub-only via API) ======================
 import io
 import os
 import re
@@ -3053,19 +3053,15 @@ import requests
 import pandas as pd
 from functools import lru_cache
 
-# ---- config (override via env if needed) ----
-GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "").strip()
-PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")   # owner/name
-PASSES_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
-# file is at repo root in your case:
-PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")
+GITHUB_TOKEN   = os.getenv("GITHUB_TOKEN", "").strip()
+PASSES_REPO    = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")
+PASSES_BRANCH  = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
+# file is at repo root in your screenshot:
+PASSES_PATH    = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")
 
-# use GitHub “raw/refs/heads” form (works with Authorization header)
-RAW_URL = os.getenv(
-    "ASSESSOR_PASSES_RAW_URL",
-    f"https://github.com/{PASSES_REPO}/raw/refs/heads/{PASSES_BRANCH}/{PASSES_PATH}"
-)
-HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
+API_URL = f"https://api.github.com/repos/{PASSES_REPO}/contents/{PASSES_PATH}?ref={PASSES_BRANCH}"
+API_HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
+API_RAW_HEADERS = {**API_HEADERS, "Accept": "application/vnd.github.raw"}
 
 def _digits_only(s: str) -> str:
     return re.sub(r"\D", "", str(s or ""))
@@ -3074,11 +3070,11 @@ def _digits_only(s: str) -> str:
 def _load_delinquencies_df() -> pd.DataFrame:
     if not GITHUB_TOKEN:
         raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
-    r = requests.get(RAW_URL, headers=HEADERS, timeout=60, allow_redirects=True)
+    r = requests.get(API_URL, headers=API_RAW_HEADERS, timeout=60)
     if r.status_code == 404:
-        raise RuntimeError(f"GitHub 404 for {RAW_URL}")
+        raise RuntimeError(f"GitHub 404 for {API_URL}")
     r.raise_for_status()
-    # raw bytes -> pandas (gzip)
+    # We requested raw bytes; it's a gzipped CSV:
     return pd.read_csv(io.BytesIO(r.content), dtype=str, compression="gzip", low_memory=False)
 
 def fetch_delinquent(pin: str):
@@ -3090,16 +3086,14 @@ def fetch_delinquent(pin: str):
     except Exception as e:
         return f"❌ Failed to fetch delinquency CSV from GitHub: {e}"
 
-    # tolerate column casing
     col = next((c for c in ("pin", "PIN", "Pin") if c in df.columns), None)
     if not col:
         return f"❌ 'pin' column not found in {PASSES_PATH}"
 
     comp = df[col].astype(str).str.replace(r"\D", "", regex=True)
     matches = df[comp == pin_d]
-    if matches.empty:
-        return f"ℹ️ No delinquencies found for PIN {pin}"
-    return matches.reset_index(drop=True)
+    return matches.reset_index(drop=True) if not matches.empty else f"ℹ️ No delinquencies found for PIN {pin}"
+
 
 
 

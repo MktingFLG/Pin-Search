@@ -23,44 +23,42 @@ GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO   = os.getenv("ASSESSOR_DATA_REPO", "MktingFLG/assessor-passes-data")   # owner/name
 GITHUB_BRANCH = os.getenv("ASSESSOR_DATA_BRANCH", "main")
 
-# Allow full override (lets you paste an exact base if needed)
-RAW_BASE = os.getenv(
-    "ASSESSOR_INDEX_RAW_BASE",
-    f"https://github.com/{GITHUB_REPO}/raw/refs/heads/{GITHUB_BRANCH}/data/_index"
-)
-AUTH_HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
+# --- GitHub fallback (private repo raw via API) ---
+API_BASE = f"https://api.github.com/repos/{GITHUB_REPO}/contents/data/_index"
+API_HEADERS = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}"
+} if GITHUB_TOKEN else {}
+API_RAW_HEADERS = {**API_HEADERS, "Accept": "application/vnd.github.raw"}
 
-# -----------------------------------
+def _fetch_json_from_github(filename: str) -> dict:
+    # example: .../contents/data/_index/pin_to_key.json?ref=main
+    url = f"{API_BASE}/{filename}?ref={GITHUB_BRANCH}"
+    r = requests.get(url, headers=API_RAW_HEADERS, timeout=30)
+    r.raise_for_status()
+    # with Accept: raw we receive the file content directly (not base64)
+    return r.json()
 
 @lru_cache(maxsize=1)
 def _load_index() -> tuple[dict, dict]:
-    """
-    Returns (pin_to_key, key_to_children) dicts.
-    Prefers local files. If not found, fetches from GitHub raw with token.
-    """
-    # 1) local files
+    # 1) local files first
     if PIN_TO_KEY_JSON.exists() and KEY_TO_CHILD_JSON.exists():
         try:
             p2k = json.loads(PIN_TO_KEY_JSON.read_text(encoding="utf-8"))
             k2c = json.loads(KEY_TO_CHILD_JSON.read_text(encoding="utf-8"))
             return p2k, k2c
         except Exception:
-            pass  # fall through to GitHub
+            pass  # fall through
 
-    # 2) GitHub raw (private ok if GITHUB_TOKEN set)
+    # 2) GitHub API (private ok with token)
     try:
-        p2k_url = f"{RAW_BASE}/pin_to_key.json"
-        k2c_url = f"{RAW_BASE}/key_to_children.json"
-        r1 = requests.get(p2k_url, headers=AUTH_HEADERS, timeout=30)
-        r1.raise_for_status()
-        r2 = requests.get(k2c_url, headers=AUTH_HEADERS, timeout=30)
-        r2.raise_for_status()
-        p2k = r1.json()
-        k2c = r2.json()
+        if not GITHUB_TOKEN:
+            raise RuntimeError("GITHUB_TOKEN missing for private repo")
+        p2k = _fetch_json_from_github("pin_to_key.json")
+        k2c = _fetch_json_from_github("key_to_children.json")
         return p2k, k2c
     except Exception:
-        # final fallback: empty
         return {}, {}
+
 
 def _digits14(s: str) -> str:
     d = "".join(ch for ch in (s or "") if ch.isdigit())
