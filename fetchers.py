@@ -3476,49 +3476,68 @@ def _money_to_float(s: str) -> float | None:
 
 def _treasurer_fetch_html(und: str) -> tuple[str | None, str | None]:
     """
-    Try a couple of flows to land on the overview page with the session primed.
+    Hardens the flow:
+      1) Open home + search pages to set ASP.NET cookies
+      2) Hit setsearchparameters?pin= to prime state
+      3) Force-navigate to yourpropertytaxoverviewresults.aspx (no query)
+      4) Fallback to ...overviewresults.aspx?PIN=...
     Returns (html, final_url) or (None, None).
     """
     base = "https://www.cookcountytreasurer.com"
     s = requests.Session()
     s.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                      "AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/124.0 Safari/537.36"
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Connection": "keep-alive",
     })
-    # small retry adapter
     try:
-        _ad = HTTPAdapter(max_retries=Retry(total=3, backoff_factor=0.3, status_forcelist=(500, 502, 503, 504)))
+        _ad = HTTPAdapter(max_retries=Retry(
+            total=3, backoff_factor=0.4,
+            status_forcelist=(429, 500, 502, 503, 504)
+        ))
         s.mount("https://", _ad); s.mount("http://", _ad)
     except Exception:
         pass
 
-    candidates = [
-        f"{base}/yourpropertytaxoverviewresults.aspx?PIN={und}",
-        f"{base}/yourpropertytaxoverviewresults.aspx?pin={und}",
-        # Prime cookies/session, then open overview (no query) – this often works on ASP.NET sites
-        f"{base}/setsearchparameters.aspx?pin={und}",
-    ]
+    def looks_like_overview(html: str) -> bool:
+        # very light fingerprint so we don't depend on exact IDs
+        return ("Tax Year" in html and "Total Amount Billed" in html) or ("lblCurrentTaxYear" in html)
 
-    for i, url in enumerate(candidates):
-        try:
-            r = s.get(url, timeout=20, allow_redirects=True)
-            if not r.ok:
-                continue
-            html = r.text
-            # If we just hit setsearchparameters, immediately follow to the overview page
-            if "setsearchparameters" in r.url.lower() or "setsearchparameters" in url.lower():
-                r2 = s.get(f"{base}/yourpropertytaxoverviewresults.aspx", timeout=20, allow_redirects=True)
-                if r2.ok:
-                    return r2.text, r2.url
-            else:
-                # If this page already looks like the overview, keep it
-                if "Tax Year" in html and "Total Amount Billed" in html:
-                    return html, r.url
-        except Exception:
-            continue
+    try:
+        # Step 0: land on the site to get cookies
+        s.get(f"{base}/", timeout=15)
+        # Step 1: open search/overview pages to set more cookies + viewstate
+        s.get(f"{base}/yourpropertytaxoverview.aspx", timeout=15)
+        s.get(f"{base}/yourpropertytaxoverviewresults.aspx", timeout=15)
 
-    return None, None
+        # Step 2: prime session with the PIN
+        s.headers["Referer"] = f"{base}/yourpropertytaxoverview.aspx"
+        r = s.get(f"{base}/setsearchparameters.aspx?pin={und}", timeout=20, allow_redirects=True)
+
+        # Step 3: force open overview results (no query)
+        s.headers["Referer"] = f"{base}/setsearchparameters.aspx?pin={und}"
+        r2 = s.get(f"{base}/yourpropertytaxoverviewresults.aspx", timeout=20, allow_redirects=True)
+        if r2.ok and looks_like_overview(r2.text):
+            return r2.text, r2.url
+
+        # Step 4: fallback to explicit query (both PIN and pin)
+        for url in (
+            f"{base}/yourpropertytaxoverviewresults.aspx?PIN={und}",
+            f"{base}/yourpropertytaxoverviewresults.aspx?pin={und}",
+        ):
+            r3 = s.get(url, timeout=20, allow_redirects=True)
+            if r3.ok and looks_like_overview(r3.text):
+                return r3.text, r3.url
+
+        return None, None
+    except Exception:
+        return None, None
+
 
 def _parse_installments(scope: BeautifulSoup) -> list[dict]:
     """
@@ -3603,13 +3622,19 @@ def fetch_tax_bill_latest(pin: str) -> dict:
 
         html, final_url = _treasurer_fetch_html(und)
         base_url = "https://www.cookcountytreasurer.com/yourpropertytaxoverviewresults.aspx"
+
         if not html:
-            # graceful fallback: keep the link so user can click through
             return {
                 "_status": "ok",
-                "normalized": {"year": None, "total": None, "overview_url": f"{base_url}?PIN={und}", "pin": und},
+                "normalized": {
+                    "year": None,
+                    "total": None,
+                    "overview_url": f"{base_url}?PIN={und}",  # always a clickable results URL
+                    "pin": und
+                },
                 "_meta": {"pin": und, "note": "treasurer fetch failed; returned link only"},
             }
+
 
         soup = BeautifulSoup(html, "lxml")
 
@@ -3662,7 +3687,11 @@ def fetch_tax_bill_latest(pin: str) -> dict:
 
         norm = {
             "pin": und,
-            "overview_url": final_url or f"{base_url}?PIN={und}",
+            # prefer a results URL; if we somehow got setsearchparameters, rewrite to results with query
+            "overview_url": (
+                final_url if (final_url and "overviewresults.aspx" in final_url.lower())
+                else f"{base_url}?PIN={und}"
+            ),
             "current": cur,
             "prior": pri,
             "year": latest_year,

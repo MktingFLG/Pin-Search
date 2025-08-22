@@ -231,8 +231,25 @@
   },
 
   nearby: (content) => {
-    return renderRowsAsTable(content?.features || []);
-  },
+  const table = renderRowsAsTable(content?.features || []);
+  // Attach click-to-focus safely (find 'pin' column by header name)
+  const theadCells = Array.from(table.querySelectorAll("thead th"));
+  const pinIdx = theadCells.findIndex(th => th.textContent.trim().toLowerCase() === "pin");
+
+  if (pinIdx >= 0) {
+    table.querySelectorAll("tbody tr").forEach(tr => {
+      const cell = tr.cells[pinIdx];
+      const pinDash = cell?.textContent?.trim();
+      if (!pinDash) return;
+      tr.classList.add("cursor-pointer", "hover:bg-gray-50");
+      tr.addEventListener("click", () => focusMarkerByPin(pinDash));
+    });
+  }
+
+  return table;
+},
+
+
 
   prc: (content) => {
     const url = content?.url;
@@ -322,7 +339,8 @@ function renderSection(key, title, content) {
     // =========================
     // 4) MAP HELPERS
     // =========================
-    let _map, _markersLayer, _subjectLayer, _radiusCircle;
+
+    let _map, _markersLayer, _subjectLayer, _radiusCircle, _pinToLayer;
     const M2_PER_MI = 1609.344;
 
     function ensureMap() {
@@ -333,49 +351,91 @@ function renderSection(key, title, content) {
       }).addTo(_map);
       _markersLayer = L.layerGroup().addTo(_map);
       _subjectLayer = L.layerGroup().addTo(_map);
+      _pinToLayer = new Map();
     }
 
-    function renderMap(nearby) {
-      ensureMap();
-      _markersLayer.clearLayers();
-      _subjectLayer.clearLayers();
-      if (_radiusCircle) { _map.removeLayer(_radiusCircle); _radiusCircle = null; }
 
-      if (!nearby?.center || nearby.center.lat == null || nearby.center.lon == null) {
-        return;
-      }
-      const c = [nearby.center.lat, nearby.center.lon];
-      _map.setView(c, 13);
+    function renderMap(nearby, taxBill) {
+  ensureMap();
+  _markersLayer.clearLayers();
+  _subjectLayer.clearLayers();
+  _pinToLayer.clear(); // <-- reset the index
+  if (_radiusCircle) { _map.removeLayer(_radiusCircle); _radiusCircle = null; }
 
-      // Subject marker + radius ring
-      _radiusCircle = L.circle(c, { radius: (nearby.radius_mi || 5) * M2_PER_MI, fillOpacity: 0.08 })
-        .addTo(_map);
-      L.marker(c, { title: nearby.subject?.pin_dash || nearby.subject?.pin })
-        .addTo(_subjectLayer)
-        .bindPopup(`
-          <div class="text-sm">
-            <div class="font-semibold">${nearby.subject?.pin_dash || nearby.subject?.pin || ''}</div>
-            <div>${nearby.subject?.property_use || ''} ${nearby.subject?.class ? '('+nearby.subject.class+')' : ''}</div>
-          </div>
-        `);
+  if (!nearby?.center || nearby.center.lat == null || nearby.center.lon == null) return;
 
-      const bounds = [c];
-      (nearby.features || []).forEach(f => {
-        const latlng = [f.lat, f.lon];
-        bounds.push(latlng);
-        L.marker(latlng, { title: f.pin })
-          .addTo(_markersLayer)
-          .bindPopup(`
-            <div class="text-sm">
-              <div class="font-semibold">${f.pin}</div>
-              <div>${f.property_use || ''} ${f.class ? '('+f.class+')' : ''}</div>
-              ${f.distance_mi != null ? `<div>${f.distance_mi} mi away</div>` : ''}
-              ${f.links?.prc ? `<div><a class="text-blue-700 underline" href="${f.links.prc}" target="_blank" rel="noopener">Assessor card</a></div>` : ''}
-            </div>
-          `);
-      });
-      if (bounds.length > 1) _map.fitBounds(L.latLngBounds(bounds).pad(0.2));
-    }
+  const c = [nearby.center.lat, nearby.center.lon];
+  _map.setView(c, 13);
+
+  _radiusCircle = L.circle(c, { radius: (nearby.radius_mi || 5) * M2_PER_MI, fillOpacity: 0.08 })
+    .addTo(_map);
+
+  const latestBillStr = (() => {
+    const cur = taxBill?.current;
+    const pri = taxBill?.prior;
+    const label = (cur?.label || pri?.label) || "";
+    const total = (cur?.total_billed || pri?.total_billed) || "";
+    if (!label && !total) return "";
+    return `
+      <div class="mt-2 p-2 border rounded bg-gray-50">
+        <div class="font-semibold">Latest Tax Bill</div>
+        ${label ? `<div>${label}</div>` : ""}
+        ${total ? `<div>Total Billed: ${total}</div>` : ""}
+      </div>`;
+  })();
+
+  const subjPopupHtml = `
+    <div class="text-sm">
+      <div class="font-semibold">${nearby.subject?.pin_dash || nearby.subject?.pin || ''}</div>
+      <div>${nearby.subject?.property_use || ''} ${nearby.subject?.class ? '('+nearby.subject.class+')' : ''}</div>
+      ${latestBillStr}
+    </div>
+  `;
+
+  const subjMarker = L.circleMarker(c, { radius: 10, weight: 3, opacity: 1, fillOpacity: 0.9 })
+    .addTo(_subjectLayer)
+    .bindPopup(subjPopupHtml)
+    .openPopup(); // <-- open by default
+
+  // Index the subject by its dashed PIN if present
+  const subjKey = nearby.subject?.pin_dash || nearby.subject?.pin;
+  if (subjKey) _pinToLayer.set(subjKey, subjMarker);
+
+  const bounds = [c];
+  (nearby.features || []).forEach(f => {
+    const latlng = [f.lat, f.lon];
+    bounds.push(latlng);
+
+    const treasurerUrl = `https://www.cookcountytreasurer.com/yourpropertytaxoverviewresults.aspx?PIN=${encodeURIComponent(f.pin.replace(/-/g,''))}`;
+    const html = `
+      <div class="text-sm">
+        <div class="font-semibold">${f.pin}</div>
+        <div>${f.property_use || ''} ${f.class ? '('+f.class+')' : ''}</div>
+        ${f.distance_mi != null ? `<div>${f.distance_mi} mi away</div>` : ''}
+        ${f.links?.prc ? `<div><a class="text-blue-700 underline" href="${f.links.prc}" target="_blank" rel="noopener">Assessor card</a></div>` : ''}
+        <div><a class="text-blue-700 underline" href="${treasurerUrl}" target="_blank" rel="noopener">Treasurer overview</a></div>
+      </div>
+    `;
+
+    const m = L.circleMarker(latlng, { radius: 6, weight: 2, opacity: 1, fillOpacity: 0.85 })
+      .addTo(_markersLayer)
+      .bindPopup(html);
+
+    // Index nearby marker by its dashed PIN
+    if (f.pin) _pinToLayer.set(f.pin, m);
+  });
+
+  if (bounds.length > 1) _map.fitBounds(L.latLngBounds(bounds).pad(0.2));
+}
+
+
+function focusMarkerByPin(pinDash) {
+  const layer = _pinToLayer.get(pinDash);
+  if (!layer) return;
+  _map.setView(layer.getLatLng(), Math.max(_map.getZoom(), 15));
+  layer.openPopup();
+}
+
 
     // =========================
     // 5) APP LOGIC
@@ -394,7 +454,8 @@ function renderSection(key, title, content) {
         $("#meta").textContent = `PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
 
         // Map
-        renderMap(data.sections?.nearby);
+        renderMap(data.sections?.nearby, data.sections?.tax_bill);
+
 
         // Sections (ordered → then remaining)
         const sections = data.sections || {};
