@@ -259,7 +259,6 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "recorder_of_deeds": (rod or {}).get("normalized", {}),
             "ptab": ptab_rows,
             "permits_ccao": (permits_ccao or {}).get("normalized", {}),
-            "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_raw, prc),
             "delinquent": delinquent,
             "prc": (prc or {}).get("normalized", {}),
@@ -466,9 +465,6 @@ def _shape_permits(permits):
     return out
 
 
-def _shape_nearby(bor, cv):
-    # stub; wire your class+distance logic here later
-    return {"rows": []}
 
 def _shape_links(pin_raw, prc=None):
     prc_url = None
