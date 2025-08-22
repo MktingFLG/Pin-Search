@@ -92,3 +92,27 @@ async def everything_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top
         "rod_bundle","ptab","ccao_permits","ptax_main","delinquent",
     ]
     return {"_status":"ok","_meta":{"pin": normalize_pin(pin)}, "bundle": {k:_norm(v) for k,v in zip(keys,results)}}
+
+
+from fastapi.responses import HTMLResponse
+import json
+
+@app.get("/pin/{pin}/ui", response_class=HTMLResponse)
+def pin_ui(pin: str):
+    from orchestrator import get_pin_summary
+    summary = get_pin_summary(pin)
+    return f"""
+    <html>
+      <head>
+        <title>PIN {pin}</title>
+        <style>
+          body {{ font-family: monospace; white-space: pre-wrap; }}
+        </style>
+      </head>
+      <body>
+        <h1>PIN {pin} Summary</h1>
+        <pre>{json.dumps(summary, indent=2)}</pre>
+      </body>
+    </html>
+    """
+
