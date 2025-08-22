@@ -227,7 +227,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             },
             "recorder_of_deeds": (rod or {}).get("normalized", {}),
             "ptab": ptab_rows,
-
+            "permits_ccao": (permits_ccao or {}).get("normalized", {}),
             "nearby": _shape_nearby(bor, cv),
             "links": _shape_links(pin_raw),
             "delinquent": delinquent,

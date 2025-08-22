@@ -2997,56 +2997,38 @@ def fetch_ptab_by_docket(
 # Docs: https://datacatalog.cookcountyil.gov/resource/6yjf-dfxs
 # Uses 14-digit UNDASHED PIN in the "pin" column.
 
-def fetch_ccao_permits(
-    pin: str,
-    year_min: int | None = None,
-    year_max: int | None = None,
-    dataset_id: str = "6yjf-dfxs",
-) -> dict:
-    p = undashed_pin(pin)
-    where_parts = ["pin = :p"]
-    params = {":p": p, "$order": "year DESC, date_issued DESC"}
+def fetch_ccao_permits(pin: str, year_min: int | None = None, year_max: int | None = None,
+                       dataset_id: str = "6yjf-dfxs") -> dict:
+    p = undashed_pin(pin)  # 14-digit string, digits only
+    # Inline literals (no bind params)
+    where_parts = [f"pin = '{p}'"]
+    params = {"$order": "year DESC, date_issued DESC"}  # no :p here
 
     if year_min is not None:
-        where_parts.append("year >= :ymin")
-        params[":ymin"] = int(year_min)
+        where_parts.append(f"year >= {int(year_min)}")
     if year_max is not None:
-        where_parts.append("year <= :ymax")
-        params[":ymax"] = int(year_max)
+        where_parts.append(f"year <= {int(year_max)}")
 
     try:
         rows = _socrata_get_cook(dataset_id, {"$where": " AND ".join(where_parts), **params}, fetch_all=True)
-        return {
-            "_status": "ok",
-            "normalized": {"rows": rows},
-            "_meta": {"dataset": dataset_id, "count": len(rows), "pin": p},
-        }
+        return {"_status": "ok",
+                "normalized": {"rows": rows},
+                "_meta": {"dataset": dataset_id, "count": len(rows), "pin": p}}
     except RuntimeError as re:
         if str(re) == "SOC_DATA_THROTTLED":
-            return {
-                "_status": "throttled",
-                "normalized": {"rows": []},
-                "_meta": {"dataset": dataset_id, "pin": p, "reason": "429 Too Many Requests"},
-            }
-        return {
-            "_status": "error",
-            "normalized": {"rows": []},
-            "_meta": {"dataset": dataset_id, "pin": p, "error": str(re)},
-        }
+            return {"_status": "throttled", "normalized": {"rows": []},
+                    "_meta": {"dataset": dataset_id, "pin": p, "reason": "429 Too Many Requests"}}
+        return {"_status": "error", "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "pin": p, "error": str(re)}}
     except requests.HTTPError as e:
-        sc = getattr(e.response, "status_code", None)
+        sc   = getattr(e.response, "status_code", None)
         body = getattr(e.response, "text", "")[:800] if getattr(e, "response", None) else ""
-        return {
-            "_status": "error",
-            "normalized": {"rows": []},
-            "_meta": {"dataset": dataset_id, "pin": p, "status": sc, "error": body or str(e)},
-        }
+        return {"_status": "error", "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "pin": p, "status": sc, "error": body or str(e)}}
     except Exception as e:
-        return {
-            "_status": "error",
-            "normalized": {"rows": []},
-            "_meta": {"dataset": dataset_id, "pin": p, "error": str(e)},
-        }
+        return {"_status": "error", "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "pin": p, "error": str(e)}}
+
 
 
 def fetch_ccao_permits_multi(
@@ -3055,6 +3037,10 @@ def fetch_ccao_permits_multi(
     year_max: int | None = None,
     dataset_id: str = "6yjf-dfxs",
 ) -> dict:
+    """
+    Fetch ALL columns for MANY pins (<= ~50 recommended). Pins may be dashed/undashed.
+    Uses inlined year constraints (no bind params).
+    """
     und = []
     for raw in (pins or []):
         up = undashed_pin(raw)
@@ -3065,15 +3051,14 @@ def fetch_ccao_permits_multi(
     if not incl:
         return {"_status": "ok", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "count": 0}}
 
+    # Build WHERE with literals only (no :ymin/:ymax)
     where_parts = [f"pin IN {incl}"]
-    params = {"$order": "pin ASC, year DESC, date_issued DESC"}
-
     if year_min is not None:
-        where_parts.append("year >= :ymin")
-        params[":ymin"] = int(year_min)
+        where_parts.append(f"year >= {int(year_min)}")
     if year_max is not None:
-        where_parts.append("year <= :ymax")
-        params[":ymax"] = int(year_max)
+        where_parts.append(f"year <= {int(year_max)}")
+
+    params = {"$order": "pin ASC, year DESC, date_issued DESC"}
 
     try:
         rows = _socrata_get_cook(dataset_id, {"$where": " AND ".join(where_parts), **params}, fetch_all=True)
@@ -3095,7 +3080,7 @@ def fetch_ccao_permits_multi(
             "_meta": {"dataset": dataset_id, "pins": und[:], "error": str(re)},
         }
     except requests.HTTPError as e:
-        sc = getattr(e.response, "status_code", None)
+        sc   = getattr(e.response, "status_code", None)
         body = getattr(e.response, "text", "")[:800] if getattr(e, "response", None) else ""
         return {
             "_status": "error",
@@ -3108,9 +3093,6 @@ def fetch_ccao_permits_multi(
             "normalized": {"rows": []},
             "_meta": {"dataset": dataset_id, "pins": und[:], "error": str(e)},
         }
-
-
-
 
 
 # ================= Delinquent Taxes (GitHub Contents API) ======================
