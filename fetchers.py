@@ -30,8 +30,19 @@ from functools import lru_cache
 import pandas as _pd
 import re as _re
 
+import math
+
+def _haversine_miles(lat1, lon1, lat2, lon2):
+    R = 3958.7613  # miles
+    p1 = math.radians(lat1); p2 = math.radians(lat2)
+    dphi = p2 - p1
+    dlmb = math.radians(lon2 - lon1)
+    a = math.sin(dphi/2)**2 + math.cos(p1)*math.cos(p2)*math.sin(dlmb/2)**2
+    return 2*R*math.asin(math.sqrt(a))
+
+
 # ---------------- Cook County Socrata helper (datacatalog.cookcountyil.gov) ----------------
-import os, time, random, requests
+import random
 
 COOK_SOCRATA_BASE = "https://datacatalog.cookcountyil.gov/resource"
 COOK_APP_TOKEN = os.getenv("COOK_SODA_APP_TOKEN") or os.getenv("ILLINOIS_APP_TOKEN") or ""
@@ -3422,16 +3433,19 @@ def fetch_nearby_candidates(pin: str, radius_mi: float = 5.0, limit: int = 100) 
             # drop the subject itself
             if pin14 == subj["normalized"].get("pin"):
                 continue
+            dist = _haversine_miles(c["lat"], c["lon"], lat, lon)
             rows.append({
                 "pin": at.get("PIN14_dash") or normalize_pin(pin14),
                 "pin_undashed": pin14,
                 "class": (at.get("BCLASS") or "").strip() or None,
                 "property_use": (at.get("major_class_description") or "").strip() or None,
                 "lat": lat, "lon": lon,
+                "distance_mi": round(dist, 3),
                 "links": {"prc": f"https://data.cookcountyassessoril.gov/viewcard/viewcard.aspx?pin={pin14}"},
             })
-            if len(rows) >= max(1, int(limit or 100)):
-                break
+            # after the loop:
+        rows.sort(key=lambda r: r.get("distance_mi", 9e9))
+        rows = rows[:max(1, int(limit or 100))]
 
         norm = {
             "center": subj["normalized"]["center"],
