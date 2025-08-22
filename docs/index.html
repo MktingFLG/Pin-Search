@@ -248,7 +248,7 @@
     return renderKeyValues(content || {});
   },
 
-  // ✅ Add tax_bill here (inside SECTION_RENDERERS)
+
   tax_bill: (content) => {
     if (!content) return document.createTextNode("No data");
     const wrap = el("div", { className: "space-y-4" });
@@ -291,9 +291,27 @@
   },
 };
 
+// Fallback renderer if no custom one exists
+function renderGeneric(content) {
+  if (Array.isArray(content)) return renderRowsAsTable(content);
+  if (content && typeof content === "object") return renderKeyValues(content);
+  return el("div", {}, content ?? "");
+}
 
+function renderSection(key, title, content) {
+  const details = el("details", { className: "border rounded-xl" });
+  const sum = el("summary", {
+    className: "cursor-pointer list-none px-4 py-2 font-medium bg-gray-100 rounded-t-xl"
+  }, title);
+  const body = el("div", { className: "px-4 py-3 text-sm" });
 
+  const renderer = SECTION_RENDERERS[key] || renderGeneric;
+  body.appendChild(renderer(content));
 
+  details.appendChild(sum);
+  details.appendChild(body);
+  return details;
+}
 
     // =========================
     // 4) MAP HELPERS
@@ -382,6 +400,7 @@
         keys.forEach(key => {
           const title = SECTION_TITLES[key] || key;
           $("#sections").appendChild(renderSection(key, title, sections[key]));
+
         });
 
         const first = $("#sections details");
