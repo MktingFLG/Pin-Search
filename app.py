@@ -94,25 +94,63 @@ async def everything_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top
     return {"_status":"ok","_meta":{"pin": normalize_pin(pin)}, "bundle": {k:_norm(v) for k,v in zip(keys,results)}}
 
 
-from fastapi.responses import HTMLResponse
-import json
+from fastapi.responses import HTMLResponse, RedirectResponse
+from orchestrator import get_pin_summary
 
+@app.get("/")
+def root():
+    # send people somewhere useful instead of 404
+    return RedirectResponse(url="/docs", status_code=307)
+
+@app.get("/pin/{pin}/summary")
+def pin_summary(pin: str, fresh: bool = False):
+    _must_pin(pin)
+    return get_pin_summary(pin, fresh=fresh)
+
+@app.get("/ui", response_class=HTMLResponse)
 @app.get("/pin/{pin}/ui", response_class=HTMLResponse)
-def pin_ui(pin: str):
-    from orchestrator import get_pin_summary
-    summary = get_pin_summary(pin)
-    return f"""
-    <html>
-      <head>
-        <title>PIN {pin}</title>
-        <style>
-          body {{ font-family: monospace; white-space: pre-wrap; }}
-        </style>
-      </head>
-      <body>
-        <h1>PIN {pin} Summary</h1>
-        <pre>{json.dumps(summary, indent=2)}</pre>
-      </body>
-    </html>
-    """
+def ui(pin: str = ""):
+    # very small single-file UI
+    html = f"""
+<!doctype html>
+<meta charset="utf-8"/>
+<title>PIN Tool UI</title>
+<style>
+  body {{ font: 14px/1.4 system-ui, sans-serif; margin: 20px; }}
+  input[type=text] {{ width: 320px; padding: 6px 8px; }}
+  button {{ padding: 6px 10px; }}
+  .row {{ margin: 8px 0; }}
+  #out {{ white-space: pre; border: 1px solid #ddd; padding: 12px; border-radius: 6px; overflow:auto }}
+</style>
+<div class="row">
+  <label>PIN: <input id="pin" type="text" value="{pin}"/></label>
+  <button id="go">Fetch</button>
+  <label style="margin-left:12px"><input type="checkbox" id="pretty"> Pretty‑print</label>
+</div>
+<div id="status"></div>
+<pre id="out">{{}}</pre>
+<script>
+async function fetchPin(p) {{
+  if (!p) return;
+  const qs = new URLSearchParams(window.location.search);
+  const fresh = qs.get("fresh")==="1" ? "&fresh=true" : "";
+  const url = `/pin/${{encodeURIComponent(p)}}/summary?` + fresh;
+  document.getElementById('status').textContent = "Loading " + url + " …";
+  try {{
+    const r = await fetch(url);
+    const j = await r.json();
+    const pretty = document.getElementById('pretty').checked;
+    document.getElementById('out').textContent = pretty ? JSON.stringify(j, null, 2) : JSON.stringify(j);
+    document.getElementById('status').textContent = "";
+    history.replaceState(null, "", `/pin/${{encodeURIComponent(p)}}/ui`);
+  }} catch (e) {{
+    document.getElementById('status').textContent = "Error: " + e;
+  }}
+}}
+document.getElementById('go').onclick = () => fetchPin(document.getElementById('pin').value);
+document.getElementById('pin').addEventListener('keydown', (e) => {{ if (e.key==='Enter') document.getElementById('go').click(); }});
+{ f"fetchPin('{pin}');" if pin else "" }
+</script>
+"""
+    return HTMLResponse(html)
 
