@@ -3584,36 +3584,7 @@ def _parse_installments(scope: BeautifulSoup) -> list[dict]:
 
 def fetch_tax_bill_latest(pin: str) -> dict:
     """
-    Scrape the Treasurer overview page for current/prior year totals & installment details.
-    Returns:
-      {
-        "_status": "ok",
-        "normalized": {
-          "pin": "33292000140000",
-          "overview_url": ".../yourpropertytaxoverviewresults.aspx?PIN=...",
-          "current": {
-              "label": "Tax Year 2024 (billed in 2025)",
-              "year": 2024,
-              "total_billed": "$1,740.54",
-              "total_billed_num": 1740.54,
-              "total_due": "$0.00",
-              "total_due_num": 0.0,
-              "installments": [ {...}, {...} ]
-          },
-          "prior": {
-              "label": "Tax Year 2023 (billed in 2024)",
-              "year": 2023,
-              "total_billed": "$3,164.61",
-              "total_billed_num": 3164.61,
-              "total_due": "$0.00",
-              "total_due_num": 0.0,
-              "installments": [ {...}, {...} ]
-          },
-          "year": 2024,             # latest (prefers current)
-          "total": "$1,740.54"      # latest total billed (string, as on site)
-        },
-        "_meta": { "pin": "33292000140000" }
-      }
+    ... docstring unchanged ...
     """
     try:
         und = undashed_pin(pin)
@@ -3629,77 +3600,157 @@ def fetch_tax_bill_latest(pin: str) -> dict:
                 "normalized": {
                     "year": None,
                     "total": None,
-                    "overview_url": f"{base_url}?PIN={und}",  # always a clickable results URL
+                    "overview_url": f"{base_url}?PIN={und}",
                     "pin": und
                 },
                 "_meta": {"pin": und, "note": "treasurer fetch failed; returned link only"},
             }
 
-
         soup = BeautifulSoup(html, "lxml")
 
-        # Current block
-        cur_label = soup.select_one('span[id$="lblCurrentTaxYear"]')
-        cur_total = soup.select_one('span[id$="lblCurrentTotalAmountBilled"]')
-        cur_due   = soup.select_one('span[id$="lblCurrentTotalAmountDue"]')
-        cur_scope = soup.select_one('div[id$="panOnlineCurrent"]')
+        # ---------- helpers (unchanged) ----------
+        def _clean_text(s):
+            if s is None:
+                return None
+            return " ".join(str(s).replace("\xa0", " ").split())
 
-        cur = None
-        if cur_label or cur_total or cur_scope:
-            y = None
-            if cur_label:
-                m = re.search(r"(\d{4})", cur_label.get_text(strip=True))
-                if m: y = int(m.group(1))
-            cur = {
-                "label": (cur_label.get_text(strip=True) if cur_label else None),
-                "year": y,
-                "total_billed": (cur_total.get_text(strip=True) if cur_total else None),
-                "total_billed_num": _money_to_float(cur_total.get_text(strip=True)) if cur_total else None,
-                "total_due": (cur_due.get_text(strip=True) if cur_due else None),
-                "total_due_num": _money_to_float(cur_due.get_text(strip=True)) if cur_due else None,
-                "installments": _parse_installments(cur_scope),
+        def _sel_text_one(soup_or_el, selectors: list[str]):
+            for css in selectors:
+                try:
+                    el = soup_or_el.select_one(css)
+                except Exception:
+                    # in case :contains() isn’t supported by your bs4/soupsieve version
+                    continue
+                if el:
+                    t = _clean_text(el.get_text(strip=True))
+                    if t:
+                        return t
+            return None
+
+        def _money_or_none(txt: str | None) -> float | None:
+            if not txt:
+                return None
+            m = re.search(r"\$[\d,]+(?:\.\d{2})?", txt)
+            if m:
+                try:
+                    return float(m.group(0).replace("$", "").replace(",", ""))
+                except Exception:
+                    pass
+            try:
+                return float(_MONEY_RE.sub("", txt))
+            except Exception:
+                return None
+
+        def _extract_block(kind: str) -> dict | None:
+            scope = soup.select_one(f'div[id$="panOnline{kind}"]') or soup
+
+            label = _sel_text_one(scope, [
+                f'span[id$="lbl{kind}TaxYear"]',
+                f'div[id$="{kind.lower()}-taxyear"]',
+                'span:contains("Tax Year")',
+            ])
+
+            total_billed = _sel_text_one(scope, [
+                f'span[id$="lbl{kind}TotalAmountBilled"]',
+                f'div[id$="{kind.lower()}-total-billed"]',
+                'div:contains("Total Amount Billed") + div',
+                'span:contains("Total Amount Billed")',
+            ])
+
+            total_due = _sel_text_one(scope, [
+                f'span[id$="lbl{kind}TotalAmountDue"]',
+                f'div[id$="{kind.lower()}-total-due"]',
+                'div:contains("Total Amount Due") + div',
+                'span:contains("Total Amount Due")',
+            ])
+
+            if not total_billed:
+                txt = _clean_text(scope.get_text(" ", strip=True))
+                m2 = re.search(r"Total Amount Billed:\s*(\$[\d,]+(?:\.\d{2})?)", txt)
+                if m2:
+                    total_billed = m2.group(1)
+
+            if not total_due:
+                txt = _clean_text(scope.get_text(" ", strip=True))
+                m3 = re.search(r"Total Amount Due:\s*(\$[\d,]+(?:\.\d{2})?)", txt)
+                if m3:
+                    total_due = m3.group(1)
+
+            year = None
+            if label:
+                my = re.search(r"(\d{4})", label)
+                if my:
+                    try:
+                        year = int(my.group(1))
+                    except Exception:
+                        year = None
+
+            installments = []
+            for head in scope.select("div.overviewpaymentscolumnheader1"):
+                title = _clean_text(head.get_text(strip=True))
+                box = head.find_next_sibling("div")
+                while box and "paymentbox" not in (box.get("class") or []):
+                    box = box.find_next_sibling("div")
+                if not box:
+                    continue
+
+                kv = {}
+                for row in box.select("div"):
+                    lab = row.select_one("div.overviewpaymentsrowheader")
+                    val = row.select_one("div.overviewpaymentsdatavalue")
+                    lk = _clean_text(lab.get_text(strip=True)) if lab else None
+                    lv = _clean_text(val.get_text(strip=True)) if val else None
+                    if lk:
+                        lk = lk.rstrip(":")
+                        kv[lk] = lv
+
+                installments.append({
+                    "title": title,
+                    "original_billed": kv.get("Original Billed Amount"),
+                    "due_date": kv.get("Due Date"),
+                    "tax": kv.get("Tax"),
+                    "interest": kv.get("Interest"),
+                    "current_amount_due": kv.get("Current Amount Due"),
+                    "original_billed_num": _money_or_none(kv.get("Original Billed Amount")),
+                    "tax_num": _money_or_none(kv.get("Tax")),
+                    "interest_num": _money_or_none(kv.get("Interest")),
+                    "current_amount_due_num": _money_or_none(kv.get("Current Amount Due")),
+                })
+
+            if not (label or total_billed or total_due or installments):
+                return None
+
+            return {
+                "label": label,
+                "year": year,
+                "total_billed": total_billed,
+                "total_billed_num": _money_or_none(total_billed),
+                "total_due": total_due,
+                "total_due_num": _money_or_none(total_due),
+                "installments": installments,
             }
 
-        # Prior block
-        pri_label = soup.select_one('span[id$="lblPriorTaxYear"]')
-        pri_total = soup.select_one('span[id$="lblPriorTotalAmountBilled"]')
-        pri_due   = soup.select_one('span[id$="lblPriorTotalAmountDue"]')
-        pri_scope = soup.select_one('div[id$="panOnlinePrior"]')
-
-        pri = None
-        if pri_label or pri_total or pri_scope:
-            y = None
-            if pri_label:
-                m = re.search(r"(\d{4})", pri_label.get_text(strip=True))
-                if m: y = int(m.group(1))
-            pri = {
-                "label": (pri_label.get_text(strip=True) if pri_label else None),
-                "year": y,
-                "total_billed": (pri_total.get_text(strip=True) if pri_total else None),
-                "total_billed_num": _money_to_float(pri_total.get_text(strip=True)) if pri_total else None,
-                "total_due": (pri_due.get_text(strip=True) if pri_due else None),
-                "total_due_num": _money_to_float(pri_due.get_text(strip=True)) if pri_due else None,
-                "installments": _parse_installments(pri_scope),
-            }
+        cur = _extract_block("Current")
+        pri = _extract_block("Prior")
 
         latest_year = (cur or {}).get("year") or (pri or {}).get("year")
         latest_total = (cur or {}).get("total_billed") or (pri or {}).get("total_billed")
 
         norm = {
             "pin": und,
-            # prefer a results URL; if we somehow got setsearchparameters, rewrite to results with query
-            "overview_url": (
-                final_url if (final_url and "overviewresults.aspx" in final_url.lower())
-                else f"{base_url}?PIN={und}"
-            ),
+            "overview_url": final_url if (final_url and "overviewresults.aspx" in (final_url or "").lower())
+                              else f"{base_url}?PIN={und}",
             "current": cur,
             "prior": pri,
             "year": latest_year,
             "total": latest_total,
         }
         return {"_status": "ok", "normalized": norm, "_meta": {"pin": und}}
-    except Exception as e:
-        return {"_status": "error", "normalized": {}, "_meta": {"error": str(e)}}
+
+    except Exception as e:  # <-- this closes the try:
+        return {"_status": "error", "normalized": {}, "_meta": {"pin": pin, "error": str(e)}}
+
+
 
 #===================================================================================================
 
