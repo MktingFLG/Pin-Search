@@ -279,6 +279,12 @@
       return box;
     }
 
+    const hasBlocks = !!content.current || !!content.prior;
+    if (!hasBlocks) {
+      wrap.appendChild(el("div", { className: "text-sm text-gray-600" },
+        "No parsed tax bill data yet for this PIN."));
+    }
+
     if (content.current) wrap.appendChild(renderBlock(content.current, "Current Year"));
     if (content.prior)   wrap.appendChild(renderBlock(content.prior,   "Prior Year"));
 
