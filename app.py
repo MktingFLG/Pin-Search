@@ -1,121 +1,94 @@
-# app.py
-import os, re, json
-from pathlib import Path
+import os, asyncio
+from typing import Optional, List
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
-from utils import normalize_pin, undashed_pin
+try:
+    from dotenv import load_dotenv; load_dotenv()
+except Exception:
+    pass
 
-from assessor_assoc import get_associated_pins
+import fetchers
+from utils import undashed_pin, normalize_pin
 
-
-print("ILLINOIS_APP_TOKEN set:", bool(os.getenv("ILLINOIS_APP_TOKEN")))
-APP_VERSION = "2025-08-14-01"
-
-app = FastAPI(title="PIN Tool API", version="0.1.0", docs_url="/swagger", redoc_url=None)
-
+app = FastAPI(title="PIN Tool API", version="1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
-    allow_credentials=False,
-    allow_methods=["GET"],
-    allow_headers=["*"],
+    allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
 )
 
-@app.get("/api/health")
-def health():
-    return {"status": "ok", "version": APP_VERSION}
-
-# app.py
-@app.get("/api/pin/{pin}")
-def pin_summary(pin: str, fresh: int = Query(0, ge=0, le=1)):
-    from utils import normalize_pin
-    pin_dash = normalize_pin(pin)
-    print("[PIN] start", pin_dash)
-    try:
-        from orchestrator import get_pin_summary
-        data = get_pin_summary(pin_dash, fresh=bool(fresh))
-        print("[PIN] done")
-        return JSONResponse(data)
-    except MemoryError:
-        print("[PIN] MemoryError")
-        raise HTTPException(status_code=503, detail="Out of memory while building summary")
-    except Exception as e:
-        print("[PIN] error:", repr(e))
-        raise HTTPException(status_code=502, detail="Failed to assemble PIN summary")
-
-
-
-@app.get("/ptab/pin/{pin}")
-def ptab_pin(pin: str, years: str | None = None):
-    try:
-        year_list = [int(y) for y in years.split(",")] if years else None
-        # LAZY import here
-        from fetchers import fetch_ptab_by_pin
-        res = fetch_ptab_by_pin(pin, years=year_list, expand_associated=True)
-        return JSONResponse(content=res)
-    except Exception as e:
-        print("ptab_pin error:", repr(e))
-        raise HTTPException(status_code=500, detail=f"Failed to fetch PTAB data: {e}")
-
-@app.get("/permits/{pin}")
-def api_ccao_permits(pin: str, year_min: int | None = None, year_max: int | None = None):
-    try:
-        # LAZY import here
-        from fetchers import fetch_ccao_permits
-        res = fetch_ccao_permits(pin, year_min=year_min, year_max=year_max)
-        if res.get("_status") != "ok":
-            raise HTTPException(status_code=502, detail="Permit fetch failed")
-        return JSONResponse(res)
-    except Exception as e:
-        print("permits error:", repr(e))
-        raise
-
-@app.get("/api/ping")
-def api_ping():
-    return {"ok": True}
-
-
-@app.get("/subs/associations/{pin}")
-def get_associations(pin: str):
+def _must_pin(pin: str) -> str:
     p14 = undashed_pin(pin)
-    group = get_associated_pins(p14)
-    if not group:
-        raise HTTPException(status_code=404, detail="PIN not found in local index")
-    key = group[0]
-    assoc = sorted(set(group[1:]))
-    return {"key_pin": key, "associated": assoc}
+    if not p14:
+        raise HTTPException(status_code=400, detail="PIN must be 14 digits.")
+    return p14
 
-@app.get("/subs/manifest")
-def subs_manifest():
-    mpath = Path(__file__).parent / "data" / "manifest.json"
-    if not mpath.exists():
-        return []
-    try:
-        data = json.loads(mpath.read_text(encoding="utf-8"))
-    except Exception:
-        return []
-    out = []
-    for town_code, row in (data.get("towns") or {}).items():
-        out.append({
-            "town_code": int(town_code),
-            "pass": None,
-            "last_update": row.get("last_update"),
-            "head_pins_count": row.get("head_pins"),
-            "detail_pins_count": row.get("detail_pins"),
-        })
-    out.sort(key=lambda r: r["town_code"])
-    return out
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
-# Static site (avoid clobbering Swagger /docs)
-STATIC_DIR = Path(__file__).parent / "docs"
-if STATIC_DIR.exists():
-    app.mount("/site", StaticFiles(directory=str(STATIC_DIR), html=True), name="static-docs")
+@app.get("/assessor/profile")
+def assessor_profile(pin: str, jur: str = "016", taxyr: str = "2025"):
+    _must_pin(pin)
+    return fetchers.fetch_assessor_profile(pin, jur, taxyr)
 
-# --- SINGLE root route: send users to Swagger ---
-@app.get("/")
-def root():
-    return {"ok": True}
+@app.get("/rod/bundle")
+def rod_bundle(pin: str, top_n: int = 3):
+    _must_pin(pin)
+    return fetchers.fetch_recorder_bundle(pin, top_n=top_n)
 
+@app.get("/ptab/by-pin")
+def ptab_by_pin(pin: str, years: Optional[List[int]] = Query(default=None)):
+    _must_pin(pin)
+    return fetchers.fetch_ptab_by_pin(pin, years or [])
+
+@app.get("/ccao/permits")
+def ccao_permits(pin: str, year_min: Optional[int] = None, year_max: Optional[int] = None):
+    _must_pin(pin)
+    return fetchers.fetch_ccao_permits(pin, year_min, year_max)
+
+@app.get("/ptax/main")
+def ptax_main(pin: str):
+    _must_pin(pin)
+    return fetchers.fetch_ptax_main(pin)
+
+@app.get("/delinquent")
+def delinquent(pin: str):
+    _must_pin(pin)
+    return fetchers.fetch_delinquent(pin)
+
+async def _to_thread(fn, *a, **kw): return await asyncio.to_thread(fn, *a, **kw)
+
+@app.get("/pin/{pin}/bundle")
+async def everything_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top_n_deeds: int = 3):
+    _must_pin(pin)
+    tasks = [
+        _to_thread(fetchers.fetch_assessor_profile, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_values, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_location, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_land, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_residential, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_other_structures, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_commercial_building, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_exemptions, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_maildetail, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_notice_summary, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_appeals_coes, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_permits, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_assessor_hie_additions, pin, jur, taxyr),
+        _to_thread(fetchers.fetch_recorder_bundle, pin, top_n_deeds),
+        _to_thread(fetchers.fetch_ptab_by_pin, pin, []),
+        _to_thread(fetchers.fetch_ccao_permits, pin, None, None),
+        _to_thread(fetchers.fetch_ptax_main, pin),
+        _to_thread(fetchers.fetch_delinquent, pin),
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    def _norm(x): return {"_status":"error","_meta":{"error":str(x)},"normalized":{}} if isinstance(x, Exception) else x
+    keys = [
+        "assessor_profile","assessor_values","assessor_location","assessor_land",
+        "assessor_residential","assessor_other_structures","assessor_commercial_building",
+        "assessor_exemptions","assessor_maildetail","assessor_notice_summary",
+        "assessor_appeals_coes","assessor_permits","assessor_hie_additions",
+        "rod_bundle","ptab","ccao_permits","ptax_main","delinquent",
+    ]
+    return {"_status":"ok","_meta":{"pin": normalize_pin(pin)}, "bundle": {k:_norm(v) for k,v in zip(keys,results)}}

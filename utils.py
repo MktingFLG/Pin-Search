@@ -19,21 +19,19 @@ def is_valid_pin(pin: str) -> bool:
     return len(d) == _PIN_DIGITS
 
 def normalize_pin(pin: str) -> str:
-    """
-    Return a 14-digit normalized PIN with dashes: xx-xx-xxx-xxxx.
-    Raises ValueError if not 14 digits after stripping.
-    """
-    d = only_digits(pin)
-    if len(d) != _PIN_DIGITS:
-        raise ValueError(f"PIN must have {_PIN_DIGITS} digits after stripping, got {len(d)}: {pin!r}")
+    """Return dashed XX-XX-XXX-XXX-XXXX or '' if invalid."""
+    d = undashed_pin(pin)
+    if not d:
+        return ""
     return f"{d[0:2]}-{d[2:4]}-{d[4:7]}-{d[7:10]}-{d[10:14]}"
 
 def undashed_pin(pin: str) -> str:
-    """Return the 14-digit string without dashes (some APIs want this)."""
-    d = only_digits(pin)
-    if len(d) != _PIN_DIGITS:
-        raise ValueError(f"PIN must have {_PIN_DIGITS} digits after stripping, got {len(d)}: {pin!r}")
-    return d
+    """Return 14-digit numeric PIN or '' if invalid."""
+    if pin is None:
+        return ""
+    d = re.sub(r"\D", "", str(pin))
+    return d if len(d) == 14 else ""
+
 
 
 def try_normalize_pin(pin: str):

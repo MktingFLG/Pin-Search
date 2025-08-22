@@ -10,17 +10,18 @@ from datetime import datetime
 from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
+from utils import undashed_pin  # we need the 14-digit no-dash for the URL
 from utils import normalize_pin, undashed_pin
 
 import os
 import urllib.parse
-import re
+import re, urllib.parse
 
 # --- PTAB scraper imports ---
 from urllib.parse import urljoin
 
 # typing + requests retry bits
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Iterable
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -28,9 +29,6 @@ from urllib3.util.retry import Retry
 from functools import lru_cache
 import pandas as _pd
 import re as _re
-
-DEFAULT_UA = "PIN-Tool/1.0 (+https://example.com)"
-
 
 _DATA_DIR = Path("data")
 
@@ -62,7 +60,7 @@ def _retrying_session(
     adapter = HTTPAdapter(max_retries=retry)
     sess.mount("http://", adapter)
     sess.mount("https://", adapter)
-    sess.headers.update({"User-Agent": DEFAULT_UA})
+    sess.headers.update({"User-Agent": "Mozilla/5.0"})
     return sess
 
 
@@ -136,42 +134,130 @@ def _pick_col(df: _pd.DataFrame, options: list[str]) -> str | None:
             return cols[name.upper()]
     return None
 
+def _find_detail_files() -> list[Path]:
+    """
+    For each township under data/<Township>/<YYYY-MM-DD>/,
+    pick only the newest date folder.
+    Prefer normalized Detail.* in that folder; if none, fall back to NLTWND*.(xlsx|xls|csv).
+    """
+
+
+    latest_dir_by_town: dict[str, Path] = {}
+    for dated in _DATA_DIR.glob("*/20??-??-??"):
+        town = dated.parent.name
+        try:
+            dt = datetime.fromisoformat(dated.name)
+        except ValueError:
+            continue
+        prev = latest_dir_by_town.get(town)
+        if not prev or dt > datetime.fromisoformat(prev.name):
+            latest_dir_by_town[town] = dated
+
+    files: list[Path] = []
+    for town, ddir in latest_dir_by_town.items():
+        # Prefer Detail.* if present
+        detail = sorted(ddir.glob("Detail.*"))
+        if detail:
+            files.extend(detail)
+            continue
+        # Else fall back to NLTWND* in common extensions
+        found = []
+        for ext in ("xlsx", "xls", "csv"):
+            found.extend(ddir.glob(f"NLTWND*.{ext}"))
+        files.extend(sorted(found))
+
+    return [p.resolve() for p in files]
+
+
+@lru_cache(maxsize=1)
+def _build_assoc_index() -> tuple[dict[str, list[str]], dict[str, str]]:
+    """
+    Returns (key_to_children, child_to_key).
+      key_to_children: { <DT_KEY_PIN>: [child_pin, ...] }
+      child_to_key:    { <child_pin>:  <DT_KEY_PIN> }
+    All pins are 14-digit strings (no dashes).
+    """
+    key_to_children: dict[str, set[str]] = {}
+    child_to_key: dict[str, str] = {}
+
+    for f in _find_detail_files():
+        try:
+            df = _read_any_table(f)
+        except Exception:
+            continue
+
+        pin_col = _pick_col(df, ["DT_PIN", "PIN", "PIN_NUM"])
+        key_col = _pick_col(df, ["DT_KEY_PIN", "DT_KEY_P", "KEY_PIN"])
+        if not pin_col or not key_col:
+            continue
+
+        # normalize to 14-digit undashed strings
+        def _norm_pin14(s: str) -> str:
+            s = (s or "").strip()
+            s = _re.sub(r"\D", "", s)
+            return s if len(s) == 14 else ""  
+
+        pins = df[pin_col].astype(str).map(_norm_pin14)
+        keys = df[key_col].astype(str).map(_norm_pin14)
+
+        assoc_rows = df[(keys != "") & keys.notna()]
+        for i, row in assoc_rows.iterrows():
+            child = _norm_pin14(row.get(pin_col, ""))
+            key   = _norm_pin14(row.get(key_col, ""))
+            if not child or not key:
+                continue
+            key_to_children.setdefault(key, set()).add(child)
+            child_to_key[child] = key
+
+        # ensure keys exist even if no child in that file
+        for k in keys.unique():
+            if k:
+                key_to_children.setdefault(k, set())
+
+    # freeze sets to sorted lists for stable outputs
+    ktc = {k: sorted(list(v)) for k, v in key_to_children.items()}
+    return ktc, child_to_key
+
+def refresh_assessor_assoc_index() -> None:
+    """Force rebuild the cached index (call this if you add new Detail files)."""
+    _build_assoc_index.cache_clear()  # type: ignore[attr-defined]
+    _build_assoc_index()
+
 def get_assessor_associated_pins(pin: str) -> list[str]:
     p = undashed_pin(pin)
+    key_to_children, child_to_key = _build_assoc_index()
 
-    # (A) Remote GitHub index
-    key_to_children_remote, child_to_key_remote = _remote_assoc_index()
-
-    group: list[str] = []
-    if p in key_to_children_remote:
-        group = [p] + key_to_children_remote[p]
-    elif p in child_to_key_remote:
-        k = child_to_key_remote[p]
-        group = [k] + key_to_children_remote.get(k, [])
+    group = []
+    if p in key_to_children:
+        group = [p] + key_to_children[p]
+    elif p in child_to_key:
+        k = child_to_key[p]
+        group = [k] + key_to_children.get(k, [])
     else:
-        group = [p]  # not in index
+        group = [p]  # no assoc from Detail
 
-    # (B) Fallback to Recorder of Deeds only if we still have just the input
+    # ---- Fallback to ROD if Detail gave us nothing meaningful
+    # 'meaningful' = group has more than just the input
     if len(set(group)) <= 1:
         rod14s = _rod_assoc_for(p)
         if rod14s:
-            merged, seen = [], set()
+            # Make the first PIN the 'key' (stable) and merge
+            merged = []
+            seen = set()
             for x in rod14s:
-                x14 = undashed_pin(x)
-                if x14 and x14 not in seen:
-                    seen.add(x14); merged.append(x14)
+                if x and x not in seen:
+                    seen.add(x); merged.append(x)
             if p not in seen:
                 merged.insert(0, p)
             group = merged
 
-    # (C) Dedup, ensure 14‑digit
+    # Deduplicate, keep order, ensure 14-digit
     seen, out = set(), []
     for x in group:
         x14 = undashed_pin(x)
         if x14 and x14 not in seen:
             seen.add(x14); out.append(x14)
     return out
-
 
 # ==============================================================================
 
@@ -321,7 +407,7 @@ def fetch_assessor_profile(pin: str, jur: str = "016", taxyr: str = "2025", forc
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
         raw_rec = save_raw_text(f"assessor_profile/{pin14_und}_{jur}_{taxyr}.html", html)
@@ -415,7 +501,7 @@ def fetch_assessor_maildetail(pin: str, jur: str = "016", taxyr: str = "2025", f
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
         html_path = _save_raw_html(pin14_und, jur, taxyr, html)
@@ -505,7 +591,7 @@ def fetch_assessor_exemptions(pin: str, jur: str = "016", taxyr: str = "2025", f
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
         html_path = _save_raw_html(pin14_und, jur, taxyr, html)
@@ -624,20 +710,19 @@ def fetch_assessor_values(pin: str, jur: str = "016", taxyr: str = "2025", force
     out = {"_status": "ok", "_meta": {}, "normalized": {"summary": [], "detail": {}, "rows": [], "value_summary_raw": []}}
 
     # --- Current-year detail (Values)
-    
     url_values = (
         f"{VALUES_BASE}?mode=curyear_asmt_values&UseSearch=no"
         f"&pin={pin14}&jur={jur}&taxyr={taxyr}&LMparent=896"
     )
     out["_meta"]["url_values"] = url_values
     try:
-        r = requests.get(url_values, headers={"User-Agent": DEFAULT_UA}, timeout=25)
-        r.raise_for_status()
-        html = r.text
-        raw_rec_val = save_raw_text(f"values/{pin14}_{jur}_{taxyr}_cur.html", html)
-        out["raw_values"] = {**raw_rec_val, "html_size_bytes": len(html)}
-        soup = BeautifulSoup(html, "html.parser")
+        r = requests.get(url_values, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
+        raw_rec_val = save_raw_text(f"values/{pin14}_{jur}_{taxyr}_cur.html", r.text)
+        out["raw_values"] = {**raw_rec_val, "html_size_bytes": len(r.text)}
 
+
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, "html.parser")
 
         # Summary (header+one data row)
         div_sum = soup.find("div", attrs={"name": "CURYEAR_ASMT_VALUES"}) or soup.find(id="datalet_div_0")
@@ -689,7 +774,6 @@ def fetch_assessor_values(pin: str, jur: str = "016", taxyr: str = "2025", force
         out["_status"] = "error"
         out["_meta"]["values_error"] = str(e)
 
-
     # --- Value Summary (history table)
     url_summary = (
         f"{VALUES_BASE}?mode=value_summary_cc&UseSearch=no"
@@ -697,7 +781,7 @@ def fetch_assessor_values(pin: str, jur: str = "016", taxyr: str = "2025", force
     )
     out["_meta"]["url_value_summary"] = url_summary
     try:
-        r = requests.get(url_summary, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url_summary, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         sum_rec = save_raw_text(f"values/{pin14}_{jur}_{taxyr}_summary.html", r.text)
         out["raw_value_summary"] = {**sum_rec, "html_size_bytes": len(r.text)}
@@ -740,7 +824,7 @@ def fetch_assessor_location(pin: str, jur: str = "016", taxyr: str = "2025", for
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
 
@@ -817,7 +901,7 @@ def fetch_assessor_land(pin: str, jur: str = "016", taxyr: str = "2025", force: 
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
 
@@ -912,7 +996,7 @@ def fetch_assessor_residential(pin: str, jur: str = "016", taxyr: str = "2025", 
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
 
@@ -988,7 +1072,7 @@ def fetch_assessor_other_structures(pin: str, jur: str = "016", taxyr: str = "20
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
 
@@ -1093,7 +1177,7 @@ def fetch_assessor_commercial_building(pin: str, jur: str = "016", taxyr: str = 
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
 
@@ -1175,7 +1259,7 @@ def fetch_assessor_prop_association(pin: str, jur: str = "016", taxyr: str = "20
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
 
@@ -1255,7 +1339,7 @@ def fetch_assessor_sales_datalet(pin: str, jur: str = "016", taxyr: str = "2025"
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
 
@@ -1372,7 +1456,7 @@ def fetch_assessor_notice_summary(pin: str, jur: str = "016", taxyr: str = "2025
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
 
@@ -1483,7 +1567,7 @@ def fetch_assessor_appeals_coes(pin: str, jur: str = "016", taxyr: str = "2025",
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
 
@@ -1599,7 +1683,7 @@ def fetch_permits(pin: str, jur: str = "016", taxyr: str = "2025", force: bool =
 
     def _fetch_idx(idx: int):
         url = f"{base}&idx={idx}&sIndex=0"
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         return url, r.text
 
@@ -1696,7 +1780,7 @@ def fetch_assessor_hie_additions(pin: str, jur: str = "016", taxyr: str = "2025"
     url = f"{PROFILE_BASE}?mode=res_addn&UseSearch=no&pin={pin14}&jur={jur}&taxyr={taxyr}&LMparent=896"
     meta = {"source":"ASSR_HIE_ADDN","url":url,"pin":pin14,"jur":jur,"taxyr":taxyr,"fetched_at":_now_iso()}
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = requests.get(url, headers={"User-Agent":"Mozilla/5.0"}, timeout=25)
         r.raise_for_status()
         html = r.text
         outdir = Path("raw_cache/hie_additions"); outdir.mkdir(parents=True, exist_ok=True)
@@ -2998,15 +3082,13 @@ def _delinq_index() -> dict[str, dict]:
         if not pin_col:
             raise RuntimeError(f"'pin' column not found in {PASSES_PATH}")
 
-        # Keep *all* columns so we don't drop fields due to header name drift
+        keep = {"tax_year","amount_due","sale_status","last_update"}
         for row in reader:
             pin14 = _digits(row.get(pin_col, ""))
             if len(pin14) != 14:
                 continue
-            # normalize empty strings to None
-            cleaned = {k: (v if (v is not None and str(v).strip() != "") else None) for k, v in row.items()}
-            index[pin14] = cleaned  # last one wins
-
+            out = {k: (row.get(k) or None) for k in keep if k in row}
+            index[pin14] = out  # last one wins
     return index
 
 def fetch_delinquent(pin: str):
@@ -3018,56 +3100,6 @@ def fetch_delinquent(pin: str):
         return {"status":"ok","data":[(row | {"pin14": pin14})] if row else []}
     except Exception as e:
         return {"status":"error","error": f"delinquency fetch failed: {e}"}
-    
-    #===================================================================================
-
-    # === Remote Assessor Associated-PIN Index (GitHub JSON) ======================
-# File path in the repo: data/_index/key_to_children.json
-ASSR_INDEX_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")
-ASSR_INDEX_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
-ASSR_INDEX_PATH   = os.getenv("ASSESSOR_INDEX_PATH", "data/_index/key_to_children.json")
-
-ASSR_INDEX_URL = f"https://api.github.com/repos/{ASSR_INDEX_REPO}/contents/{ASSR_INDEX_PATH}?ref={ASSR_INDEX_BRANCH}"
-ASSR_INDEX_HEADERS = {
-    "Authorization": f"Bearer {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.raw",
-    "User-Agent": "pin-tool/1.0",
-}
-
-@lru_cache(maxsize=1)
-def _remote_assoc_index() -> tuple[dict[str, list[str]], dict[str, str]]:
-    """
-    Load key_to_children.json from GitHub (if token present), and build:
-      key_to_children: { <KEY_PIN14>: [child14, ...] }
-      child_to_key:    { <child14>: <KEY_PIN14> }
-    Returns ({}, {}) on any failure (caller can fall back to ROD).
-    """
-    try:
-        if not GITHUB_TOKEN:
-            return {}, {}
-        r = requests.get(ASSR_INDEX_URL, headers=ASSR_INDEX_HEADERS, timeout=25)
-        if r.status_code == 401:
-            return {}, {}
-        r.raise_for_status()
-        import json as _json
-        data = _json.loads(r.text)  # dict: key_pin -> [child pins]
-        key_to_children: dict[str, list[str]] = {}
-        child_to_key: dict[str, str] = {}
-        for k, arr in (data or {}).items():
-            k14 = undashed_pin(k)
-            if not k14:
-                continue
-            kids = []
-            for c in arr or []:
-                c14 = undashed_pin(c)
-                if c14:
-                    kids.append(c14)
-                    child_to_key[c14] = k14
-            key_to_children[k14] = sorted(set(kids))
-        return key_to_children, child_to_key
-    except Exception:
-        return {}, {}
-
 
 
 def fetch_bor(pin: str, force: bool = False) -> dict:
@@ -3082,4 +3114,6 @@ def fetch_cv(pin: str, force: bool = False) -> dict:
 def fetch_sales(pin: str, force: bool = False) -> dict:
     # TODO: Replace with your real Parcel Sales dataset fetch
     return {"latest": {}, "history": [], "_status": "stub"}
+
+
 
