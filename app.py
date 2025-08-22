@@ -1,34 +1,42 @@
-import os, asyncio
+import os
+import asyncio
 from typing import Optional, List
+
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 
 try:
-    from dotenv import load_dotenv; load_dotenv()
+    from dotenv import load_dotenv
+    load_dotenv()
 except Exception:
     pass
 
 import fetchers
 from utils import undashed_pin, normalize_pin
-# near your other imports
-from fetchers import fetch_prc_link
+from fetchers import fetch_prc_link, fetch_pin_geom_arcgis, fetch_nearby_candidates, fetch_tax_bill_latest
+from orchestrator import get_pin_summary
 
+# ---------------- App & middleware ----------------
 app = FastAPI(title="PIN Tool API", version="1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+    allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"],
 )
 
+# ---------------- Helpers ----------------
 def _must_pin(pin: str) -> str:
     p14 = undashed_pin(pin)
     if not p14:
         raise HTTPException(status_code=400, detail="PIN must be 14 digits.")
     return p14
 
+# ---------------- Health ----------------
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
+# ---------------- Assessor & other source endpoints (unchanged) ----------------
 @app.get("/assessor/profile")
 def assessor_profile(pin: str, jur: str = "016", taxyr: str = "2025"):
     _must_pin(pin)
@@ -59,7 +67,9 @@ def delinquent(pin: str):
     _must_pin(pin)
     return fetchers.fetch_delinquent(pin)
 
-async def _to_thread(fn, *a, **kw): return await asyncio.to_thread(fn, *a, **kw)
+# ---------------- Big parallel bundle (unchanged) ----------------
+async def _to_thread(fn, *a, **kw):
+    return await asyncio.to_thread(fn, *a, **kw)
 
 @app.get("/pin/{pin}/bundle")
 async def everything_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top_n_deeds: int = 3):
@@ -85,7 +95,10 @@ async def everything_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top
         _to_thread(fetchers.fetch_delinquent, pin),
     ]
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    def _norm(x): return {"_status":"error","_meta":{"error":str(x)},"normalized":{}} if isinstance(x, Exception) else x
+
+    def _norm(x):
+        return {"_status": "error", "_meta": {"error": str(x)}, "normalized": {}} if isinstance(x, Exception) else x
+
     keys = [
         "assessor_profile","assessor_values","assessor_location","assessor_land",
         "assessor_residential","assessor_other_structures","assessor_commercial_building",
@@ -93,75 +106,40 @@ async def everything_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top
         "assessor_appeals_coes","assessor_permits","assessor_hie_additions",
         "rod_bundle","ptab","ccao_permits","ptax_main","delinquent",
     ]
-    return {"_status":"ok","_meta":{"pin": normalize_pin(pin)}, "bundle": {k:_norm(v) for k,v in zip(keys,results)}}
+    return {"_status": "ok", "_meta": {"pin": normalize_pin(pin)}, "bundle": {k: _norm(v) for k, v in zip(keys, results)}}
 
-
-from fastapi.responses import HTMLResponse, RedirectResponse
-from orchestrator import get_pin_summary
-
-@app.get("/")
+# ---------------- UI routes ----------------
+@app.get("/", include_in_schema=False)
 def root():
-    # send people somewhere useful instead of 404
-    return RedirectResponse(url="/docs", status_code=307)
+    # Serve your docs/index.html (adjust path if your HTML lives elsewhere)
+    return FileResponse("docs/index.html")
 
+# Keep the JSON summary route (handy for debugging)
 @app.get("/pin/{pin}/summary")
 def pin_summary(pin: str, fresh: bool = False):
     _must_pin(pin)
     return get_pin_summary(pin, fresh=fresh)
 
-@app.get("/ui", response_class=HTMLResponse)
-@app.get("/pin/{pin}/ui", response_class=HTMLResponse)
-def ui(pin: str = ""):
-    # very small single-file UI
-    html = f"""
-<!doctype html>
-<meta charset="utf-8"/>
-<title>PIN Tool UI</title>
-<style>
-  body {{ font: 14px/1.4 system-ui, sans-serif; margin: 20px; }}
-  input[type=text] {{ width: 320px; padding: 6px 8px; }}
-  button {{ padding: 6px 10px; }}
-  .row {{ margin: 8px 0; }}
-  #out {{ white-space: pre; border: 1px solid #ddd; padding: 12px; border-radius: 6px; overflow:auto }}
-</style>
-<div class="row">
-  <label>PIN: <input id="pin" type="text" value="{pin}"/></label>
-  <button id="go">Fetch</button>
-  <label style="margin-left:12px"><input type="checkbox" id="pretty"> Pretty‑print</label>
-</div>
-<div id="status"></div>
-<pre id="out">{{}}</pre>
-<script>
-async function fetchPin(p) {{
-  if (!p) return;
-  const qs = new URLSearchParams(window.location.search);
-  const fresh = qs.get("fresh")==="1" ? "&fresh=true" : "";
-  const url = `/pin/${{encodeURIComponent(p)}}/summary?` + fresh;
-  document.getElementById('status').textContent = "Loading " + url + " …";
-  try {{
-    const r = await fetch(url);
-    const j = await r.json();
-    const pretty = document.getElementById('pretty').checked;
-    document.getElementById('out').textContent = pretty ? JSON.stringify(j, null, 2) : JSON.stringify(j);
-    document.getElementById('status').textContent = "";
-    history.replaceState(null, "", `/pin/${{encodeURIComponent(p)}}/ui`);
-  }} catch (e) {{
-    document.getElementById('status').textContent = "Error: " + e;
-  }}
-}}
-document.getElementById('go').onclick = () => fetchPin(document.getElementById('pin').value);
-document.getElementById('pin').addEventListener('keydown', (e) => {{ if (e.key==='Enter') document.getElementById('go').click(); }});
-{ f"fetchPin('{pin}');" if pin else "" }
-</script>
-"""
-    return HTMLResponse(html)
-
-
-
-# assuming app = FastAPI() already exists
+# ---------------- API used by the frontend ----------------
+@app.get("/api/pin/{pin}")
+def api_pin(pin: str, fresh: bool = False):
+    """
+    Returns the same shape your index.html expects:
+    { pin, generated_at, sections: {...} }
+    """
+    _must_pin(pin)
+    return get_pin_summary(pin, fresh=fresh)
 
 @app.get("/api/prc/{pin}")
 def api_prc(pin: str):
+    _must_pin(pin)
     return fetch_prc_link(pin)
 
-
+# (Optional) small helper API if you still want a minimal nearby/tax endpoint
+@app.get("/api/nearby-mini/{pin}")
+def api_nearby_mini(pin: str, radius: float = Query(5.0, ge=0), limit: int = Query(100, ge=1, le=500)):
+    _must_pin(pin)
+    subject = fetch_pin_geom_arcgis(pin).get("normalized", {})
+    nearby = fetch_nearby_candidates(pin, radius_mi=radius, limit=limit).get("normalized", {})
+    tax = fetch_tax_bill_latest(pin).get("normalized", {})
+    return {"pin": normalize_pin(pin), "subject": subject, "nearby": nearby, "tax_bill": tax}
