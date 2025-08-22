@@ -68,6 +68,9 @@ TTL = {
     "PERMITS_CCAO": timedelta(hours=24),
     "DELINQUENT": timedelta(hours=24),
     "PRC": timedelta(hours=24),
+    "NEARBY": timedelta(hours=6),
+    "TAX_BILL": timedelta(hours=24),
+
 
 }
 
@@ -128,6 +131,8 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     permits_ccao= _fetch_if("PERMITS_CCAO",      "fetch_ccao_permits",      pin_raw) if (fresh or _expired(prev, "PERMITS_CCAO", now)) else prev["data"].get("sections", {}).get("permits_ccao", {})
     delinquent  = _fetch_if("DELINQUENT",        "fetch_delinquent",        pin_raw)
     prc         = _fetch_if("PRC",               "fetch_prc_link",          pin_raw)
+    nearby      = _fetch_if("NEARBY",            "fetch_nearby_candidates", pin_raw, radius_mi=5.0, limit=100)
+    tax_bill    = _fetch_if("TAX_BILL",          "fetch_tax_bill_latest", pin_raw)
 
 
     rod = {}
@@ -258,9 +263,8 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "links": _shape_links(pin_raw, prc),
             "delinquent": delinquent,
             "prc": (prc or {}).get("normalized", {}),
-
-
-
+            "nearby": (nearby or {}).get("normalized", {}),
+            "tax_bill": (tax_bill or {}).get("normalized", {}),
         },
 
 
@@ -295,6 +299,9 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "PERMITS_CCAO": permits_ccao.get("_status", "ok"),
             "DELINQUENT": "ok" if isinstance(delinquent, dict) else "empty",
             "PRC": prc.get("_status", "ok"),
+            "NEARBY": nearby.get("_status", "ok"),
+            "TAX_BILL": tax_bill.get("_status", "ok"),
+
 
 
         }
@@ -312,7 +319,8 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
         ("ASSR_SALES", assr_sales_dalet), ("ASSR_NOTICE_SUMMARY", notice_sum),
         ("ASSR_APPEALS", appeals), ("ASSR_HIE_ADDN", assr_hie),
         ("PTAX_MAIN", ptax_main), ("ROD", rod),("PTAB", ptab),
-        ("PERMITS_CCAO", permits_ccao),("PRC", prc),
+        ("PERMITS_CCAO", permits_ccao),("PRC", prc),("NEARBY", nearby), ("TAX_BILL", tax_bill),
+
     ]:
         if obj and obj.get("_status", "ok") == "ok":
             stamps[key] = now

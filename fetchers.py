@@ -15,7 +15,8 @@ from utils import normalize_pin, undashed_pin
 import os
 import urllib.parse
 import re
-
+import math
+import json
 # --- PTAB scraper imports ---
 from urllib.parse import urljoin
 
@@ -3283,6 +3284,184 @@ def fetch_prc_link(pin: str) -> dict:
         }
     except Exception as e:
         return {"_status": "error", "normalized": {}, "_meta": {"error": str(e)}}
+    
+
+# ======================= ArcGIS (Cook parcels) =======================
+# Public parcel layer with PIN + lat/lon:
+# https://gis12.cookcountyil.gov/arcgis/rest/services/parcel_current_beta/FeatureServer/0/query
+COOK_ARCGIS_QUERY = os.getenv(
+    "COOK_ARCGIS_QUERY",
+    "https://gis12.cookcountyil.gov/arcgis/rest/services/parcel_current_beta/FeatureServer/0/query",
+)
+
+def _arcgis_get(params: dict, *, timeout=25, retries=4, backoff=0.8):
+    """Tiny GET with retries for ArcGIS JSON endpoints."""
+    sess = requests.Session()
+    attempt = 0
+    while True:
+        try:
+            r = sess.get(COOK_ARCGIS_QUERY, params=params, timeout=timeout)
+            if r.status_code in (429, 500, 502, 503, 504):
+                raise requests.HTTPError(f"{r.status_code}", response=r)
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            attempt += 1
+            if attempt > retries:
+                raise
+            time.sleep(backoff)
+            backoff = min(backoff * 2, 10.0)
+
+def fetch_pin_geom_arcgis(pin: str) -> dict:
+    """
+    Look up a single PIN in the parcel layer and return center + a few attrs.
+    Tries PIN14 and PARID with undashed PIN. Uses layer latitude/longitude when present.
+    """
+    und = undashed_pin(pin)
+    dashed = normalize_pin(pin)
+
+    where = f"(PIN14='{und}' OR PARID='{und}' OR PIN14_dash='{dashed}')"
+    out_fields = "PIN14,PIN14_dash,latitude,longitude,BCLASS,major_class_description,class_info_display"
+    params = {
+        "where": where,
+        "outFields": out_fields,
+        "returnGeometry": "true",
+        "outSR": "4326",   # ensure geometry (if used) is WGS84
+        "f": "json",
+    }
+
+    try:
+        data = _arcgis_get(params)
+        feats = (data or {}).get("features") or []
+        if not feats:
+            return {"_status": "ok", "normalized": {}, "_meta": {"count": 0, "pin": und}}
+
+        at = feats[0].get("attributes", {}) or {}
+        lat = at.get("latitude")
+        lon = at.get("longitude")
+        # Fallback: derive centroid from geometry if lat/lon fields missing
+        if (lat is None or lon is None) and feats[0].get("geometry", {}).get("rings"):
+            rings = feats[0]["geometry"]["rings"][0]
+            if rings:
+                xs = [pt[0] for pt in rings]
+                ys = [pt[1] for pt in rings]
+                lon = sum(xs) / len(xs)
+                lat = sum(ys) / len(ys)
+
+        out = {
+            "center": {"lat": lat, "lon": lon},
+            "pin": at.get("PIN14") or und,
+            "pin_dash": at.get("PIN14_dash") or dashed,
+            "class": (at.get("BCLASS") or "").strip() or None,
+            "property_use": (at.get("major_class_description") or at.get("class_info_display") or "").strip() or None,
+        }
+        return {"_status": "ok", "normalized": out, "_meta": {"count": 1, "pin": und}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {}, "_meta": {"pin": und, "error": str(e)}}
+
+def _miles_to_degs(lat: float, miles: float) -> tuple[float, float]:
+    # Rough conversion; good enough for an envelope query
+    # 1 deg lat ≈ 69 miles; 1 deg lon ≈ 69*cos(lat) miles
+    lat_deg = miles / 69.0
+    lon_deg = miles / (math.cos(math.radians(lat or 0.0)) * 69.172 or 1e-6)
+    return lat_deg, lon_deg
+
+def fetch_nearby_candidates(pin: str, radius_mi: float = 5.0, limit: int = 100) -> dict:
+    """
+    Return candidate nearby parcels within a radius, filtered to same class/property_use.
+    Uses ArcGIS envelope query (WGS84), prefers latitude/longitude fields from layer.
+    """
+    try:
+        subj = fetch_pin_geom_arcgis(pin)
+        if subj.get("_status") != "ok" or not (subj["normalized"].get("center") and subj["normalized"]["center"].get("lat")):
+            return {"_status": "error", "normalized": {}, "_meta": {"error": "subject centroid not found"}}
+
+        c = subj["normalized"]["center"]
+        subj_class = subj["normalized"].get("class")
+        subj_use = subj["normalized"].get("property_use")
+
+        # Envelope bbox in WGS84
+        dy, dx = _miles_to_degs(c["lat"], radius_mi)
+        bbox = {"xmin": c["lon"] - dx, "ymin": c["lat"] - dy, "xmax": c["lon"] + dx, "ymax": c["lat"] + dy}
+
+        # Server-side filter by class/use when available to reduce result size
+        where_parts = ["1=1"]
+        if subj_class:
+            where_parts.append(f"BCLASS='{subj_class}'")
+        if subj_use:
+            # major_class_description is our closest match to "property use" on this layer
+            safe = subj_use.replace("'", "''")
+            where_parts.append(f"major_class_description='{safe}'")
+        where = " AND ".join(where_parts)
+
+        out_fields = "PIN14,PIN14_dash,latitude,longitude,BCLASS,major_class_description"
+        params = {
+            "where": where,
+            "geometryType": "esriGeometryEnvelope",
+            "inSR": "4326",
+            "spatialRel": "esriSpatialRelIntersects",
+            "geometry": json.dumps(bbox),
+            "outFields": out_fields,
+            "outSR": "4326",
+            "returnGeometry": "false",   # we have lat/lon fields
+            "f": "json",
+        }
+
+        data = _arcgis_get(params)
+        feats = (data or {}).get("features") or []
+        rows = []
+        for f in feats:
+            at = f.get("attributes", {}) or {}
+            lat = at.get("latitude")
+            lon = at.get("longitude")
+            if lat is None or lon is None:
+                continue
+            pin14 = (at.get("PIN14") or "").strip()
+            if not pin14:
+                continue
+            # drop the subject itself
+            if pin14 == subj["normalized"].get("pin"):
+                continue
+            rows.append({
+                "pin": at.get("PIN14_dash") or normalize_pin(pin14),
+                "pin_undashed": pin14,
+                "class": (at.get("BCLASS") or "").strip() or None,
+                "property_use": (at.get("major_class_description") or "").strip() or None,
+                "lat": lat, "lon": lon,
+                "links": {"prc": f"https://data.cookcountyassessoril.gov/viewcard/viewcard.aspx?pin={pin14}"},
+            })
+            if len(rows) >= max(1, int(limit or 100)):
+                break
+
+        norm = {
+            "center": subj["normalized"]["center"],
+            "radius_mi": radius_mi,
+            "filters": {"class": subj_class, "property_use": subj_use},
+            "features": rows,
+            "subject": {k: subj["normalized"][k] for k in ("pin","pin_dash","class","property_use") if k in subj["normalized"]},
+        }
+        return {"_status": "ok", "normalized": norm, "_meta": {"count": len(rows)}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {}, "_meta": {"error": str(e)}}
+
+# -------- Treasurer stub (latest bill) --------
+def fetch_tax_bill_latest(pin: str) -> dict:
+    """
+    Placeholder: will mimic the Treasurer form flow:
+      GET setsearchparameters.aspx  -> POST with PIN -> GET overviewresults.aspx
+    For now, just return the target URL so the UI can link to it.
+    """
+    try:
+        und = undashed_pin(pin)
+        url = "https://www.cookcountytreasurer.com/yourpropertytaxoverviewresults.aspx"
+        return {
+            "_status": "ok",
+            "normalized": {"year": None, "total": None, "overview_url": url, "pin": und},
+            "_meta": {"pin": und, "note": "stub; implement form flow next"},
+        }
+    except Exception as e:
+        return {"_status": "error", "normalized": {}, "_meta": {"error": str(e)}}
+#===================================================================================================
 
 
 def fetch_bor(pin: str, force: bool = False) -> dict:
