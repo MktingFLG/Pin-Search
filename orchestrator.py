@@ -4,36 +4,34 @@ from typing import Dict, Any
 import hashlib
 import json
 
-from fetchers import (
-    fetch_bor, fetch_cv, fetch_sales, fetch_permits,
-    fetch_assessor_values,
-    fetch_assessor_profile, fetch_assessor_maildetail,
-    fetch_assessor_exemptions,fetch_assessor_location,
-    fetch_assessor_land,fetch_assessor_residential,
-    fetch_assessor_other_structures,fetch_assessor_commercial_building,
-    fetch_assessor_prop_association,fetch_assessor_sales_datalet,
-    fetch_assessor_notice_summary,fetch_assessor_appeals_coes,
-    fetch_assessor_hie_additions,fetch_ptax_main,
-    fetch_ptax_additional_buyers, fetch_ptax_additional_sellers,
-    fetch_ptax_additional_pins, fetch_ptax_personal_property,
-    fetch_recorder_bundle,fetch_ptax_main_multi,
-    merge_ptax_by_declaration, fetch_ptab_by_pin,
-    fetch_ccao_permits, fetch_delinquent,
-)
+
 
 from datetime import datetime
 
 from utils import normalize_pin, undashed_pin
 
-# orchestrator.py
+# orchestrator.py (add near top)
 import os
-try:
-    import psutil
-    def _mb():
-        return int(psutil.Process(os.getpid()).memory_info().rss / (1024*1024))
-except Exception:
-    def _mb():
-        return -1
+
+PIN_MINIMAL = os.getenv("PIN_MINIMAL", "0") == "1"
+# optional: fine-grained allow-list, e.g. "BOR,CV,DELINQUENT"
+PIN_SOURCES = {s.strip().upper() for s in os.getenv("PIN_SOURCES", "").split(",") if s.strip()}
+
+def _enabled(name: str) -> bool:
+    if PIN_MINIMAL:
+        # only these in minimal mode (tweak as you like)
+        return name in {"ASSR_PROFILE", "ASSR_MAILDETAIL", "DELINQUENT"}
+    if PIN_SOURCES:
+        return name in PIN_SOURCES
+    return True  # default: everything on
+
+def _fetch_if(name: str, fn_name: str, *args, **kwargs):
+    """Import the fetcher lazily and call it only if the source is enabled."""
+    if not _enabled(name):
+        return {}
+    mod = __import__("fetchers", fromlist=[fn_name])
+    fn = getattr(mod, fn_name)
+    return fn(*args, **kwargs)
 
 
 
@@ -105,29 +103,92 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     # load previous if any (for partial reuse)
     prev = _CACHE.get(ck, {"data": {}, "stamps": {}})
 
-    # Revalidate each source independently (ETag/If-Modified-Since inside fetchers)
-    bor = fetch_bor(pin_raw, force=fresh or _expired(prev, "BOR", now))
-    cv = fetch_cv(pin_raw, force=fresh or _expired(prev, "CV", now))
-    sales = fetch_sales(pin_raw, force=fresh or _expired(prev, "SALES", now))
-    permits = fetch_permits(pin_raw, force=fresh or _expired(prev, "PERMITS", now))
-    assr_vals = fetch_assessor_values(pin_raw, force=fresh or _expired(prev, "ASSR_VALUES", now))
-    assr_profile = fetch_assessor_profile(pin_raw, force=fresh or _expired(prev, "ASSR_PROFILE", now))
-    assr_maildetail = fetch_assessor_maildetail(pin_raw, force=fresh or _expired(prev, "ASSR_MAILDETAIL", now))
-    assr_exempt = fetch_assessor_exemptions(pin_raw, force=fresh or _expired(prev, "ASSR_EXEMPT", now))
-    assr_location = fetch_assessor_location(pin_raw, force=fresh or _expired(prev, "ASSR_LOCATION", now))
-    assr_land = fetch_assessor_land(pin_raw, force=fresh or _expired(prev, "ASSR_LAND", now))
-    assr_res = fetch_assessor_residential(pin_raw, force=fresh or _expired(prev, "ASSR_RESIDENTIAL", now))
-    assr_oby = fetch_assessor_other_structures(pin_raw, force=fresh or _expired(prev, "ASSR_OBY", now))
-    comm_bldg = fetch_assessor_commercial_building(pin_raw, force=fresh or _expired(prev, "ASSR_COMM_BLDG", now))
-    prop_assoc = fetch_assessor_prop_association(pin_raw, force=fresh or _expired(prev, "ASSR_PROP_ASSOCIATION", now))
-    assr_sales_dalet = fetch_assessor_sales_datalet(pin_raw, force=fresh or _expired(prev, "ASSR_SALES", now))  
-    notice_sum = fetch_assessor_notice_summary(pin_raw, force=fresh or _expired(prev, "ASSR_NOTICE_SUMMARY", now))
-    appeals = fetch_assessor_appeals_coes(pin_raw, force=fresh or _expired(prev, "ASSR_APPEALS", now))
-    assr_hie = fetch_assessor_hie_additions(pin_raw, force=fresh or _expired(prev, "ASSR_HIE_ADDN", now))
-    ptab = fetch_ptab_by_pin(pin_raw, years=None, expand_associated=True)
-    permits_ccao = fetch_ccao_permits(pin_raw) if fresh or _expired(prev, "PERMITS_CCAO", now) else prev["data"]["sections"].get("permits_ccao", {})
-    delinquent = fetch_delinquent(pin_raw)
+    # --- Revalidate each source (LAZY + GATED) ---
+    bor         = _fetch_if("BOR",               "fetch_bor",               pin_raw, force=fresh or _expired(prev, "BOR", now))
+    cv          = _fetch_if("CV",                "fetch_cv",                pin_raw, force=fresh or _expired(prev, "CV", now))
+    sales       = _fetch_if("SALES",             "fetch_sales",             pin_raw, force=fresh or _expired(prev, "SALES", now))
+    permits     = _fetch_if("PERMITS",           "fetch_permits",           pin_raw, force=fresh or _expired(prev, "PERMITS", now))
+    assr_vals   = _fetch_if("ASSR_VALUES",       "fetch_assessor_values",   pin_raw, force=fresh or _expired(prev, "ASSR_VALUES", now))
+    assr_profile= _fetch_if("ASSR_PROFILE",      "fetch_assessor_profile",  pin_raw, force=fresh or _expired(prev, "ASSR_PROFILE", now))
+    assr_maildetail=_fetch_if("ASSR_MAILDETAIL", "fetch_assessor_maildetail",pin_raw, force=fresh or _expired(prev, "ASSR_MAILDETAIL", now))
+    assr_exempt = _fetch_if("ASSR_EXEMPT",       "fetch_assessor_exemptions",pin_raw, force=fresh or _expired(prev, "ASSR_EXEMPT", now))
+    assr_location=_fetch_if("ASSR_LOCATION",     "fetch_assessor_location", pin_raw, force=fresh or _expired(prev, "ASSR_LOCATION", now))
+    assr_land   = _fetch_if("ASSR_LAND",         "fetch_assessor_land",     pin_raw, force=fresh or _expired(prev, "ASSR_LAND", now))
+    assr_res    = _fetch_if("ASSR_RESIDENTIAL",  "fetch_assessor_residential", pin_raw, force=fresh or _expired(prev, "ASSR_RESIDENTIAL", now))
+    assr_oby    = _fetch_if("ASSR_OBY",          "fetch_assessor_other_structures", pin_raw, force=fresh or _expired(prev, "ASSR_OBY", now))
+    comm_bldg   = _fetch_if("ASSR_COMM_BLDG",    "fetch_assessor_commercial_building", pin_raw, force=fresh or _expired(prev, "ASSR_COMM_BLDG", now))
+    prop_assoc  = _fetch_if("ASSR_PROP_ASSOCIATION", "fetch_assessor_prop_association", pin_raw, force=fresh or _expired(prev, "ASSR_PROP_ASSOCIATION", now))
+    assr_sales_dalet=_fetch_if("ASSR_SALES",     "fetch_assessor_sales_datalet", pin_raw, force=fresh or _expired(prev, "ASSR_SALES", now))
+    notice_sum  = _fetch_if("ASSR_NOTICE_SUMMARY","fetch_assessor_notice_summary", pin_raw, force=fresh or _expired(prev, "ASSR_NOTICE_SUMMARY", now))
+    appeals     = _fetch_if("ASSR_APPEALS",      "fetch_assessor_appeals_coes", pin_raw, force=fresh or _expired(prev, "ASSR_APPEALS", now))
+    assr_hie    = _fetch_if("ASSR_HIE_ADDN",     "fetch_assessor_hie_additions", pin_raw, force=fresh or _expired(prev, "ASSR_HIE_ADDN", now))
+    ptab        = _fetch_if("PTAB",              "fetch_ptab_by_pin",       pin_raw, years=None, expand_associated=True)
+    permits_ccao= _fetch_if("PERMITS_CCAO",      "fetch_ccao_permits",      pin_raw) if (fresh or _expired(prev, "PERMITS_CCAO", now)) else prev["data"].get("sections", {}).get("permits_ccao", {})
+    delinquent  = _fetch_if("DELINQUENT",        "fetch_delinquent",        pin_raw)
 
+
+    rod = {}
+    assoc_und, assoc_pins = [], []
+    pins_for_ptax = [pin_raw]
+    ptax_main = {}
+    ptax_buyers = ptax_sellers = ptax_pins = ptax_personal = {}
+    buyers_rows = sellers_rows = addlpins_rows = pp_rows = []
+    bundle, ptax_summary_rows = {}, []
+
+
+    if _enabled("ROD") or _enabled("PTAX_MAIN"):
+        from fetchers import get_assessor_associated_pins
+        assoc_und = get_assessor_associated_pins(pin_raw) or []
+
+        if _enabled("ROD"):
+            from fetchers import fetch_recorder_bundle
+            rod = fetch_recorder_bundle(pin_raw, top_n=1)
+            rod_norm = (rod or {}).get("normalized", {}) or {}
+            assoc_pins = rod_norm.get("associated_pins_dashed") or []
+            if len(set(assoc_und)) <= 1 and assoc_pins:
+                # use ROD to expand
+                from utils import undashed_pin as _und
+                assoc_und = [_und(p) for p in assoc_pins if p]
+            else:
+                from utils import normalize_pin as _norm_pin
+                assoc_pins = [_norm_pin(p) for p in assoc_und]  # dashed for UI
+
+        pins_for_ptax = [p for p in [pin_raw] + assoc_und if p][:20]
+
+        if _enabled("PTAX_MAIN"):
+            from fetchers import (
+                fetch_ptax_main_multi, fetch_ptax_additional_buyers,
+                fetch_ptax_additional_sellers, fetch_ptax_additional_pins,
+                fetch_ptax_personal_property, merge_ptax_by_declaration
+            )
+            ptax_main = fetch_ptax_main_multi(pins_for_ptax) or {}
+            main_rows = (ptax_main.get("normalized", {}) or {}).get("rows") or []
+
+            # (OPTIONAL RAM SAVE) cap main rows:
+            main_rows = main_rows[:50]
+
+            from utils import normalize_pin as _norm
+            pin_match_map = {}
+            for r in main_rows:
+                did = r.get("declaration_id"); ptxt = (r.get("line_1_primary_pin") or "").strip()
+                if did and ptxt:
+                    pin_match_map.setdefault(did, set()).add(_norm(ptxt))
+
+            decl_ids = [r.get("declaration_id") for r in main_rows if r.get("declaration_id")]
+            ptax_buyers   = fetch_ptax_additional_buyers(declaration_ids=decl_ids)   or {}
+            ptax_sellers  = fetch_ptax_additional_sellers(declaration_ids=decl_ids)  or {}
+            ptax_pins     = fetch_ptax_additional_pins(declaration_ids=decl_ids)     or {}
+            ptax_personal = fetch_ptax_personal_property(declaration_ids=decl_ids)   or {}
+
+            buyers_rows   = (ptax_buyers.get("normalized", {}) or {}).get("rows")  or []
+            sellers_rows  = (ptax_sellers.get("normalized", {}) or {}).get("rows") or []
+            addlpins_rows = (ptax_pins.get("normalized", {}) or {}).get("rows")    or []
+            pp_rows       = (ptax_personal.get("normalized", {}) or {}).get("rows") or []
+
+            bundle, ptax_summary_rows, set_matches = merge_ptax_by_declaration(
+                main_rows, buyers_rows, sellers_rows, addlpins_rows, pp_rows, normalize_pin_fn=_norm
+            )
+            set_matches(pin_match_map)
 
 
     # --- Associated PINs: Detail index first; ROD fallback if trivial ---
