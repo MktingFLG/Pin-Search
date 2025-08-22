@@ -1847,6 +1847,68 @@ def fetch_assessor_hie_additions(pin: str, jur: str = "016", taxyr: str = "2025"
 
 
 # ======================= PTAX (Socrata) =======================
+
+def fetch_ptax_decl_ids_by_addl_pin(pins: list[str], dataset_id: str = "ay2h-5hx3") -> dict:
+    """
+    Return unique declaration_ids where any of the given pins appear in the Additional PINs table.
+    Accepts dashed/undashed; normalizes both ways.
+    """
+    dashed, undashed = [], []
+    for p in pins or []:
+        d = _pin_for_socrata(p)  # XX-XX-XXX-XXX-XXXX
+        dashed.append(d)
+        undashed.append(d.replace("-", ""))
+
+    def _in(vals):
+        vals = [v for v in (vals or []) if v]
+        if not vals:
+            return None
+        return "(" + ",".join("'" + v.replace("'", "''") + "'" for v in vals) + ")"
+
+    incl_d = _in(dashed)
+    incl_u = _in(undashed)
+
+    where = []
+    if incl_d: where.append(f"pin IN {incl_d}")
+    if incl_u: where.append(f"replace(pin,'-','') IN {incl_u}")
+    if not where:
+        return {"_status": "ok", "normalized": {"declaration_ids": []}, "_meta": {"dataset": dataset_id, "count": 0}}
+
+    try:
+        rows = _socrata_get(dataset_id, {
+            "$where": " OR ".join(where),
+            "$select": "declaration_id",
+            "$limit": "5000",
+        })
+        decls = sorted({r.get("declaration_id") for r in (rows or []) if r.get("declaration_id")})
+        return {"_status": "ok", "normalized": {"declaration_ids": decls},
+                "_meta": {"dataset": dataset_id, "count": len(decls)}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {"declaration_ids": []},
+                "_meta": {"dataset": dataset_id, "error": str(e)}}
+
+
+def fetch_ptax_main_by_declaration_ids(declaration_ids: list[str], dataset_id: str = "it54-y4c6") -> dict:
+    """
+    Fetch PTAX main rows by a list of declaration_ids. Complements fetch_ptax_main_multi
+    to cover declarations where target pins are ONLY Additional PINs.
+    """
+    incl = _ids_in_clause(declaration_ids or [])
+    if not incl:
+        return {"_status": "ok", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "count": 0}}
+    try:
+        rows = _socrata_get(dataset_id, {
+            "$where": f"declaration_id IN {incl}",
+            "$order": "date_recorded DESC",
+            "$limit": "5000",
+        })
+        return {"_status": "ok", "normalized": {"rows": rows},
+                "_meta": {"dataset": dataset_id, "count": len(rows)}}
+    except Exception as e:
+        return {"_status": "error", "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "error": str(e)}}
+
+
 SOCRATA_BASE = "https://data.illinois.gov/resource"
 APP_TOKEN = os.getenv("ILLINOIS_APP_TOKEN", "")  #
 
@@ -3154,7 +3216,7 @@ def fetch_delinquent(pin: str):
     
     #===================================================================================
 
-    # === Remote Assessor Associated-PIN Index (GitHub JSON) ======================
+# === Remote Assessor Associated-PIN Index (GitHub JSON) ======================
 # File path in the repo: data/_index/key_to_children.json
 ASSR_INDEX_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")
 ASSR_INDEX_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")

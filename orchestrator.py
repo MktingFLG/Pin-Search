@@ -139,20 +139,25 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     bundle, ptax_summary_rows = {}, []
 
 
-        # --- Associated PINs: GitHub index first; ROD fallback if trivial ---
+    # --- Associated PINs: GitHub index first; ROD fallback if empty ---
     from fetchers import get_assessor_associated_pins, fetch_recorder_bundle
-    assoc_und = get_assessor_associated_pins(pin_raw)  # undashed 14‑digit
 
-    if len(set(assoc_und)) <= 1:
-        # Not meaningful from index → try to expand via Recorder of Deeds
+    assoc_und = [p for p in (get_assessor_associated_pins(pin_raw) or [])
+                 if isinstance(p, str) and p.isdigit() and len(p) == 14]
+
+    if not assoc_und:
+        # Not found (or invalid) in remote index → try Recorder of Deeds
         rod = fetch_recorder_bundle(pin_raw, top_n=1)
         rod_norm = (rod or {}).get("normalized", {}) or {}
         assoc_pins = rod_norm.get("associated_pins_dashed") or []
-        assoc_und = [undashed_pin(p) for p in assoc_pins if p]
+        assoc_und = [undashed_pin(p) for p in assoc_pins if undashed_pin(p)]
     else:
-        # We still want the ROD section for the UI
+        # Still fetch ROD once so UI has deeds, but do not change assoc_und
         rod = fetch_recorder_bundle(pin_raw, top_n=1)
-        assoc_pins = [normalize_pin(p) for p in assoc_und]  # dashed for UI
+
+    # For UI convenience
+    assoc_pins = [normalize_pin(p) for p in assoc_und]  # dashed
+
 
     # Build PTAX search input = base + associated (unique, capped at 20)
     pins_for_ptax = [pin_raw] + assoc_und
@@ -162,6 +167,24 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     # --- PTAX main for ALL pins at once ---
     ptax_main = _fetch_if("PTAX_MAIN", "fetch_ptax_main_multi", pins_for_ptax) or {}
     main_rows = (ptax_main.get("normalized", {}) or {}).get("rows") or []
+
+    # --- Cover declarations where our pins appear ONLY as Additional PINs ---
+    from fetchers import fetch_ptax_decl_ids_by_addl_pin, fetch_ptax_main_by_declaration_ids
+
+    # 1) Find extra declaration_ids via Additional PINs table
+    decl_extra = fetch_ptax_decl_ids_by_addl_pin(pins_for_ptax) or {}
+    extra_ids = (decl_extra.get("normalized", {}) or {}).get("declaration_ids", []) or []
+
+    # 2) Add the missing main rows for those declarations
+    have_ids = {r.get("declaration_id") for r in main_rows if r.get("declaration_id")}
+    missing_ids = sorted(set(extra_ids) - have_ids)
+
+    if missing_ids:
+        ptax_main_extra = _fetch_if("PTAX_MAIN", "fetch_ptax_main_by_declaration_ids", missing_ids) or {}
+        extra_rows = (ptax_main_extra.get("normalized", {}) or {}).get("rows") or []
+        if extra_rows:
+            main_rows.extend(extra_rows)
+
 
     # Which of our input pins matched each declaration_id?
     from utils import normalize_pin as _norm
