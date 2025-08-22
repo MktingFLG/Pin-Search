@@ -343,6 +343,23 @@ function renderSection(key, title, content) {
     let _map, _markersLayer, _subjectLayer, _radiusCircle, _pinToLayer;
     const M2_PER_MI = 1609.344;
 
+    // Colored pointer icons (CDN PNGs)
+    const NearbyIcon = new L.Icon({
+      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
+    });
+
+    // green subject icon
+    const SubjectIcon = new L.Icon({
+      iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+      iconRetinaUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
+    });
+
+
     function ensureMap() {
       if (_map) return;
       _map = L.map('map');
@@ -355,11 +372,11 @@ function renderSection(key, title, content) {
     }
 
 
-    function renderMap(nearby, taxBill) {
+    function renderMap(nearby, sales) {
   ensureMap();
   _markersLayer.clearLayers();
   _subjectLayer.clearLayers();
-  _pinToLayer.clear(); // <-- reset the index
+  _pinToLayer.clear();
   if (_radiusCircle) { _map.removeLayer(_radiusCircle); _radiusCircle = null; }
 
   if (!nearby?.center || nearby.center.lat == null || nearby.center.lon == null) return;
@@ -367,66 +384,72 @@ function renderSection(key, title, content) {
   const c = [nearby.center.lat, nearby.center.lon];
   _map.setView(c, 13);
 
+  // Subject ring
   _radiusCircle = L.circle(c, { radius: (nearby.radius_mi || 5) * M2_PER_MI, fillOpacity: 0.08 })
     .addTo(_map);
 
-  const latestBillStr = (() => {
-    const cur = taxBill?.current;
-    const pri = taxBill?.prior;
-    const label = (cur?.label || pri?.label) || "";
-    const total = (cur?.total_billed || pri?.total_billed) || "";
-    if (!label && !total) return "";
-    return `
-      <div class="mt-2 p-2 border rounded bg-gray-50">
-        <div class="font-semibold">Latest Tax Bill</div>
-        ${label ? `<div>${label}</div>` : ""}
-        ${total ? `<div>Total Billed: ${total}</div>` : ""}
-      </div>`;
-  })();
+  // Subject popup content
+  const subjPin = nearby.subject?.pin_dash || nearby.subject?.pin || "";
+  const subjUse = nearby.subject?.property_use || "";
+  const subjClass = nearby.subject?.class ? `(${nearby.subject.class})` : "";
+  const subjAddr = (nearby.subject?.address || "").trim(); // supply address in backend if possible
+
+  // derive latest sale from sections.sales (year + amount)
+  const saleDate = sales?.["Latest Sale Date"] || "";  // "MM/DD/YYYY" or similar
+  const saleYear = saleDate ? (new Date(saleDate).getFullYear() || (saleDate.match(/\b\d{4}\b/)?.[0])) : "";
+  const saleAmt = sales?.["Latest Sale Price"] || "";
 
   const subjPopupHtml = `
     <div class="text-sm">
-      <div class="font-semibold">${nearby.subject?.pin_dash || nearby.subject?.pin || ''}</div>
-      <div>${nearby.subject?.property_use || ''} ${nearby.subject?.class ? '('+nearby.subject.class+')' : ''}</div>
-      ${latestBillStr}
+      <div class="font-semibold">${subjPin}</div>
+      <div>${subjUse} ${subjClass}</div>
+      ${subjAddr ? `<div>${subjAddr}</div>` : ""}
+      ${saleYear || saleAmt ? `
+        <div class="mt-2 p-2 border rounded bg-gray-50">
+          <div class="font-semibold">Latest Sale</div>
+          <div>${saleYear ? `Year: ${saleYear}` : ""} ${saleAmt ? `&nbsp;•&nbsp; Amount: ${saleAmt}` : ""}</div>
+        </div>` : ""
+      }
     </div>
   `;
 
-  const subjMarker = L.circleMarker(c, { radius: 10, weight: 3, opacity: 1, fillOpacity: 0.9 })
+  const subjMarker = L.marker(c, { icon: SubjectIcon, title: subjPin })
     .addTo(_subjectLayer)
     .bindPopup(subjPopupHtml)
-    .openPopup(); // <-- open by default
+    .openPopup();
 
-  // Index the subject by its dashed PIN if present
-  const subjKey = nearby.subject?.pin_dash || nearby.subject?.pin;
-  if (subjKey) _pinToLayer.set(subjKey, subjMarker);
+  if (subjPin) _pinToLayer.set(subjPin, subjMarker);
 
+  // Nearby markers (no assessor/treasurer links in popup)
   const bounds = [c];
   (nearby.features || []).forEach(f => {
     const latlng = [f.lat, f.lon];
     bounds.push(latlng);
 
-    const treasurerUrl = `https://www.cookcountytreasurer.com/yourpropertytaxoverviewresults.aspx?PIN=${encodeURIComponent(f.pin.replace(/-/g,''))}`;
+    const pin = f.pin || "";
+    const use = f.property_use || "";
+    const cls = f.class ? `(${f.class})` : "";
+    const addr = (f.address || "").trim(); // backend can populate; otherwise it just won't show
+
     const html = `
       <div class="text-sm">
-        <div class="font-semibold">${f.pin}</div>
-        <div>${f.property_use || ''} ${f.class ? '('+f.class+')' : ''}</div>
+        <div class="font-semibold">${pin}</div>
+        <div>${use} ${cls}</div>
+        ${addr ? `<div>${addr}</div>` : ""}
         ${f.distance_mi != null ? `<div>${f.distance_mi} mi away</div>` : ''}
-        ${f.links?.prc ? `<div><a class="text-blue-700 underline" href="${f.links.prc}" target="_blank" rel="noopener">Assessor card</a></div>` : ''}
-        <div><a class="text-blue-700 underline" href="${treasurerUrl}" target="_blank" rel="noopener">Treasurer overview</a></div>
       </div>
     `;
 
-    const m = L.circleMarker(latlng, { radius: 6, weight: 2, opacity: 1, fillOpacity: 0.85 })
+    const m = L.marker(latlng, { icon: NearbyIcon, title: pin })
       .addTo(_markersLayer)
       .bindPopup(html);
 
-    // Index nearby marker by its dashed PIN
-    if (f.pin) _pinToLayer.set(f.pin, m);
+    if (pin) _pinToLayer.set(pin, m);
   });
 
   if (bounds.length > 1) _map.fitBounds(L.latLngBounds(bounds).pad(0.2));
 }
+
 
 
 function focusMarkerByPin(pinDash) {
@@ -454,7 +477,8 @@ function focusMarkerByPin(pinDash) {
         $("#meta").textContent = `PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
 
         // Map
-        renderMap(data.sections?.nearby, data.sections?.tax_bill);
+        renderMap(data.sections?.nearby, data.sections?.sales);
+
 
 
         // Sections (ordered → then remaining)
