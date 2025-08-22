@@ -67,6 +67,8 @@ TTL = {
     "PTAB": timedelta(hours=24), 
     "PERMITS_CCAO": timedelta(hours=24),
     "DELINQUENT": timedelta(hours=24),
+    "PRC": timedelta(hours=24),
+
 }
 
 TTL.pop("ASSR_MAIL", None)
@@ -125,6 +127,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     ptab        = _fetch_if("PTAB",              "fetch_ptab_by_pin",       pin_raw, years=None, expand_associated=True)
     permits_ccao= _fetch_if("PERMITS_CCAO",      "fetch_ccao_permits",      pin_raw) if (fresh or _expired(prev, "PERMITS_CCAO", now)) else prev["data"].get("sections", {}).get("permits_ccao", {})
     delinquent  = _fetch_if("DELINQUENT",        "fetch_delinquent",        pin_raw)
+    prc         = _fetch_if("PRC",               "fetch_prc_link",          pin_raw)
 
 
     rod = {}
@@ -229,8 +232,10 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "ptab": ptab_rows,
             "permits_ccao": (permits_ccao or {}).get("normalized", {}),
             "nearby": _shape_nearby(bor, cv),
-            "links": _shape_links(pin_raw),
+            "links": _shape_links(pin_raw, prc),
             "delinquent": delinquent,
+            "prc": (prc or {}).get("normalized", {}),
+
 
 
         },
@@ -266,6 +271,8 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "PTAB_COUNT": len(ptab_rows or []),
             "PERMITS_CCAO": permits_ccao.get("_status", "ok"),
             "DELINQUENT": "ok" if isinstance(delinquent, dict) else "empty",
+            "PRC": prc.get("_status", "ok"),
+
 
         }
 
@@ -281,7 +288,8 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
         ("ASSR_COMM_BLDG", comm_bldg), ("ASSR_PROP_ASSOCIATION", prop_assoc),
         ("ASSR_SALES", assr_sales_dalet), ("ASSR_NOTICE_SUMMARY", notice_sum),
         ("ASSR_APPEALS", appeals), ("ASSR_HIE_ADDN", assr_hie),
-        ("PTAX_MAIN", ptax_main), ("ROD", rod),("PTAB", ptab),("PERMITS_CCAO", permits_ccao),
+        ("PTAX_MAIN", ptax_main), ("ROD", rod),("PTAB", ptab),
+        ("PERMITS_CCAO", permits_ccao),("PRC", prc),
     ]:
         if obj and obj.get("_status", "ok") == "ok":
             stamps[key] = now
@@ -431,8 +439,16 @@ def _shape_nearby(bor, cv):
     # stub; wire your class+distance logic here later
     return {"rows": []}
 
-def _shape_links(pin_raw):
+def _shape_links(pin_raw, prc=None):
+    prc_url = None
+    if prc and prc.get("_status") == "ok":
+        prc_url = (prc.get("normalized") or {}).get("url")
+    if not prc_url:
+        # fallback: construct directly if needed
+        prc_url = f"https://data.cookcountyassessoril.gov/viewcard/viewcard.aspx?pin={pin_raw}"
+
     return {
         "CookViewer": f"https://maps.cookcountyil.gov/cookviewer/?search={pin_raw}",
-        "PRC": f"https://data.cookcountyassessor.com/ (requires login)",
+        "PRC": prc_url,
     }
+

@@ -10,6 +10,8 @@ except Exception:
 
 import fetchers
 from utils import undashed_pin, normalize_pin
+# near your other imports
+from fetchers import fetch_prc_link
 
 app = FastAPI(title="PIN Tool API", version="1.0")
 app.add_middleware(
@@ -153,4 +155,13 @@ document.getElementById('pin').addEventListener('keydown', (e) => {{ if (e.key==
 </script>
 """
     return HTMLResponse(html)
+
+
+
+# assuming app = FastAPI() already exists
+
+@app.get("/api/prc/{pin}")
+def api_prc(pin: str):
+    return fetch_prc_link(pin)
+
 

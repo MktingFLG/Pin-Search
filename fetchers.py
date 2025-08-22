@@ -3201,6 +3201,26 @@ def _remote_assoc_index() -> tuple[dict[str, list[str]], dict[str, str]]:
     except Exception:
         return {}, {}
 
+#====================PRC link===================================================
+
+# --- Property Record Card (PRC) link ---
+from utils import undashed_pin
+
+def fetch_prc_link(pin: str) -> dict:
+    """
+    Return the PRC ViewCard URL for an undashed 14-digit PIN.
+    No network call; just constructs the link.
+    """
+    try:
+        pin14 = undashed_pin(pin)
+        url = f"https://data.cookcountyassessoril.gov/viewcard/viewcard.aspx?pin={pin14}"
+        return {
+            "_status": "ok",
+            "normalized": {"url": url, "pin": pin14},
+            "_meta": {"pin": pin14, "host": "data.cookcountyassessoril.gov"}
+        }
+    except Exception as e:
+        return {"_status": "error", "normalized": {}, "_meta": {"error": str(e)}}
 
 
 def fetch_bor(pin: str, force: bool = False) -> dict:
