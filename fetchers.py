@@ -3458,23 +3458,220 @@ def fetch_nearby_candidates(pin: str, radius_mi: float = 5.0, limit: int = 100) 
     except Exception as e:
         return {"_status": "error", "normalized": {}, "_meta": {"error": str(e)}}
 
-# -------- Treasurer stub (latest bill) --------
+# -------- Treasurer (latest bill) --------
+# Scrapes: https://www.cookcountytreasurer.com/yourpropertytaxoverviewresults.aspx
+# Strategy:
+#  - Try overviewresults with PIN as query; if that fails, hit setsearchparameters then overviewresults.
+#  - Parse Current & Prior sections: total billed, total due, and installment boxes (1st/2nd).
+
+_MONEY_RE = re.compile(r"[$,\s]")
+
+def _money_to_float(s: str) -> float | None:
+    if not s:
+        return None
+    try:
+        return float(_MONEY_RE.sub("", s))
+    except Exception:
+        return None
+
+def _treasurer_fetch_html(und: str) -> tuple[str | None, str | None]:
+    """
+    Try a couple of flows to land on the overview page with the session primed.
+    Returns (html, final_url) or (None, None).
+    """
+    base = "https://www.cookcountytreasurer.com"
+    s = requests.Session()
+    s.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/124.0 Safari/537.36"
+    })
+    # small retry adapter
+    try:
+        _ad = HTTPAdapter(max_retries=Retry(total=3, backoff_factor=0.3, status_forcelist=(500, 502, 503, 504)))
+        s.mount("https://", _ad); s.mount("http://", _ad)
+    except Exception:
+        pass
+
+    candidates = [
+        f"{base}/yourpropertytaxoverviewresults.aspx?PIN={und}",
+        f"{base}/yourpropertytaxoverviewresults.aspx?pin={und}",
+        # Prime cookies/session, then open overview (no query) – this often works on ASP.NET sites
+        f"{base}/setsearchparameters.aspx?pin={und}",
+    ]
+
+    for i, url in enumerate(candidates):
+        try:
+            r = s.get(url, timeout=20, allow_redirects=True)
+            if not r.ok:
+                continue
+            html = r.text
+            # If we just hit setsearchparameters, immediately follow to the overview page
+            if "setsearchparameters" in r.url.lower() or "setsearchparameters" in url.lower():
+                r2 = s.get(f"{base}/yourpropertytaxoverviewresults.aspx", timeout=20, allow_redirects=True)
+                if r2.ok:
+                    return r2.text, r2.url
+            else:
+                # If this page already looks like the overview, keep it
+                if "Tax Year" in html and "Total Amount Billed" in html:
+                    return html, r.url
+        except Exception:
+            continue
+
+    return None, None
+
+def _parse_installments(scope: BeautifulSoup) -> list[dict]:
+    """
+    Given a scope element (either Current or Prior container), parse the two 'installment' boxes.
+    We look for headers with class 'overviewpaymentscolumnheader1' then read the following 'paymentbox'.
+    """
+    out = []
+    if not scope:
+        return out
+
+    for head in scope.select("div.overviewpaymentscolumnheader1"):
+        title = (head.get_text(strip=True) or "").strip()
+        # find the sibling payment box
+        box = head.find_next_sibling("div")
+        while box and "paymentbox" not in (box.get("class") or []):
+            box = box.find_next_sibling("div")
+        if not box:
+            continue
+
+        kv = {}
+        for row in box.select("div"):
+            lab = row.select_one("div.overviewpaymentsrowheader")
+            val = row.select_one("div.overviewpaymentsdatavalue")
+            if lab and val:
+                key = lab.get_text(strip=True).rstrip(":")
+                kv[key] = val.get_text(strip=True)
+
+        # Normalize a few likely fields if present
+        out.append({
+            "title": title,  # e.g., "1st INSTALLMENT - Tax Year 2023"
+            "original_billed": kv.get("Original Billed Amount"),
+            "due_date": kv.get("Due Date"),
+            "tax": kv.get("Tax"),
+            "interest": kv.get("Interest"),
+            "current_amount_due": kv.get("Current Amount Due"),
+            # numeric convenience fields
+            "original_billed_num": _money_to_float(kv.get("Original Billed Amount")),
+            "tax_num": _money_to_float(kv.get("Tax")),
+            "interest_num": _money_to_float(kv.get("Interest")),
+            "current_amount_due_num": _money_to_float(kv.get("Current Amount Due")),
+        })
+
+    return out
+
 def fetch_tax_bill_latest(pin: str) -> dict:
     """
-    Placeholder: will mimic the Treasurer form flow:
-      GET setsearchparameters.aspx  -> POST with PIN -> GET overviewresults.aspx
-    For now, just return the target URL so the UI can link to it.
+    Scrape the Treasurer overview page for current/prior year totals & installment details.
+    Returns:
+      {
+        "_status": "ok",
+        "normalized": {
+          "pin": "33292000140000",
+          "overview_url": ".../yourpropertytaxoverviewresults.aspx?PIN=...",
+          "current": {
+              "label": "Tax Year 2024 (billed in 2025)",
+              "year": 2024,
+              "total_billed": "$1,740.54",
+              "total_billed_num": 1740.54,
+              "total_due": "$0.00",
+              "total_due_num": 0.0,
+              "installments": [ {...}, {...} ]
+          },
+          "prior": {
+              "label": "Tax Year 2023 (billed in 2024)",
+              "year": 2023,
+              "total_billed": "$3,164.61",
+              "total_billed_num": 3164.61,
+              "total_due": "$0.00",
+              "total_due_num": 0.0,
+              "installments": [ {...}, {...} ]
+          },
+          "year": 2024,             # latest (prefers current)
+          "total": "$1,740.54"      # latest total billed (string, as on site)
+        },
+        "_meta": { "pin": "33292000140000" }
+      }
     """
     try:
         und = undashed_pin(pin)
-        url = "https://www.cookcountytreasurer.com/yourpropertytaxoverviewresults.aspx"
-        return {
-            "_status": "ok",
-            "normalized": {"year": None, "total": None, "overview_url": url, "pin": und},
-            "_meta": {"pin": und, "note": "stub; implement form flow next"},
+        if not und:
+            return {"_status": "error", "normalized": {}, "_meta": {"error": "Invalid PIN"}}
+
+        html, final_url = _treasurer_fetch_html(und)
+        base_url = "https://www.cookcountytreasurer.com/yourpropertytaxoverviewresults.aspx"
+        if not html:
+            # graceful fallback: keep the link so user can click through
+            return {
+                "_status": "ok",
+                "normalized": {"year": None, "total": None, "overview_url": f"{base_url}?PIN={und}", "pin": und},
+                "_meta": {"pin": und, "note": "treasurer fetch failed; returned link only"},
+            }
+
+        soup = BeautifulSoup(html, "lxml")
+
+        # Current block
+        cur_label = soup.select_one('span[id$="lblCurrentTaxYear"]')
+        cur_total = soup.select_one('span[id$="lblCurrentTotalAmountBilled"]')
+        cur_due   = soup.select_one('span[id$="lblCurrentTotalAmountDue"]')
+        cur_scope = soup.select_one('div[id$="panOnlineCurrent"]')
+
+        cur = None
+        if cur_label or cur_total or cur_scope:
+            y = None
+            if cur_label:
+                m = re.search(r"(\d{4})", cur_label.get_text(strip=True))
+                if m: y = int(m.group(1))
+            cur = {
+                "label": (cur_label.get_text(strip=True) if cur_label else None),
+                "year": y,
+                "total_billed": (cur_total.get_text(strip=True) if cur_total else None),
+                "total_billed_num": _money_to_float(cur_total.get_text(strip=True)) if cur_total else None,
+                "total_due": (cur_due.get_text(strip=True) if cur_due else None),
+                "total_due_num": _money_to_float(cur_due.get_text(strip=True)) if cur_due else None,
+                "installments": _parse_installments(cur_scope),
+            }
+
+        # Prior block
+        pri_label = soup.select_one('span[id$="lblPriorTaxYear"]')
+        pri_total = soup.select_one('span[id$="lblPriorTotalAmountBilled"]')
+        pri_due   = soup.select_one('span[id$="lblPriorTotalAmountDue"]')
+        pri_scope = soup.select_one('div[id$="panOnlinePrior"]')
+
+        pri = None
+        if pri_label or pri_total or pri_scope:
+            y = None
+            if pri_label:
+                m = re.search(r"(\d{4})", pri_label.get_text(strip=True))
+                if m: y = int(m.group(1))
+            pri = {
+                "label": (pri_label.get_text(strip=True) if pri_label else None),
+                "year": y,
+                "total_billed": (pri_total.get_text(strip=True) if pri_total else None),
+                "total_billed_num": _money_to_float(pri_total.get_text(strip=True)) if pri_total else None,
+                "total_due": (pri_due.get_text(strip=True) if pri_due else None),
+                "total_due_num": _money_to_float(pri_due.get_text(strip=True)) if pri_due else None,
+                "installments": _parse_installments(pri_scope),
+            }
+
+        latest_year = (cur or {}).get("year") or (pri or {}).get("year")
+        latest_total = (cur or {}).get("total_billed") or (pri or {}).get("total_billed")
+
+        norm = {
+            "pin": und,
+            "overview_url": final_url or f"{base_url}?PIN={und}",
+            "current": cur,
+            "prior": pri,
+            "year": latest_year,
+            "total": latest_total,
         }
+        return {"_status": "ok", "normalized": norm, "_meta": {"pin": und}}
     except Exception as e:
         return {"_status": "error", "normalized": {}, "_meta": {"error": str(e)}}
+
 #===================================================================================================
 
 

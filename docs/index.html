@@ -100,6 +100,7 @@
     // Optional: force an order for common sections; others follow.
     const SECTION_ORDER = [
       "property_info",
+      "tax_bill",
       "sales",
       "permits",
       "nearby",
@@ -175,109 +176,124 @@
     // =========================
     // Provide a function per section key when you want a custom view.
     const SECTION_RENDERERS = {
-      links: (content) => {
-        const box = el("div", { className: "space-y-1" });
-        Object.entries(content || {}).forEach(([label, href]) => {
-          if (!href) return;
-          box.appendChild(
-            el("div", {},
-              el("a", {
-                href, target: "_blank", rel: "noopener",
-                className: "text-blue-700 underline"
-              }, label)
-            )
-          );
-        });
-        return box;
-      },
+  links: (content) => {
+    const box = el("div", { className: "space-y-1" });
+    Object.entries(content || {}).forEach(([label, href]) => {
+      if (!href) return;
+      box.appendChild(
+        el("div", {},
+          el("a", { href, target: "_blank", rel: "noopener", className: "text-blue-700 underline" }, label)
+        )
+      );
+    });
+    return box;
+  },
 
-      sales: (content) => {
-        // Expecting { Latest..., History: [...] }
-        const wrapper = el("div", { className: "space-y-3" });
-        if (content?.["Latest Sale Date"] || content?.["Latest Sale Price"]) {
-          wrapper.appendChild(renderKeyValues({
-            "Latest Sale Date": content["Latest Sale Date"],
-            "Latest Sale Price": content["Latest Sale Price"],
-            "Notes": content["Notes"] ?? ""
-          }));
-        }
-        if (Array.isArray(content?.History)) {
-          wrapper.appendChild(el("div", { className: "mt-2" }, renderRowsAsTable(content.History)));
-        }
-        return wrapper;
-      },
+  sales: (content) => {
+    const wrapper = el("div", { className: "space-y-3" });
+    if (content?.["Latest Sale Date"] || content?.["Latest Sale Price"]) {
+      wrapper.appendChild(renderKeyValues({
+        "Latest Sale Date": content["Latest Sale Date"],
+        "Latest Sale Price": content["Latest Sale Price"],
+        "Notes": content["Notes"] ?? ""
+      }));
+    }
+    if (Array.isArray(content?.History)) {
+      wrapper.appendChild(el("div", { className: "mt-2" }, renderRowsAsTable(content.History)));
+    }
+    return wrapper;
+  },
 
-      permits: (content) => {
-        // Your backend returns { rows: [...] } for permits.
-        if (Array.isArray(content?.rows)) return renderRowsAsTable(content.rows);
-        return renderKeyValues(content || {});
-      },
+  permits: (content) => {
+    if (Array.isArray(content?.rows)) return renderRowsAsTable(content.rows);
+    return renderKeyValues(content || {});
+  },
 
-      permits_ccao: (content) => {
-        if (Array.isArray(content?.rows)) return renderRowsAsTable(content.rows);
-        return renderKeyValues(content || {});
-      },
+  permits_ccao: (content) => {
+    if (Array.isArray(content?.rows)) return renderRowsAsTable(content.rows);
+    return renderKeyValues(content || {});
+  },
 
-      assessor_sales_datalet: (content) => {
-        const wrap = el("div", { className: "space-y-3" });
-        if (Array.isArray(content?.summary_rows)) {
-          wrap.appendChild(el("div", {}, el("div", { className: "font-semibold mb-2" }, "Summary"), renderRowsAsTable(content.summary_rows)));
-        }
-        if (content?.verbatim) {
-          const details = el("details", { className: "mt-2" },
-            el("summary", { className: "cursor-pointer list-none px-3 py-1 bg-gray-50 inline-block rounded" }, "Raw HTML (verbatim)")
-          );
-          const pre = el("pre", { className: "whitespace-pre-wrap text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border" }, content.verbatim);
-          details.appendChild(pre);
-          wrap.appendChild(details);
-        }
-        return wrap;
-      },
+  assessor_sales_datalet: (content) => {
+    const wrap = el("div", { className: "space-y-3" });
+    if (Array.isArray(content?.summary_rows)) {
+      wrap.appendChild(el("div", {}, el("div", { className: "font-semibold mb-2" }, "Summary"), renderRowsAsTable(content.summary_rows)));
+    }
+    if (content?.verbatim) {
+      const details = el("details", { className: "mt-2" },
+        el("summary", { className: "cursor-pointer list-none px-3 py-1 bg-gray-50 inline-block rounded" }, "Raw HTML (verbatim)")
+      );
+      const pre = el("pre", { className: "whitespace-pre-wrap text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border" }, content.verbatim);
+      details.appendChild(pre);
+      wrap.appendChild(details);
+    }
+    return wrap;
+  },
 
-      nearby: (content) => {
-        // We also render this on the map — here show a compact table.
-        // If backend sends features with distance_mi, great; otherwise table still shows.
-        return renderRowsAsTable(content?.features || []);
-      },
+  nearby: (content) => {
+    return renderRowsAsTable(content?.features || []);
+  },
 
-      prc: (content) => {
-        const url = content?.url;
-        if (!url) return document.createTextNode("No link");
-        return el("a", {
-          href: url, target: "_blank", rel: "noopener",
-          className: "text-blue-700 underline"
-        }, `Open Assessor Card (PIN ${content?.pin || ""})`);
-      },
+  prc: (content) => {
+    const url = content?.url;
+    if (!url) return document.createTextNode("No link");
+    return el("a", { href: url, target: "_blank", rel: "noopener", className: "text-blue-700 underline" },
+      `Open Assessor Card (PIN ${content?.pin || ""})`);
+  },
 
-      delinquent: (content) => {
-        if (content?.status === "ok" && Array.isArray(content?.data) && content.data.length === 0) {
-          return el("div", { className: "text-green-700" }, "No delinquent records.");
-        }
-        return renderKeyValues(content || {});
+  delinquent: (content) => {
+    if (content?.status === "ok" && Array.isArray(content?.data) && content.data.length === 0) {
+      return el("div", { className: "text-green-700" }, "No delinquent records.");
+    }
+    return renderKeyValues(content || {});
+  },
+
+  // ✅ Add tax_bill here (inside SECTION_RENDERERS)
+  tax_bill: (content) => {
+    if (!content) return document.createTextNode("No data");
+    const wrap = el("div", { className: "space-y-4" });
+
+    function renderBlock(block, heading) {
+      if (!block) return null;
+      const box = el("div", { className: "border rounded-xl" });
+      box.appendChild(el("div", { className: "px-4 py-2 bg-gray-100 rounded-t-xl font-medium" },
+        heading || (block.label || "Tax Bill")));
+      const body = el("div", { className: "px-4 py-3 text-sm space-y-2" });
+      body.appendChild(renderKeyValues({
+        "Label": block.label,
+        "Total Billed": block.total_billed,
+        "Total Due": block.total_due,
+      }));
+      if (Array.isArray(block.installments) && block.installments.length) {
+        const rows = block.installments.map(i => ({
+          Title: i.title,
+          "Original Billed": i.original_billed,
+          "Due Date": i.due_date,
+          Tax: i.tax,
+          Interest: i.interest,
+          "Current Amount Due": i.current_amount_due,
+        }));
+        body.appendChild(el("div", { className: "mt-2" }, renderRowsAsTable(rows)));
       }
-    };
-
-    // Fallback renderer if no custom one exists
-    function renderGeneric(content) {
-      if (Array.isArray(content)) return renderRowsAsTable(content);
-      if (content && typeof content === "object") return renderKeyValues(content);
-      return el("div", {}, content ?? "");
+      box.appendChild(body);
+      return box;
     }
 
-    function renderSection(key, title, content) {
-      const details = el("details", { className: "border rounded-xl" });
-      const sum = el("summary", {
-        className: "cursor-pointer list-none px-4 py-2 font-medium bg-gray-100 rounded-t-xl"
-      }, title);
-      const body = el("div", { className: "px-4 py-3 text-sm" });
+    if (content.current) wrap.appendChild(renderBlock(content.current, "Current Year"));
+    if (content.prior)   wrap.appendChild(renderBlock(content.prior,   "Prior Year"));
 
-      const renderer = SECTION_RENDERERS[key] || renderGeneric;
-      body.appendChild(renderer(content));
-
-      details.appendChild(sum);
-      details.appendChild(body);
-      return details;
+    if (content.overview_url) {
+      wrap.appendChild(el("div", {},
+        el("a", { href: content.overview_url, target: "_blank", rel: "noopener",
+                  className: "text-blue-700 underline" }, "Open Treasurer Overview")));
     }
+    return wrap;
+  },
+};
+
+
+
+
 
     // =========================
     // 4) MAP HELPERS
