@@ -24,10 +24,111 @@ from typing import Any, Dict, List, Optional, Tuple
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# ================= Assessor Detail (DT_PIN ⇄ DT_KEY_PIN) ======================
+
 from functools import lru_cache
 import pandas as _pd
 import re as _re
+
+# ---------------- Cook County Socrata helper (datacatalog.cookcountyil.gov) ----------------
+import os, time, random, requests
+
+COOK_SOCRATA_BASE = "https://datacatalog.cookcountyil.gov/resource"
+COOK_APP_TOKEN = os.getenv("COOK_SODA_APP_TOKEN") or os.getenv("ILLINOIS_APP_TOKEN") or ""
+
+def _socrata_get_cook(
+    dataset_id: str,
+    params: dict,
+    *,
+    fetch_all: bool = True,
+    chunk_size: int = 50000,   # safe page size for big pulls
+    max_retries: int = 5,
+    base_backoff: float = 0.8, # seconds
+    timeout: int = 30,
+) -> list[dict]:
+    """
+    Robust Socrata GET for Cook County:
+      - No token required (adds X-App-Token automatically if env set)
+      - Retries 429/5xx/timeouts with exponential backoff + jitter
+      - Optional pagination when fetch_all=True
+    """
+    base_url = f"{COOK_SOCRATA_BASE}/{dataset_id}.json"
+
+    headers = {"Accept": "application/json", "User-Agent": "PIN-Tool/1.0"}
+    if COOK_APP_TOKEN:
+        headers["X-App-Token"] = COOK_APP_TOKEN
+
+    effective_params = dict(params or {})
+    if fetch_all:
+        effective_params.setdefault("$limit", chunk_size)
+    else:
+        effective_params.setdefault("$limit", 5000)
+
+    results: list[dict] = []
+    session = requests.Session()
+
+    def _attempt_once(p: dict) -> list[dict]:
+        r = session.get(base_url, params=p, headers=headers, timeout=timeout)
+        code = r.status_code
+
+        if code == 200:
+            try:
+                data = r.json()
+            except Exception:
+                raise requests.HTTPError(f"Invalid JSON from Socrata ({dataset_id})", response=r)
+            return data if isinstance(data, list) else []
+
+        if code == 429:
+            raise requests.HTTPError("429 Too Many Requests", response=r)
+
+        if 500 <= code < 600:
+            raise requests.HTTPError(f"{code} Server Error", response=r)
+
+        # For other client errors (bad where/params), surface details
+        if 400 <= code < 500:
+            raise requests.HTTPError(f"{code} Client Error: {r.text[:800]}", response=r)
+
+        r.raise_for_status()
+
+    # Paging
+    offset = int(effective_params.get("$offset", 0))
+    page_limit = int(effective_params["$limit"])
+
+    while True:
+        attempt = 0
+        while True:
+            try:
+                page = _attempt_once({**effective_params, "$offset": offset})
+                break
+            except requests.HTTPError as e:
+                sc = getattr(e.response, "status_code", None)
+                if sc == 429 or (sc and 500 <= sc < 600):
+                    attempt += 1
+                    if attempt >= max_retries:
+                        # signal throttling so caller can return _status:"throttled"
+                        if sc == 429:
+                            raise RuntimeError("SOC_DATA_THROTTLED") from e
+                        raise
+                    sleep_s = (base_backoff * (2 ** (attempt - 1))) + random.uniform(0, 0.5)
+                    time.sleep(sleep_s)
+                    continue
+                raise
+            except (requests.Timeout, requests.ConnectionError):
+                attempt += 1
+                if attempt >= max_retries:
+                    raise
+                sleep_s = (base_backoff * (2 ** (attempt - 1))) + random.uniform(0, 0.4)
+                time.sleep(sleep_s)
+                continue
+
+        results.extend(page)
+
+        if not fetch_all:
+            return results
+        if len(page) < page_limit:
+            return results
+
+        offset += page_limit
+
 
 DEFAULT_UA = "PIN-Tool/1.0 (+https://example.com)"
 
@@ -1765,8 +1866,6 @@ def _ids_in_clause(ids):
     return f"({quoted})"
 
 
-
-
 def _socrata_get(dataset_id: str, params: dict) -> list:
     """
     Socrata fetch with auto-pagination, polite throttling (esp. when no APP_TOKEN),
@@ -2895,70 +2994,122 @@ def fetch_ptab_by_docket(
     
 
 # ======================= CCAO Permits (Socrata: 6yjf-dfxs) =======================
-# Table docs: https://datacatalog.cookcountyil.gov/resource/6yjf-dfxs
+# Docs: https://datacatalog.cookcountyil.gov/resource/6yjf-dfxs
 # Uses 14-digit UNDASHED PIN in the "pin" column.
 
-def fetch_ccao_permits(pin: str, year_min: int | None = None, year_max: int | None = None,
-                       dataset_id: str = "6yjf-dfxs") -> dict:
-    """
-    Fetch ALL columns for a single PIN from CCAO permits (undashed 14-digit).
-    Optional year_min/year_max to constrain by 'year'.
-    Returns: {"_status","normalized":{"rows":[...]}, "_meta":{...}}
-    """
-    p = undashed_pin(pin)  # ensure 14-digit
+def fetch_ccao_permits(
+    pin: str,
+    year_min: int | None = None,
+    year_max: int | None = None,
+    dataset_id: str = "6yjf-dfxs",
+) -> dict:
+    p = undashed_pin(pin)
     where_parts = ["pin = :p"]
-    params = {"p": p, "$limit": "5000", "$order": "year DESC, date_issued DESC"}
+    params = {":p": p, "$order": "year DESC, date_issued DESC"}
 
     if year_min is not None:
         where_parts.append("year >= :ymin")
-        params["ymin"] = str(int(year_min))
+        params[":ymin"] = int(year_min)
     if year_max is not None:
         where_parts.append("year <= :ymax")
-        params["ymax"] = str(int(year_max))
+        params[":ymax"] = int(year_max)
 
     try:
-        rows = _socrata_get(dataset_id, {"$where": " AND ".join(where_parts), **params})
-        return {
-            "_status": "ok",
-            "normalized": {"rows": rows},   # every column comes back as-is
-            "_meta": {"dataset": dataset_id, "count": len(rows), "pin": p}
-        }
-    except Exception as e:
-        return {"_status": "error", "normalized": {"rows": []},
-                "_meta": {"dataset": dataset_id, "pin": p, "error": str(e)}}
-
-
-def fetch_ccao_permits_multi(pins: list[str], year_min: int | None = None, year_max: int | None = None,
-                             dataset_id: str = "6yjf-dfxs") -> dict:
-    """
-    Fetch ALL columns for MANY pins (<= ~50 recommended). Pins may be dashed/undashed.
-    """
-    und = [undashed_pin(p) for p in (pins or []) if undashed_pin(p)]
-    incl = _ids_in_clause(und)  # ('123...','456...')
-    if not incl:
-        return {"_status": "ok", "normalized": {"rows": []},
-                "_meta": {"dataset": dataset_id, "count": 0}}
-
-    where_parts = [f"pin IN {incl}"]
-    params = {"$limit": "5000", "$order": "pin ASC, year DESC, date_issued DESC"}
-
-    if year_min is not None:
-        where_parts.append("year >= :ymin")
-        params["ymin"] = str(int(year_min))
-    if year_max is not None:
-        where_parts.append("year <= :ymax")
-        params["ymax"] = str(int(year_max))
-
-    try:
-        rows = _socrata_get(dataset_id, {"$where": " AND ".join(where_parts), **params})
+        rows = _socrata_get_cook(dataset_id, {"$where": " AND ".join(where_parts), **params}, fetch_all=True)
         return {
             "_status": "ok",
             "normalized": {"rows": rows},
-            "_meta": {"dataset": dataset_id, "count": len(rows), "pins": und[:]}
+            "_meta": {"dataset": dataset_id, "count": len(rows), "pin": p},
+        }
+    except RuntimeError as re:
+        if str(re) == "SOC_DATA_THROTTLED":
+            return {
+                "_status": "throttled",
+                "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "pin": p, "reason": "429 Too Many Requests"},
+            }
+        return {
+            "_status": "error",
+            "normalized": {"rows": []},
+            "_meta": {"dataset": dataset_id, "pin": p, "error": str(re)},
+        }
+    except requests.HTTPError as e:
+        sc = getattr(e.response, "status_code", None)
+        body = getattr(e.response, "text", "")[:800] if getattr(e, "response", None) else ""
+        return {
+            "_status": "error",
+            "normalized": {"rows": []},
+            "_meta": {"dataset": dataset_id, "pin": p, "status": sc, "error": body or str(e)},
         }
     except Exception as e:
-        return {"_status": "error", "normalized": {"rows": []},
-                "_meta": {"dataset": dataset_id, "pins": und[:], "error": str(e)}}
+        return {
+            "_status": "error",
+            "normalized": {"rows": []},
+            "_meta": {"dataset": dataset_id, "pin": p, "error": str(e)},
+        }
+
+
+def fetch_ccao_permits_multi(
+    pins: list[str],
+    year_min: int | None = None,
+    year_max: int | None = None,
+    dataset_id: str = "6yjf-dfxs",
+) -> dict:
+    und = []
+    for raw in (pins or []):
+        up = undashed_pin(raw)
+        if up:
+            und.append(up)
+
+    incl = _ids_in_clause(und)  # -> ('123...','456...')
+    if not incl:
+        return {"_status": "ok", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "count": 0}}
+
+    where_parts = [f"pin IN {incl}"]
+    params = {"$order": "pin ASC, year DESC, date_issued DESC"}
+
+    if year_min is not None:
+        where_parts.append("year >= :ymin")
+        params[":ymin"] = int(year_min)
+    if year_max is not None:
+        where_parts.append("year <= :ymax")
+        params[":ymax"] = int(year_max)
+
+    try:
+        rows = _socrata_get_cook(dataset_id, {"$where": " AND ".join(where_parts), **params}, fetch_all=True)
+        return {
+            "_status": "ok",
+            "normalized": {"rows": rows},
+            "_meta": {"dataset": dataset_id, "count": len(rows), "pins": und[:]},
+        }
+    except RuntimeError as re:
+        if str(re) == "SOC_DATA_THROTTLED":
+            return {
+                "_status": "throttled",
+                "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "pins": und[:], "reason": "429 Too Many Requests"},
+            }
+        return {
+            "_status": "error",
+            "normalized": {"rows": []},
+            "_meta": {"dataset": dataset_id, "pins": und[:], "error": str(re)},
+        }
+    except requests.HTTPError as e:
+        sc = getattr(e.response, "status_code", None)
+        body = getattr(e.response, "text", "")[:800] if getattr(e, "response", None) else ""
+        return {
+            "_status": "error",
+            "normalized": {"rows": []},
+            "_meta": {"dataset": dataset_id, "pins": und[:], "status": sc, "error": body or str(e)},
+        }
+    except Exception as e:
+        return {
+            "_status": "error",
+            "normalized": {"rows": []},
+            "_meta": {"dataset": dataset_id, "pins": und[:], "error": str(e)},
+        }
+
+
 
 
 
