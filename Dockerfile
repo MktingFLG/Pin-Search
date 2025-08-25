@@ -3,6 +3,14 @@ FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
+# Keep BLAS/NumExpr from spawning extra threads (saves RAM & CPU)
+ENV OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    NUMEXPR_NUM_THREADS=1 \
+    PYTHONOPTIMIZE=1
+
+    
 # Install build tools only in this stage
 RUN apt-get update && apt-get install -y \
     build-essential \
