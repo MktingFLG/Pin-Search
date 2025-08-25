@@ -87,6 +87,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
         pin_dash = normalize_pin(pin)     # display
         pin_raw  = undashed_pin(pin_dash) # 14-digit for fetchers
     except Exception:
+        print(f"❌ PIN normalization failed:", flush=True)
         return {
             "pin": (pin or "").strip(),
             "generated_at": datetime.utcnow().isoformat() + "Z",
@@ -97,6 +98,81 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
     ck = _cache_key(pin_raw)
     now = datetime.utcnow()
+
+        # --- Revalidate each source (LAZY + GATED) ---
+    print("➡️ BOR", flush=True)
+    bor = _fetch_if("BOR", "fetch_bor", pin_raw, force=fresh or _expired(prev, "BOR", now))
+
+    print("➡️ CV", flush=True)
+    cv = _fetch_if("CV", "fetch_cv", pin_raw, force=fresh or _expired(prev, "CV", now))
+
+    print("➡️ SALES", flush=True)
+    sales = _fetch_if("SALES", "fetch_sales", pin_raw, force=fresh or _expired(prev, "SALES", now))
+
+    print("➡️ PERMITS", flush=True)
+    permits = _fetch_if("PERMITS", "fetch_permits", pin_raw, force=fresh or _expired(prev, "PERMITS", now))
+
+    print("➡️ ASSR_VALUES", flush=True)
+    assr_vals = _fetch_if("ASSR_VALUES", "fetch_assessor_values", pin_raw, force=fresh or _expired(prev, "ASSR_VALUES", now))
+
+    print("➡️ ASSR_PROFILE", flush=True)
+    assr_profile = _fetch_if("ASSR_PROFILE", "fetch_assessor_profile", pin_raw, force=fresh or _expired(prev, "ASSR_PROFILE", now))
+
+    print("➡️ ASSR_MAILDETAIL", flush=True)
+    assr_maildetail = _fetch_if("ASSR_MAILDETAIL", "fetch_assessor_maildetail", pin_raw, force=fresh or _expired(prev, "ASSR_MAILDETAIL", now))
+
+    print("➡️ ASSR_EXEMPT", flush=True)
+    assr_exempt = _fetch_if("ASSR_EXEMPT", "fetch_assessor_exemptions", pin_raw, force=fresh or _expired(prev, "ASSR_EXEMPT", now))
+
+    print("➡️ ASSR_LOCATION", flush=True)
+    assr_location = _fetch_if("ASSR_LOCATION", "fetch_assessor_location", pin_raw, force=fresh or _expired(prev, "ASSR_LOCATION", now))
+
+    print("➡️ ASSR_LAND", flush=True)
+    assr_land = _fetch_if("ASSR_LAND", "fetch_assessor_land", pin_raw, force=fresh or _expired(prev, "ASSR_LAND", now))
+
+    print("➡️ ASSR_RESIDENTIAL", flush=True)
+    assr_res = _fetch_if("ASSR_RESIDENTIAL", "fetch_assessor_residential", pin_raw, force=fresh or _expired(prev, "ASSR_RESIDENTIAL", now))
+
+    print("➡️ ASSR_OBY", flush=True)
+    assr_oby = _fetch_if("ASSR_OBY", "fetch_assessor_other_structures", pin_raw, force=fresh or _expired(prev, "ASSR_OBY", now))
+
+    print("➡️ ASSR_COMM_BLDG", flush=True)
+    comm_bldg = _fetch_if("ASSR_COMM_BLDG", "fetch_assessor_commercial_building", pin_raw, force=fresh or _expired(prev, "ASSR_COMM_BLDG", now))
+
+    print("➡️ ASSR_PROP_ASSOCIATION", flush=True)
+    prop_assoc = _fetch_if("ASSR_PROP_ASSOCIATION", "fetch_assessor_prop_association", pin_raw, force=fresh or _expired(prev, "ASSR_PROP_ASSOCIATION", now))
+
+    print("➡️ ASSR_SALES_DALET", flush=True)
+    assr_sales_dalet = _fetch_if("ASSR_SALES", "fetch_assessor_sales_datalet", pin_raw, force=fresh or _expired(prev, "ASSR_SALES", now))
+
+    print("➡️ ASSR_NOTICE_SUMMARY", flush=True)
+    notice_sum = _fetch_if("ASSR_NOTICE_SUMMARY", "fetch_assessor_notice_summary", pin_raw, force=fresh or _expired(prev, "ASSR_NOTICE_SUMMARY", now))
+
+    print("➡️ ASSR_APPEALS", flush=True)
+    appeals = _fetch_if("ASSR_APPEALS", "fetch_assessor_appeals_coes", pin_raw, force=fresh or _expired(prev, "ASSR_APPEALS", now))
+
+    print("➡️ ASSR_HIE_ADDN", flush=True)
+    assr_hie = _fetch_if("ASSR_HIE_ADDN", "fetch_assessor_hie_additions", pin_raw, force=fresh or _expired(prev, "ASSR_HIE_ADDN", now))
+
+    print("➡️ PTAB", flush=True)
+    ptab = _fetch_if("PTAB", "fetch_ptab_by_pin", pin_raw, years=None, expand_associated=True)
+
+    print("➡️ PERMITS_CCAO", flush=True)
+    permits_ccao = _fetch_if("PERMITS_CCAO", "fetch_ccao_permits", pin_raw) if (fresh or _expired(prev, "PERMITS_CCAO", now)) else prev["data"].get("sections", {}).get("permits_ccao", {})
+
+    print("➡️ DELINQUENT", flush=True)
+    delinquent = _fetch_if("DELINQUENT", "fetch_delinquent", pin_raw)
+
+    print("➡️ PRC", flush=True)
+    prc = _fetch_if("PRC", "fetch_prc_link", pin_raw)
+
+    print("➡️ NEARBY", flush=True)
+    nearby = _fetch_if("NEARBY", "fetch_nearby_candidates", pin_raw, radius_mi=5.0, limit=100)
+
+    print("➡️ TAX_BILL", flush=True)
+    tax_bill = _fetch_if("TAX_BILL", "fetch_tax_bill_latest", pin_raw)
+
+    
 
     # Try cache
     if not fresh and ck in _CACHE:
