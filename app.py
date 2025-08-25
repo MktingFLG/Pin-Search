@@ -36,7 +36,7 @@ def _must_pin(pin: str) -> str:
     return p14
 
 # ---------------- Health ----------------
-@app.get("/health")
+@app.get("/api/health")
 def health():
     return {"status": "ok"}
 
