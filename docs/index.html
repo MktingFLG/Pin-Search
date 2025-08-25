@@ -140,27 +140,27 @@
       return await r.json();
     }
 
-    function renderRowsAsTable(rows){
-      if (!rows || !rows.length) return document.createTextNode("No data");
-      const allCols = new Set();
-      rows.forEach(r => Object.keys(r || {}).forEach(k => allCols.add(k)));
-      const cols = Array.from(allCols);
+    function renderSection(key, title, content) {
+      const details = el("details", { className: "border rounded-xl" });
+      const sum = el("summary", {
+        className: "cursor-pointer list-none px-4 py-2 font-medium bg-gray-100 rounded-t-xl"
+      }, title);
+      const body = el("div", { className: "px-4 py-3 text-sm" });
 
-      const table = el("table", { className: "w-full text-sm" });
-      const thead = el("thead");
-      const thr = el("tr");
-      cols.forEach(c => thr.appendChild(el("th", { className: "text-left border-b px-2 py-1" }, c)));
-      thead.appendChild(thr);
-      table.appendChild(thead);
-      const tbody = el("tbody");
-      rows.forEach(r => {
-        const tr = el("tr");
-        cols.forEach(c => tr.appendChild(el("td", { className: "border-b px-2 py-1 align-top" }, r?.[c] ?? "")));
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-      return table;
+      try {
+        const renderer = SECTION_RENDERERS[key] || renderGeneric;
+        body.appendChild(renderer(content));
+      } catch (err) {
+        console.error(`Renderer error in section ${key}:`, err);
+        body.appendChild(el("div", { className: "text-red-600" },
+          `⚠️ Failed to render section (${err.message})`));
+      }
+
+      details.appendChild(sum);
+      details.appendChild(body);
+      return details; 
     }
+
 
     function renderKeyValues(obj) {
       const dl = el("dl");
