@@ -98,7 +98,16 @@ async def everything_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top
         _to_thread(fetchers.fetch_ptax_main, pin),
         _to_thread(fetchers.fetch_delinquent, pin),
     ]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    async def run_in_batches(tasks, batch_size=4):
+        results = []
+        for i in range(0, len(tasks), batch_size):
+            batch = tasks[i:i+batch_size]
+            part = await asyncio.gather(*batch, return_exceptions=True)
+            results.extend(part)
+        return results
+
+    # run in safer batches of 4
+    results = await run_in_batches(tasks, batch_size=4)
 
     def _norm(x):
         return {"_status": "error", "_meta": {"error": str(x)}, "normalized": {}} if isinstance(x, Exception) else x
@@ -111,6 +120,7 @@ async def everything_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top
         "rod_bundle","ptab","ccao_permits","ptax_main","delinquent",
     ]
     return {"_status": "ok", "_meta": {"pin": normalize_pin(pin)}, "bundle": {k: _norm(v) for k, v in zip(keys, results)}}
+
 
 # ---------------- UI routes ----------------
 @app.get("/", include_in_schema=False)
