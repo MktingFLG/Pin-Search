@@ -1,3 +1,5 @@
+print("🚀 Starting app.py", flush=True)
+
 import os
 for k in ("OMP_NUM_THREADS","OPENBLAS_NUM_THREADS","MKL_NUM_THREADS","NUMEXPR_NUM_THREADS"):
     os.environ.setdefault(k, "1")
@@ -5,10 +7,9 @@ os.environ.setdefault("PYTHONOPTIMIZE", "1")
 
 import asyncio
 from typing import Optional, List
-
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import FileResponse
 
 try:
     from dotenv import load_dotenv
@@ -16,10 +17,9 @@ try:
 except Exception:
     pass
 
-import fetchers
 from utils import undashed_pin, normalize_pin
+import fetchers   # ✅ keep this one (needed in many endpoints)
 from fetchers import fetch_prc_link, fetch_pin_geom_arcgis, fetch_nearby_candidates, fetch_tax_bill_latest
-from orchestrator import get_pin_summary
 
 # ---------------- App & middleware ----------------
 app = FastAPI(title="PIN Tool API", version="1.0")
@@ -28,6 +28,11 @@ app.add_middleware(
     allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"],
 )
 
+# ---------------- Health ----------------
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
 # ---------------- Helpers ----------------
 def _must_pin(pin: str) -> str:
     p14 = undashed_pin(pin)
@@ -35,10 +40,20 @@ def _must_pin(pin: str) -> str:
         raise HTTPException(status_code=400, detail="PIN must be 14 digits.")
     return p14
 
-# ---------------- Health ----------------
-@app.get("/api/health")
-def health():
-    return {"status": "ok"}
+
+# ---------------- API used by the frontend ----------------
+@app.get("/pin/{pin}/summary")
+def pin_summary(pin: str, fresh: bool = False):
+    from orchestrator import get_pin_summary   # ✅ lazy import
+    _must_pin(pin)
+    return get_pin_summary(pin, fresh=fresh)
+
+@app.get("/api/pin/{pin}")
+def api_pin(pin: str, fresh: bool = False):
+    from orchestrator import get_pin_summary   # ✅ lazy import
+    _must_pin(pin)
+    return get_pin_summary(pin, fresh=fresh)
+
 
 # ---------------- Assessor & other source endpoints (unchanged) ----------------
 @app.get("/assessor/profile")
@@ -128,21 +143,7 @@ def root():
     # Serve your docs/index.html (adjust path if your HTML lives elsewhere)
     return FileResponse("docs/index.html")
 
-# Keep the JSON summary route (handy for debugging)
-@app.get("/pin/{pin}/summary")
-def pin_summary(pin: str, fresh: bool = False):
-    _must_pin(pin)
-    return get_pin_summary(pin, fresh=fresh)
 
-# ---------------- API used by the frontend ----------------
-@app.get("/api/pin/{pin}")
-def api_pin(pin: str, fresh: bool = False):
-    """
-    Returns the same shape your index.html expects:
-    { pin, generated_at, sections: {...} }
-    """
-    _must_pin(pin)
-    return get_pin_summary(pin, fresh=fresh)
 
 @app.get("/api/prc/{pin}")
 def api_prc(pin: str):
@@ -157,3 +158,15 @@ def api_nearby_mini(pin: str, radius: float = Query(5.0, ge=0), limit: int = Que
     nearby = fetch_nearby_candidates(pin, radius_mi=radius, limit=limit).get("normalized", {})
     tax = fetch_tax_bill_latest(pin).get("normalized", {})
     return {"pin": normalize_pin(pin), "subject": subject, "nearby": nearby, "tax_bill": tax}
+
+
+@app.get("/api/pin/{pin}/fast")
+def api_pin_fast(pin: str):
+    from fetchers import fetch_ptax_main, fetch_nearby_candidates
+    _must_pin(pin)
+    return {
+        "pin": normalize_pin(pin),
+        "ptax": fetch_ptax_main(pin),
+        "nearby": fetch_nearby_candidates(pin, radius_mi=5.0, limit=50),
+    }
+
