@@ -99,6 +99,16 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     ck = _cache_key(pin_raw)
     now = datetime.utcnow()
 
+        # Try cache
+    if not fresh and ck in _CACHE:
+        entry = _CACHE[ck]
+        # Still return cached if *all* sources are within TTL; otherwise partial revalidate below
+        if all(now - entry["stamps"].get(k, now) <= TTL[k] for k in TTL):
+            return entry["data"]
+
+    # load previous if any (for partial reuse)
+    prev = _CACHE.get(ck, {"data": {}, "stamps": {}})
+
         # --- Revalidate each source (LAZY + GATED) ---
     print("➡️ BOR", flush=True)
     bor = _fetch_if("BOR", "fetch_bor", pin_raw, force=fresh or _expired(prev, "BOR", now))
@@ -174,15 +184,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
     
 
-    # Try cache
-    if not fresh and ck in _CACHE:
-        entry = _CACHE[ck]
-        # Still return cached if *all* sources are within TTL; otherwise partial revalidate below
-        if all(now - entry["stamps"].get(k, now) <= TTL[k] for k in TTL):
-            return entry["data"]
 
-    # load previous if any (for partial reuse)
-    prev = _CACHE.get(ck, {"data": {}, "stamps": {}})
 
     # --- Revalidate each source (LAZY + GATED) ---
     bor         = _fetch_if("BOR",               "fetch_bor",               pin_raw, force=fresh or _expired(prev, "BOR", now))
