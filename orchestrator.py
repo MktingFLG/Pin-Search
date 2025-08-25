@@ -171,16 +171,36 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     permits_ccao = _fetch_if("PERMITS_CCAO", "fetch_ccao_permits", pin_raw) if (fresh or _expired(prev, "PERMITS_CCAO", now)) else prev["data"].get("sections", {}).get("permits_ccao", {})
 
     print("➡️ DELINQUENT", flush=True)
-    delinquent = _fetch_if("DELINQUENT", "fetch_delinquent", pin_raw)
+    try:
+        delinquent = _fetch_if("DELINQUENT", "fetch_delinquent", pin_raw)
+        print("✅ DELINQUENT done", flush=True)
+    except Exception as e:
+        print(f"❌ DELINQUENT failed: {e}", flush=True)
+        delinquent = {}
 
     print("➡️ PRC", flush=True)
-    prc = _fetch_if("PRC", "fetch_prc_link", pin_raw)
+    try:
+        prc = _fetch_if("PRC", "fetch_prc_link", pin_raw)
+        print("✅ PRC done", flush=True)
+    except Exception as e:
+        print(f"❌ PRC failed: {e}", flush=True)
+        prc = {}
 
     print("➡️ NEARBY", flush=True)
-    nearby = _fetch_if("NEARBY", "fetch_nearby_candidates", pin_raw, radius_mi=5.0, limit=100)
+    try:
+        nearby = _fetch_if("NEARBY", "fetch_nearby_candidates", pin_raw)
+        print("✅ NEARBY done", flush=True)
+    except Exception as e:
+        print(f"❌ NEARBY failed: {e}", flush=True)
+        nearby = {}
 
     print("➡️ TAX_BILL", flush=True)
-    tax_bill = _fetch_if("TAX_BILL", "fetch_tax_bill_latest", pin_raw)
+    try:
+        tax_bill = _fetch_if("TAX_BILL", "fetch_tax_bill_latest", pin_raw)
+        print("✅ TAX_BILL done", flush=True)
+    except Exception as e:
+        print(f"❌ TAX_BILL failed: {e}", flush=True)
+        tax_bill = {}            
 
     
 
