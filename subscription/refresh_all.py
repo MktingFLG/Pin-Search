@@ -19,10 +19,30 @@ from subscription.import_subs import (
     ensure_schema, upsert_manifest, town_needs_update,
     bulk_upsert_header, bulk_upsert_detail
 )
+# --- keep the web service warm (no new file) ---
+import threading, time
+import requests
+
+WEB_ORIGIN = os.getenv("WEB_ORIGIN", "https://pin-search-wyof.onrender.com").rstrip("/")
+
+def _keepwarm():
+    url = f"{WEB_ORIGIN}/api/health"
+    while True:
+        try:
+            requests.get(url, timeout=5)
+        except Exception:
+            pass
+        time.sleep(8 * 60)  # every ~8 minutes
+
+# call this once when your worker starts
+def start_keepwarm():
+    threading.Thread(target=_keepwarm, name="keepwarm", daemon=True).start()
+
 
 LAYOUT_VERSION = 22
 
 def main():
+    start_keepwarm() 
     ensure_schema()
 
     sess = new_session()
