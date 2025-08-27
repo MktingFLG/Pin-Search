@@ -3775,17 +3775,32 @@ def fetch_tax_bill_latest(pin: str) -> dict:
 #===================================================================================================
 
 
-def fetch_latest_commercial_sales(limit: int = 200):
-    # Example: pull from PTAX data
-    # TODO: replace with your actual PTAX source logic
-    import pandas as pd
+def fetch_latest_commercial_sales(limit: int = 200, dataset_id: str = "it54-y4c6") -> dict:
+    """
+    Fetch most recent commercial PTAX sales.
+    Uses PTAX main dataset (it54-y4c6). Filters out residential.
+    """
+    try:
+        rows = _socrata_get(dataset_id, {
+            "$where": "class NOT LIKE '2%'",   # exclude residential (class 2xx)
+            "$order": "date_recorded DESC",
+            "$limit": str(limit),
+        })
+        sales = []
+        for r in rows:
+            sales.append({
+                "pin": r.get("line_1_primary_pin"),
+                "address": r.get("property_location") or "",
+                "class": r.get("class"),
+                "use_description": r.get("property_class_description") or "",
+                "sale_date": r.get("date_recorded"),
+                "sale_price": r.get("purchase_price"),
+                "lat": float(r["latitude"]) if r.get("latitude") else None,
+                "lon": float(r["longitude"]) if r.get("longitude") else None,
+            })
+        return {"_status": "ok", "sales": sales}
+    except Exception as e:
+        return {"_status": "error", "error": str(e), "sales": []}
 
-    path = os.getenv("PTAX_SALES_PATH", "raw_cache/ptax_sales.csv")
-    if not os.path.exists(path):
-        return []
-
-    df = pd.read_csv(path).sort_values("sale_date", ascending=False)
-    df = df[df["class"].astype(str).str.startswith("2") == False]  # exclude residential
-    return df.head(limit).to_dict(orient="records")
 
 

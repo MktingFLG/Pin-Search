@@ -65,9 +65,6 @@
 </main>
 
 <script>
-const API_BASE = "";  // or "/" if deployed at root
-const url = `${API_BASE}/api/pin/${encodeURIComponent(pin)}${fresh ? "?fresh=1" : ""}`;
-
 
 const $ = sel => document.querySelector(sel);
 const el = (tag, props={}, ...kids) => {

@@ -193,14 +193,7 @@ def api_pin_fast(pin: str):
     }
 
 @app.get("/api/latest-commercial-sales")
-def latest_commercial_sales(limit: int = 200):
-    """
-    Return recent commercial sales across Cook County.
-    Pulls from PTAX dataset (via fetchers).
-    """
-    try:
-        from fetchers import fetch_latest_commercial_sales
-        rows = fetch_latest_commercial_sales(limit=limit)
-        return {"_status": "ok", "sales": rows}
-    except Exception as e:
-        return {"_status": "error", "error": str(e)}
+def api_latest_commercial_sales(limit: int = 200):
+    from fetchers import fetch_latest_commercial_sales
+    return fetch_latest_commercial_sales(limit=limit)
+
