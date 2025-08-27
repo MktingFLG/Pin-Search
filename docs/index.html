@@ -269,14 +269,33 @@ async function loadPin(pin, fresh=false) {
   });
 }
 
-function renderSection(key,title,content){
-  const details=el("details",{className:"border rounded-xl", "data-section":key});
-  details.appendChild(el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"},title));
-  const body=el("div",{className:"px-4 py-3 text-sm"});
-  const renderer=SECTION_RENDERERS[key]||renderGeneric;
-  body.appendChild(renderer(content));
-  details.appendChild(body);
-  return details;
+// Init
+initMaps();
+loadLatestCommercialSales();
+
+function renderNearbyOnMap(nearby, sales) {
+  if (!_map) return;
+  _map.eachLayer(layer=>{ if (layer instanceof L.Marker || layer instanceof L.Circle) _map.removeLayer(layer); });
+  if (!nearby?.center || nearby.center.lat == null || nearby.center.lon == null) return;
+  const c = [nearby.center.lat, nearby.center.lon]; _map.setView(c, 13);
+  L.circle(c,{radius:(nearby.radius_mi||5)*M2_PER_MI,fillOpacity:0.08}).addTo(_map);
+  const subj=nearby.subject||{};
+  const subjHtml=`<div class="text-sm">
+      <div class="font-semibold">${subj.pin_dash||subj.pin||""}</div>
+      <div>${subj.class||""} ${subj.property_use||""}</div>
+      ${subj.latest_sale_date||subj.latest_sale_price?`<div>${subj.latest_sale_date||""} • ${subj.latest_sale_price||""}</div>`:""}
+    </div>`;
+  L.marker(c,{icon:SubjectIcon,title:subj.pin_dash}).addTo(_map).bindPopup(subjHtml).openPopup();
+  (nearby.features||[]).forEach(f=>{
+    if(!f.lat||!f.lon) return;
+    const html=`<div class="text-sm">
+        <div class="font-semibold">${f.pin||""}</div>
+        <div>${f.class||""} ${f.property_use||""}</div>
+        ${f.latest_sale_date||f.latest_sale_price?`<div>${f.latest_sale_date||""} • ${f.latest_sale_price||""}</div>`:""}
+        ${f.distance_mi!=null?`<div>${f.distance_mi} mi away</div>`:""}
+      </div>`;
+    L.marker([f.lat,f.lon],{icon:NearbyIcon,title:f.pin}).addTo(_map).bindPopup(html);
+  });
 }
 
 </script>
