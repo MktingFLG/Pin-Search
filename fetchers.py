@@ -3775,5 +3775,17 @@ def fetch_tax_bill_latest(pin: str) -> dict:
 #===================================================================================================
 
 
+def fetch_latest_commercial_sales(limit: int = 200):
+    # Example: pull from PTAX data
+    # TODO: replace with your actual PTAX source logic
+    import pandas as pd
+
+    path = os.getenv("PTAX_SALES_PATH", "raw_cache/ptax_sales.csv")
+    if not os.path.exists(path):
+        return []
+
+    df = pd.read_csv(path).sort_values("sale_date", ascending=False)
+    df = df[df["class"].astype(str).str.startswith("2") == False]  # exclude residential
+    return df.head(limit).to_dict(orient="records")
 
 

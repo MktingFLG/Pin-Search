@@ -156,12 +156,30 @@ def api_prc(pin: str):
 
 @app.get("/api/nearby-mini/{pin}")
 def api_nearby_mini(pin: str, radius: float = Query(5.0, ge=0), limit: int = Query(100, ge=1, le=500)):
-    from fetchers import fetch_pin_geom_arcgis, fetch_nearby_candidates, fetch_tax_bill_latest  # 👈 local import
+    from fetchers import fetch_pin_geom_arcgis, fetch_nearby_candidates, fetch_tax_bill_latest, fetch_ptax_main
     _must_pin(pin)
+
     subject = fetch_pin_geom_arcgis(pin).get("normalized", {})
     nearby = fetch_nearby_candidates(pin, radius_mi=radius, limit=limit).get("normalized", {})
     tax = fetch_tax_bill_latest(pin).get("normalized", {})
+    ptax = fetch_ptax_main(pin).get("normalized", {})
+
+    # inject latest sale into subject + nearby
+    def attach_sale(d):
+        if not d: return d
+        sale = (ptax.get("sales") or [])
+        if sale:
+            latest = sale[0]  # assume sorted
+            d["latest_sale_date"] = latest.get("date")
+            d["latest_sale_price"] = latest.get("price")
+        return d
+
+    subject = attach_sale(subject)
+    for f in (nearby.get("features") or []):
+        f = attach_sale(f)
+
     return {"pin": normalize_pin(pin), "subject": subject, "nearby": nearby, "tax_bill": tax}
+
 
 
 @app.get("/api/pin/{pin}/fast")
@@ -174,3 +192,15 @@ def api_pin_fast(pin: str):
         "nearby": fetch_nearby_candidates(pin, radius_mi=5.0, limit=50),
     }
 
+@app.get("/api/latest-commercial-sales")
+def latest_commercial_sales(limit: int = 200):
+    """
+    Return recent commercial sales across Cook County.
+    Pulls from PTAX dataset (via fetchers).
+    """
+    try:
+        from fetchers import fetch_latest_commercial_sales
+        rows = fetch_latest_commercial_sales(limit=limit)
+        return {"_status": "ok", "sales": rows}
+    except Exception as e:
+        return {"_status": "error", "error": str(e)}
