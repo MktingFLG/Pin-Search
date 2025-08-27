@@ -212,31 +212,28 @@ async function loadPin(pin,fresh=false) {
   $("#meta").textContent=`PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
   const sec=data.sections||{};
 
-  // 🔹 Show summaries immediately if present
-  if(sec.property_info && Object.keys(sec.property_info).length) {
+  // ✅ Immediate summaries
+  if(sec.property_info) {
     $("#sections").appendChild(renderSection("property_info","Property Info",sec.property_info));
   }
   if(sec.value_summary && sec.value_summary.length) {
     $("#sections").appendChild(renderSection("value_summary","Assessor Values",sec.value_summary));
   }
-  if(sec.sales && (sec.sales["Latest Sale Date"] || sec.sales.History?.length)) {
+  if(sec.sales) {
     $("#sections").appendChild(renderSection("sales","Sales",sec.sales));
   }
-  if(sec.nearby && sec.nearby.center) {
+  if(sec.nearby) {
     $("#sections").appendChild(renderSection("nearby","Nearby Properties",sec.nearby));
     renderNearbyOnMap(sec.nearby, sec.sales);
   }
 
-  // 🔹 Everything else goes lazy
-  const lazySections = [
-    "ptax","permits","permits_ccao","delinquent","ptab",
-    "recorder_of_deeds","assessor_exemptions","assessor_maildetail",
-    "tax_bill","hie_additions"
-  ];
-  lazySections.forEach(k=>{
-    $("#sections").appendChild(renderSection(k,k.replace(/_/g," "),{},true,pin));
+  // ✅ Everything else becomes expandable stubs
+  Object.entries(sec).forEach(([k,v])=>{
+    if(["property_info","value_summary","sales","nearby"].includes(k)) return;
+    $("#sections").appendChild(renderSection(k,k.replace(/_/g," "),v));
   });
 }
+
 
 
 // --- Events ---
