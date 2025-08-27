@@ -110,14 +110,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     prev = _CACHE.get(ck, {"data": {}, "stamps": {}})
 
         # --- Revalidate each source (LAZY + GATED) ---
-    print("➡️ BOR", flush=True)
-    bor = _fetch_if("BOR", "fetch_bor", pin_raw, force=fresh or _expired(prev, "BOR", now))
 
-    print("➡️ CV", flush=True)
-    cv = _fetch_if("CV", "fetch_cv", pin_raw, force=fresh or _expired(prev, "CV", now))
-
-    print("➡️ SALES", flush=True)
-    sales = _fetch_if("SALES", "fetch_sales", pin_raw, force=fresh or _expired(prev, "SALES", now))
 
     print("➡️ PERMITS", flush=True)
     permits = _fetch_if("PERMITS", "fetch_permits", pin_raw, force=fresh or _expired(prev, "PERMITS", now))
@@ -207,9 +200,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
 
     # --- Revalidate each source (LAZY + GATED) ---
-    bor         = _fetch_if("BOR",               "fetch_bor",               pin_raw, force=fresh or _expired(prev, "BOR", now))
-    cv          = _fetch_if("CV",                "fetch_cv",                pin_raw, force=fresh or _expired(prev, "CV", now))
-    sales       = _fetch_if("SALES",             "fetch_sales",             pin_raw, force=fresh or _expired(prev, "SALES", now))
+
     permits     = _fetch_if("PERMITS",           "fetch_permits",           pin_raw, force=fresh or _expired(prev, "PERMITS", now))
     assr_vals   = _fetch_if("ASSR_VALUES",       "fetch_assessor_values",   pin_raw, force=fresh or _expired(prev, "ASSR_VALUES", now))
     assr_profile= _fetch_if("ASSR_PROFILE",      "fetch_assessor_profile",  pin_raw, force=fresh or _expired(prev, "ASSR_PROFILE", now))
@@ -318,8 +309,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
 
 
-    # Derived metrics (keep simple; expand as needed)
-    derived = _compute_derived(bor, cv, sales)
+
     
     ptab_rows = (ptab.get("normalized", {}) or {}).get("rows")
     if ptab_rows is None:
@@ -329,7 +319,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
         "pin": pin_dash,
         "generated_at": now.isoformat() + "Z",
         "sections": {
-            "property_info": _shape_property_info(bor, cv, assr_maildetail, assr_profile),
+            "property_info": _shape_property_info( assr_maildetail, assr_profile),
             "assessor_profile": assr_profile.get("normalized", {}),
             "assessor_maildetail": assr_maildetail.get("normalized", {}),
             "assessor_exemptions": assr_exempt.get("normalized", {}),  
@@ -341,7 +331,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "commercial_building": comm_bldg.get("normalized", {}),
             "divisions_consolidations": prop_assoc.get("normalized", {}),
             "assessor_sales_datalet": assr_sales_dalet.get("normalized", {}), 
-            "sales": _shape_sales(sales, cv, assr_sales_dalet.get("normalized", {})),
+            "sales": _shape_sales( assr_sales_dalet.get("normalized", {})),
             "notice_summary": notice_sum.get("normalized", {}),
             "appeals_coes": appeals.get("normalized", {}),
             "permits": _shape_permits(permits),
@@ -365,11 +355,9 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
 
 
-        "derived": derived,
+
         "source_status": {
-            "BOR": bor.get("_status", "ok"),
-            "CV": cv.get("_status", "ok"),
-            "SALES": sales.get("_status", "ok"),
+
             "PERMITS": permits.get("_status", "ok"),
             "ASSR_VALUES": assr_vals.get("_status", "ok"),
             "ASSR_PROFILE": assr_profile.get("_status", "ok"),  # <-- add
@@ -406,7 +394,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
     stamps = prev.get("stamps", {}).copy()
     for key, obj in [
-        ("BOR", bor), ("CV", cv), ("SALES", sales), ("PERMITS", permits),
+        ("PERMITS", permits),
         ("ASSR_VALUES", assr_vals), ("ASSR_PROFILE", assr_profile),
         ("ASSR_MAILDETAIL", assr_maildetail), ("ASSR_EXEMPT", assr_exempt),
         ("ASSR_LOCATION", assr_location), ("ASSR_LAND", assr_land),

@@ -19,7 +19,7 @@ except Exception:
 
 from utils import undashed_pin, normalize_pin
 import fetchers   # ✅ keep this one (needed in many endpoints)
-from fetchers import fetch_prc_link, fetch_pin_geom_arcgis, fetch_nearby_candidates, fetch_tax_bill_latest
+
 
 # ---------------- App & middleware ----------------
 app = FastAPI(title="PIN Tool API", version="1.0")
@@ -58,8 +58,10 @@ def api_pin(pin: str, fresh: bool = False):
 # ---------------- Assessor & other source endpoints (unchanged) ----------------
 @app.get("/assessor/profile")
 def assessor_profile(pin: str, jur: str = "016", taxyr: str = "2025"):
+    from fetchers import fetch_assessor_profile
     _must_pin(pin)
-    return fetchers.fetch_assessor_profile(pin, jur, taxyr)
+    return fetch_assessor_profile(pin, jur, taxyr)
+
 
 @app.get("/rod/bundle")
 def rod_bundle(pin: str, top_n: int = 3):
@@ -147,12 +149,14 @@ def root():
 
 @app.get("/api/prc/{pin}")
 def api_prc(pin: str):
+    from fetchers import fetch_prc_link   
     _must_pin(pin)
     return fetch_prc_link(pin)
 
-# (Optional) small helper API if you still want a minimal nearby/tax endpoint
+
 @app.get("/api/nearby-mini/{pin}")
 def api_nearby_mini(pin: str, radius: float = Query(5.0, ge=0), limit: int = Query(100, ge=1, le=500)):
+    from fetchers import fetch_pin_geom_arcgis, fetch_nearby_candidates, fetch_tax_bill_latest  # 👈 local import
     _must_pin(pin)
     subject = fetch_pin_geom_arcgis(pin).get("normalized", {})
     nearby = fetch_nearby_candidates(pin, radius_mi=radius, limit=limit).get("normalized", {})

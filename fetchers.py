@@ -32,6 +32,17 @@ import re as _re
 
 import math
 
+_SESSION = requests.Session()
+_SESSION.headers.update({"User-Agent": "PIN-Tool/1.0"})
+
+# ----------------------------------------------------------------------
+# Render safety defaults (timeouts, chunk size, raw storage)
+# ----------------------------------------------------------------------
+DEFAULT_TIMEOUT = int(os.getenv("FETCH_TIMEOUT", "20"))    # shorter default timeout
+DEFAULT_CHUNK   = int(os.getenv("SOCRATA_CHUNK", "5000"))  # smaller Socrata pulls
+
+
+
 def _haversine_miles(lat1, lon1, lat2, lon2):
     R = 3958.7613  # miles
     p1 = math.radians(lat1); p2 = math.radians(lat2)
@@ -49,20 +60,21 @@ COOK_APP_TOKEN = os.getenv("COOK_SODA_APP_TOKEN") or os.getenv("ILLINOIS_APP_TOK
 
 def _socrata_get_cook(
     dataset_id: str,
-    params: dict,
-    *,
+    params: dict | None = None,
+    chunk_size: int | None = None,
+    timeout: int | None = None,
     fetch_all: bool = True,
-    chunk_size: int = 50000,   # safe page size for big pulls
-    max_retries: int = 5,
-    base_backoff: float = 0.8, # seconds
-    timeout: int = 30,
+    max_retries: int = 3,
+    base_backoff: float = 0.8
 ) -> list[dict]:
     """
     Robust Socrata GET for Cook County:
-      - No token required (adds X-App-Token automatically if env set)
+      - Adds X-App-Token if present
       - Retries 429/5xx/timeouts with exponential backoff + jitter
-      - Optional pagination when fetch_all=True
+      - Paginates if fetch_all=True
     """
+    chunk_size = chunk_size or DEFAULT_CHUNK
+    timeout = timeout or DEFAULT_TIMEOUT
     base_url = f"{COOK_SOCRATA_BASE}/{dataset_id}.json"
 
     headers = {"Accept": "application/json", "User-Agent": "PIN-Tool/1.0"}
@@ -77,6 +89,7 @@ def _socrata_get_cook(
 
     results: list[dict] = []
     session = requests.Session()
+
 
     def _attempt_once(p: dict) -> list[dict]:
         r = session.get(base_url, params=p, headers=headers, timeout=timeout)
@@ -332,25 +345,32 @@ def _maybe_init_s3():
 def save_raw_text(relpath: str, text: str) -> dict:
     """
     Save a raw HTML/text blob either to S3 (if enabled) or to local disk.
-    relpath: like "assessor_profile/<pin>_<jur>_<taxyr>.html"
-    Returns an object describing where it went.
+    Disabled entirely unless SAVE_RAW=1.
     """
+    if os.getenv("SAVE_RAW", "0") != "1":
+        return {"storage": "disabled"}
+
     data = text.encode("utf-8")
 
     if _S3_ENABLED and _S3_BUCKET:
         _maybe_init_s3()
         if _S3_CLIENT:
             key = f"raw_cache/{relpath}"
-            _S3_CLIENT.put_object(Bucket=_S3_BUCKET, Key=key, Body=data, ContentType="text/html; charset=utf-8")
-            # If your bucket is public, the file would be viewable via https://<bucket>.s3.<region>.amazonaws.com/<key>
+            _S3_CLIENT.put_object(
+                Bucket=_S3_BUCKET,
+                Key=key,
+                Body=data,
+                ContentType="text/html; charset=utf-8"
+            )
             return {"storage": "s3", "bucket": _S3_BUCKET, "key": key}
-        # fall through to disk if boto3 not available
 
     # local disk (works in dev; ephemeral in Render)
     p = Path("raw_cache") / relpath
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_bytes(data)
     return {"storage": "disk", "path": str(p)}
+
+
 # -----------------------------------------------------------------------------
 
 
@@ -434,12 +454,12 @@ def fetch_assessor_profile(pin: str, jur: str = "016", taxyr: str = "2025", forc
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
         raw_rec = save_raw_text(f"assessor_profile/{pin14_und}_{jur}_{taxyr}.html", html)
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         # Header block (Parcel #, Neighborhood, Address line, Roll, Tax Year line)
         header_cell = soup.find(id="datalet_header_row")
@@ -528,12 +548,12 @@ def fetch_assessor_maildetail(pin: str, jur: str = "016", taxyr: str = "2025", f
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
         html_path = _save_raw_html(pin14_und, jur, taxyr, html)
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         # Header cell not strictly needed here, but we could parse if you want.
         # The meat is the single MAILDETAIL table just under datalet_div_0.
@@ -618,12 +638,12 @@ def fetch_assessor_exemptions(pin: str, jur: str = "016", taxyr: str = "2025", f
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
         html_path = _save_raw_html(pin14_und, jur, taxyr, html)
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         # Quick 'No Data' check (exact text appears inside a small center table)
         page_text = soup.get_text(" ", strip=True).upper()
@@ -699,7 +719,7 @@ def fetch_assessor_exemptions(pin: str, jur: str = "016", taxyr: str = "2025", f
 
 
 def _scrape_value_summary_raw(html: str):
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "lxml")
     block = soup.find("div", attrs={"name": "VALUE_SUMMARY_CC"}) or soup.find(id="datalet_div_0") or soup
 
     # Prefer the table with id "Values Summary" (yes, space in id…), else fall back to
@@ -744,12 +764,12 @@ def fetch_assessor_values(pin: str, jur: str = "016", taxyr: str = "2025", force
     )
     out["_meta"]["url_values"] = url_values
     try:
-        r = requests.get(url_values, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url_values, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
         raw_rec_val = save_raw_text(f"values/{pin14}_{jur}_{taxyr}_cur.html", html)
         out["raw_values"] = {**raw_rec_val, "html_size_bytes": len(html)}
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
 
         # Summary (header+one data row)
@@ -810,7 +830,7 @@ def fetch_assessor_values(pin: str, jur: str = "016", taxyr: str = "2025", force
     )
     out["_meta"]["url_value_summary"] = url_summary
     try:
-        r = requests.get(url_summary, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url_summary, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         sum_rec = save_raw_text(f"values/{pin14}_{jur}_{taxyr}_summary.html", r.text)
         out["raw_value_summary"] = {**sum_rec, "html_size_bytes": len(r.text)}
@@ -853,7 +873,7 @@ def fetch_assessor_location(pin: str, jur: str = "016", taxyr: str = "2025", for
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
 
@@ -863,7 +883,7 @@ def fetch_assessor_location(pin: str, jur: str = "016", taxyr: str = "2025", for
         html_path = raw_dir / f"{pin14_und}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         # main block + specific table
         block = soup.find("div", id="datalet_div_0", attrs={"name": "FULL_LEGAL_CD"}) or soup
@@ -930,7 +950,7 @@ def fetch_assessor_land(pin: str, jur: str = "016", taxyr: str = "2025", force: 
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
 
@@ -940,7 +960,7 @@ def fetch_assessor_land(pin: str, jur: str = "016", taxyr: str = "2025", force: 
         html_path = raw_dir / f"{pin14_und}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         # ---- Land Summary table
         summary_rows = []
@@ -1025,7 +1045,7 @@ def fetch_assessor_residential(pin: str, jur: str = "016", taxyr: str = "2025", 
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
 
@@ -1035,7 +1055,7 @@ def fetch_assessor_residential(pin: str, jur: str = "016", taxyr: str = "2025", 
         html_path = raw_dir / f"{pin14_und}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         # Block + table
         detail = {}
@@ -1101,7 +1121,7 @@ def fetch_assessor_other_structures(pin: str, jur: str = "016", taxyr: str = "20
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
 
@@ -1111,7 +1131,7 @@ def fetch_assessor_other_structures(pin: str, jur: str = "016", taxyr: str = "20
         html_path = raw_dir / f"{pin14_und}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         # Grab the main 'holder' content (verbatim)
         holder = soup.find("div", class_="holder")
@@ -1206,7 +1226,7 @@ def fetch_assessor_commercial_building(pin: str, jur: str = "016", taxyr: str = 
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
 
@@ -1215,7 +1235,7 @@ def fetch_assessor_commercial_building(pin: str, jur: str = "016", taxyr: str = 
         html_path = outdir / f"{pin14_und}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
         holder = soup.find("div", class_="holder")
 
         verbatim_html = holder.decode() if holder else ""
@@ -1288,7 +1308,7 @@ def fetch_assessor_prop_association(pin: str, jur: str = "016", taxyr: str = "20
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
 
@@ -1297,7 +1317,7 @@ def fetch_assessor_prop_association(pin: str, jur: str = "016", taxyr: str = "20
         html_path = outdir / f"{pin14}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
         holder = soup.find("div", class_="holder")
 
         verbatim_html = holder.decode() if holder else ""
@@ -1368,7 +1388,7 @@ def fetch_assessor_sales_datalet(pin: str, jur: str = "016", taxyr: str = "2025"
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
 
@@ -1377,7 +1397,7 @@ def fetch_assessor_sales_datalet(pin: str, jur: str = "016", taxyr: str = "2025"
         html_path = outdir / f"{pin14}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         # Prefer the explicit datalet blocks if present
         div_summary = soup.find("div", attrs={"name": "SALES_SUMMARY"}) or soup.find(id="datalet_div_1")
@@ -1485,7 +1505,7 @@ def fetch_assessor_notice_summary(pin: str, jur: str = "016", taxyr: str = "2025
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
 
@@ -1495,7 +1515,7 @@ def fetch_assessor_notice_summary(pin: str, jur: str = "016", taxyr: str = "2025
         html_path = raw_dir / f"{pin14}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         normalized = {"summary": {}, "detail_rows": []}
 
@@ -1596,7 +1616,7 @@ def fetch_assessor_appeals_coes(pin: str, jur: str = "016", taxyr: str = "2025",
     }
 
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
 
@@ -1606,7 +1626,7 @@ def fetch_assessor_appeals_coes(pin: str, jur: str = "016", taxyr: str = "2025",
         html_path = outdir / f"{pin14}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
 
         def _parse_kv_block(div_name: str, table_id_hint: str):
             """
@@ -1712,12 +1732,12 @@ def fetch_permits(pin: str, jur: str = "016", taxyr: str = "2025", force: bool =
 
     def _fetch_idx(idx: int):
         url = f"{base}&idx={idx}&sIndex=0"
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         return url, r.text
 
     def _parse_one(html: str) -> dict:
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
         # Quick "no data" check
         if "-- NO DATA --" in soup.get_text(" ", strip=True).upper():
             return {"__empty__": True}
@@ -1809,14 +1829,14 @@ def fetch_assessor_hie_additions(pin: str, jur: str = "016", taxyr: str = "2025"
     url = f"{PROFILE_BASE}?mode=res_addn&UseSearch=no&pin={pin14}&jur={jur}&taxyr={taxyr}&LMparent=896"
     meta = {"source":"ASSR_HIE_ADDN","url":url,"pin":pin14,"jur":jur,"taxyr":taxyr,"fetched_at":_now_iso()}
     try:
-        r = requests.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=25)
+        r = _SESSION.get(url, headers={"User-Agent": DEFAULT_UA}, timeout=DEFAULT_TIMEOUT)
         r.raise_for_status()
         html = r.text
         outdir = Path("raw_cache/hie_additions"); outdir.mkdir(parents=True, exist_ok=True)
         html_path = outdir / f"{pin14}_{jur}_{taxyr}.html"
         html_path.write_text(html, encoding="utf-8")
 
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
         holder = soup.find("div", class_="holder")
         verbatim = holder.decode() if holder else ""
 
@@ -1967,7 +1987,7 @@ def _socrata_get(dataset_id: str, params: dict) -> list:
             try:
                 time.sleep(base_sleep)
                 url = f"{SOCRATA_BASE}/{dataset_id}.json"
-                r = requests.get(url, headers=headers, params=q, timeout=30)
+                r = _SESSION.get(url, headers=headers, params=q, timeout=30)
                 if r.status_code in (429, 500, 502, 503, 504):
                     attempt += 1
                     if attempt > retries_per_page:
@@ -2191,7 +2211,7 @@ def _rod_fetch_pin_table_html(dId: str, hId: str) -> str:
         f"{ROD_BASE}/Document/pinresult?dId={dId}&hId={hId}",
     ]
     for url in candidates:
-        r = requests.get(url, headers=_rod_headers(), timeout=30)
+        r = _SESSION.get(url, headers=_rod_headers(), timeout=30)
         if r.status_code == 200 and "<table" in r.text.lower():
             return r.text
     return ""
@@ -2277,7 +2297,7 @@ def fetch_rod_search_html(pin: str) -> dict:
     """
     und = undashed_pin(pin)  # e.g., "17344060270000"
     url = f"{ROD_BASE}/Search/Result?id1={und}"
-    r = requests.get(url, headers=_rod_headers(), timeout=30)
+    r = _SESSION.get(url, headers=_rod_headers(), timeout=30)
     r.raise_for_status()
     html = r.text
 
@@ -2311,7 +2331,7 @@ def _parse_rod_associated_pins(html: str) -> dict:
     Parse the 'Associated Pins' table on the results page.
     Returns both dashed and undashed unique lists, and full rows (address, etc.).
     """
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "lxml")
 
     # Find a table whose header contains "Property Index # (PIN)"
     target = None
@@ -2400,7 +2420,7 @@ def _parse_rod_associated_pins(html: str) -> dict:
     return {"rows": rows_out, "unique_dashed": u_dashed, "unique_undashed": u_und}
 
 def _parse_rod_deed_rows(html: str) -> list[dict]:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "lxml")
     table = soup.select_one("#tblData") or soup.find("table")
     if not table:
         return []
@@ -2503,7 +2523,7 @@ def _select_latest_deed(all_deeds: list[dict]) -> list[dict]:
 
 
 def fetch_rod_deed_detail(deed_url: str) -> dict:
-    r = requests.get(deed_url, headers=_rod_headers(), timeout=30)
+    r = _SESSION.get(deed_url, headers=_rod_headers(), timeout=30)
     r.raise_for_status()
     soup = BeautifulSoup(r.text, "html.parser")
 
@@ -2652,7 +2672,7 @@ def _ptab_get_docket_list_from_pin(sess: requests.Session, pin14: str) -> list[t
     short like '14-24172', full like '2014-024172'
     """
     def _parse(html: str) -> list[tuple[str, str]]:
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(html, "lxml")
         out: list[tuple[str, str]] = []
         for tr in soup.select("tr"):
             tds = tr.find_all("td")
@@ -3190,7 +3210,7 @@ def _digits(s: str) -> str:
 def _delinq_index() -> dict[str, dict]:
     if not GITHUB_TOKEN:
         raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
-    r = requests.get(API_URL, headers=API_HEADERS, timeout=20)
+    r = _SESSION.get(API_URL, headers=API_HEADERS, timeout=20)
     if r.status_code == 401: raise RuntimeError("401 Unauthorized: bad/expired token.")
     if r.status_code == 403: raise RuntimeError("403 Forbidden: token lacks contents:read.")
     if r.status_code == 404: raise RuntimeError(f"404 Not Found: {PASSES_BRANCH}/{PASSES_PATH}")
@@ -3252,7 +3272,7 @@ def _remote_assoc_index() -> tuple[dict[str, list[str]], dict[str, str]]:
     try:
         if not GITHUB_TOKEN:
             return {}, {}
-        r = requests.get(ASSR_INDEX_URL, headers=ASSR_INDEX_HEADERS, timeout=25)
+        r = _SESSION.get(ASSR_INDEX_URL, headers=ASSR_INDEX_HEADERS, timeout=DEFAULT_TIMEOUT)
         if r.status_code == 401:
             return {}, {}
         r.raise_for_status()
@@ -3305,7 +3325,7 @@ COOK_ARCGIS_QUERY = os.getenv(
     "https://gis12.cookcountyil.gov/arcgis/rest/services/parcel_current_beta/FeatureServer/0/query",
 )
 
-def _arcgis_get(params: dict, *, timeout=25, retries=4, backoff=0.8):
+def _arcgis_get(params: dict, *, timeout=DEFAULT_TIMEOUT, retries=4, backoff=0.8):
     """Tiny GET with retries for ArcGIS JSON endpoints."""
     sess = requests.Session()
     attempt = 0
@@ -3755,16 +3775,5 @@ def fetch_tax_bill_latest(pin: str) -> dict:
 #===================================================================================================
 
 
-def fetch_bor(pin: str, force: bool = False) -> dict:
-    # TODO: Replace with your real BOR dataset fetch
-    return {"class": None, "building_av": None, "land_av": None, "address": None, "_status": "stub"}
 
-def fetch_cv(pin: str, force: bool = False) -> dict:
-    # TODO: Replace with your real Commercial Valuation dataset fetch
-    return {"property_use": None, "building_sqft": None, "land_sqft": None,
-            "investment_rating": None, "age": None, "address": None, "_status": "stub"}
-
-def fetch_sales(pin: str, force: bool = False) -> dict:
-    # TODO: Replace with your real Parcel Sales dataset fetch
-    return {"latest": {}, "history": [], "_status": "stub"}
 
