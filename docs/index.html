@@ -175,18 +175,19 @@ function initMaps() {
 async function loadLatestCommercialSales() {
   if (!_frontMap) return;
   try {
-    const resp = await fetch(`/api/latest-commercial-sales`);
+    const resp = await fetch(`/api/latest-commercial-sales?limit=50`);
     if (!resp.ok) throw new Error("API error " + resp.status);
     const data = await resp.json();
     if (data._status !== "ok") throw new Error(data.error || "No data");
 
     (data.sales || []).forEach(s => {
-      if (!s.lat || !s.lon) return;
+      if (!s.lat || !s.lon) return;  // skip if no coords
+
       const html = `
         <div class="text-sm">
           <div class="font-semibold">${s.address || ""}</div>
-          <div>${s.class || ""} ${s.use_description || ""}</div>
-          <div>${s.date_recorded || s.sale_date || ""} • ${s.sale_price || ""}</div>
+          <div>${s.pin || ""} (${s.county || ""})</div>
+          <div>${s.date_recorded || ""} • $${s.sale_price || ""}</div>
         </div>`;
       L.marker([s.lat, s.lon], { icon: NearbyIcon })
         .addTo(_frontMap)
@@ -196,6 +197,7 @@ async function loadLatestCommercialSales() {
     console.error("Latest commercial sales load failed:", err);
   }
 }
+
 
 async function loadPin(pin,fresh=false) {
   $("#meta").textContent="Loading…"; 

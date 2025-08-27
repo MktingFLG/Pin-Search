@@ -3747,27 +3747,51 @@ def fetch_tax_bill_latest(pin: str) -> dict:
 
 #===================================================================================================
 
-
-import requests, os
-
+from fetchers import fetch_pin_geom_arcgis
 ILLINOIS_BASE = "https://data.illinois.gov/resource"
-APP_TOKEN = os.getenv("ILLINOIS_APP_TOKEN", "")
-
 def fetch_latest_sales(limit: int = 50):
     url = f"{ILLINOIS_BASE}/it54-y4c6.json"
     headers = {"User-Agent": "PIN-Tool/1.0"}
     if APP_TOKEN:
         headers["X-App-Token"] = APP_TOKEN
+
     try:
         r = requests.get(url, headers=headers, params={
-            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration",
+            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration,line_1_county",
             "$order": "date_recorded DESC",
             "$limit": str(limit),
         }, timeout=15)
         r.raise_for_status()
-        return {"_status": "ok", "rows": r.json()}
+        rows = r.json()
+
+        enriched = []
+        for row in rows:
+            pin = row.get("line_1_primary_pin")
+            lat = lon = None
+            if row.get("line_1_county", "").upper() == "COOK" and pin:
+                try:
+                    geom = fetch_pin_geom_arcgis(pin).get("normalized", {})
+                    if geom and "center" in geom:
+                        lat = geom["center"]["lat"]
+                        lon = geom["center"]["lon"]
+                except Exception:
+                    pass
+            enriched.append({
+                "declaration_id": row.get("declaration_id"),
+                "date_recorded": row.get("date_recorded"),
+                "pin": pin,
+                "address": row.get("full_address"),
+                "sale_price": row.get("line_13_net_consideration"),
+                "county": row.get("line_1_county"),
+                "lat": lat,
+                "lon": lon,
+            })
+
+        return {"_status": "ok", "rows": enriched}
+
     except Exception as e:
         return {"_status": "error", "error": str(e), "rows": []}
+
 
 
 
