@@ -55,12 +55,16 @@ def api_pin_summary(pin: str, fresh: bool = False):
 def api_pin(pin: str, fresh: bool = False):
     from orchestrator import get_pin_summary
     _must_pin(pin)
-    data = get_pin_summary(pin, fresh=fresh)
+    print(f"🔎 API /api/pin/{pin} called, fresh={fresh}", flush=True)
 
-    # Ensure `sales` exists if frontend expects it
+    data = get_pin_summary(pin, fresh=fresh)
+    print("🔎 get_pin_summary result keys:", list(data.keys()), flush=True)
+
     if "sales" not in data.get("sections", {}):
-        data["sections"]["sales"] = []
+        data.setdefault("sections", {})["sales"] = []
+
     return data
+
 
 # ---------------- PIN bundle (big parallel fetch) ----------------
 @app.get("/api/pin/{pin}/bundle")
