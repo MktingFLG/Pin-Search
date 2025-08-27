@@ -1881,34 +1881,15 @@ def fetch_assessor_hie_additions(pin: str, jur: str = "016", taxyr: str = "2025"
 # ======================= PTAX (Socrata) =======================
 
 def fetch_ptax_decl_ids_by_addl_pin(pins: list[str], dataset_id: str = "ay2h-5hx3") -> dict:
-    """
-    Return unique declaration_ids where any of the given pins appear in the Additional PINs table.
-    Accepts dashed/undashed; normalizes both ways.
-    """
-    dashed, undashed = [], []
-    for p in pins or []:
-        d = _pin_for_socrata(p)  # XX-XX-XXX-XXX-XXXX
-        dashed.append(d)
-        undashed.append(d.replace("-", ""))
+    dashed = [_pin_for_socrata(p) for p in (pins or []) if p]
+    if not dashed:
+        return {"_status": "ok", "normalized": {"declaration_ids": []},
+                "_meta": {"dataset": dataset_id, "count": 0}}
 
-    def _in(vals):
-        vals = [v for v in (vals or []) if v]
-        if not vals:
-            return None
-        return "(" + ",".join("'" + v.replace("'", "''") + "'" for v in vals) + ")"
-
-    incl_d = _in(dashed)
-    incl_u = _in(undashed)
-
-    where = []
-    if incl_d: where.append(f"pin IN {incl_d}")
-    if incl_u: where.append(f"replace(pin,'-','') IN {incl_u}")
-    if not where:
-        return {"_status": "ok", "normalized": {"declaration_ids": []}, "_meta": {"dataset": dataset_id, "count": 0}}
-
+    incl = "(" + ",".join("'" + d.replace("'", "''") + "'" for d in dashed) + ")"
     try:
         rows = _socrata_get(dataset_id, {
-            "$where": " OR ".join(where),
+            "$where": f"pin IN {incl}",
             "$select": "declaration_id",
             "$limit": "5000",
         })
@@ -2021,54 +2002,49 @@ def _socrata_get(dataset_id: str, params: dict) -> list:
 
 
 def fetch_ptax_main(pin: str, dataset_id: str = "it54-y4c6") -> dict:
-    dashed = _pin_for_socrata(pin)
+    """
+    Fetch PTAX main rows for a single PIN from Illinois Socrata.
+    Only dashed PINs are supported (XX-XX-XXX-XXX-XXXX).
+    """
+    dashed = _pin_for_socrata(pin)  # normalize to dashed format
     try:
         rows = _socrata_get(dataset_id, {
-            "$where": "line_1_primary_pin = :p OR replace(line_1_primary_pin,'-','') = :p_nodash",
+            "$where": f"line_1_primary_pin='{dashed}'",
             "$order": "date_recorded DESC",
             "$limit": "2000",
-            "p": dashed,
-            "p_nodash": dashed.replace("-", ""),
         })
-        return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+        return {
+            "_status": "ok",
+            "normalized": {"rows": rows or []},
+            "_meta": {"dataset": dataset_id, "count": len(rows or [])},
+        }
     except Exception as e:
-        return {"_status": "error", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "error": str(e)}}
+        return {
+            "_status": "error",
+            "normalized": {"rows": []},
+            "_meta": {"dataset": dataset_id, "error": str(e)},
+        }
+
 
 def fetch_ptax_main_multi(pins: list[str], dataset_id: str = "it54-y4c6") -> dict:
-    """
-    Fetch PTAX main rows for many PINs at once (<= ~50; your usage ~20).
-    Matches both dashed and undashed formats.
-    """
-    dashed, undashed = [], []
-    for p in pins or []:
-        d = _pin_for_socrata(p)         # XX-XX-XXX-XXX-XXXX
-        dashed.append(d)
-        undashed.append(d.replace("-", ""))
+    dashed = [_pin_for_socrata(p) for p in (pins or []) if p]
+    if not dashed:
+        return {"_status": "ok", "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "count": 0}}
 
-    def _in_clause(vals):
-        vals = [v for v in (vals or []) if v]
-        if not vals:
-            return None
-        return "(" + ",".join("'" + v.replace("'", "''") + "'" for v in vals) + ")"
-
-    incl_d = _in_clause(dashed)
-    incl_u = _in_clause(undashed)
-    if not (incl_d or incl_u):
-        return {"_status": "ok", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "count": 0}}
-
-    where = []
-    if incl_d: where.append(f"line_1_primary_pin IN {incl_d}")
-    if incl_u: where.append(f"replace(line_1_primary_pin,'-','') IN {incl_u}")
-
+    incl = "(" + ",".join("'" + d.replace("'", "''") + "'" for d in dashed) + ")"
     try:
         rows = _socrata_get(dataset_id, {
-            "$where": " OR ".join(where),
+            "$where": f"line_1_primary_pin IN {incl}",
             "$order": "date_recorded DESC",
             "$limit": "5000",
         })
-        return {"_status": "ok", "normalized": {"rows": rows}, "_meta": {"dataset": dataset_id, "count": len(rows)}}
+        return {"_status": "ok", "normalized": {"rows": rows or []},
+                "_meta": {"dataset": dataset_id, "count": len(rows or [])}}
     except Exception as e:
-        return {"_status": "error", "normalized": {"rows": []}, "_meta": {"dataset": dataset_id, "error": str(e)}}
+        return {"_status": "error", "normalized": {"rows": []},
+                "_meta": {"dataset": dataset_id, "error": str(e)}}
+
 
 def merge_ptax_by_declaration(ptax_main_rows, buyers_rows, sellers_rows, addlpins_rows, personal_rows, normalize_pin_fn=None):
     """
@@ -3191,12 +3167,12 @@ def fetch_ccao_permits_multi(
 
 # ================= Delinquent Taxes (GitHub Contents API) ======================
 # fetchers_delinquent.py (drop pandas; pure csv)
+# ================= Delinquent Taxes (GitHub Contents API) ======================
 import io, os, re, csv, gzip, requests
 from functools import lru_cache
-import requests
 
+# 🔧 make sure we always have a session
 _SESSION = requests.Session()
-
 
 GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "").strip()
 PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")
@@ -3204,7 +3180,11 @@ PASSES_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
 PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")
 
 API_URL = f"https://api.github.com/repos/{PASSES_REPO}/contents/{PASSES_PATH}?ref={PASSES_BRANCH}"
-API_HEADERS = {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github.raw", "User-Agent": "pin-tool/1.0"}
+API_HEADERS = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}",
+    "Accept": "application/vnd.github.raw",
+    "User-Agent": "pin-tool/1.0"
+}
 PIN_COL_CANDIDATES = ("pin","PIN","Pin")
 
 def _digits(s: str) -> str:
@@ -3215,10 +3195,9 @@ def _delinq_index() -> dict[str, dict]:
     if not GITHUB_TOKEN:
         raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
     r = _SESSION.get(API_URL, headers=API_HEADERS, timeout=20)
-    if r.status_code == 401: raise RuntimeError("401 Unauthorized: bad/expired token.")
-    if r.status_code == 403: raise RuntimeError("403 Forbidden: token lacks contents:read.")
-    if r.status_code == 404: raise RuntimeError(f"404 Not Found: {PASSES_BRANCH}/{PASSES_PATH}")
     r.raise_for_status()
+
+
 
     index: dict[str, dict] = {}
     with gzip.GzipFile(fileobj=io.BytesIO(r.content)) as gz:
@@ -3244,11 +3223,12 @@ def fetch_delinquent(pin: str):
     try:
         pin14 = _digits(pin)
         if len(pin14) != 14:
-            return {"status":"ok","data":[]}
+            return {"_status": "ok", "data": []}
         row = _delinq_index().get(pin14)
-        return {"status":"ok","data":[(row | {"pin14": pin14})] if row else []}
+        return {"_status": "ok", "data": [(row | {"pin14": pin14})] if row else []}
     except Exception as e:
-        return {"status":"error","error": f"delinquency fetch failed: {e}"}
+        return {"_status": "error", "error": f"delinquency fetch failed: {e}", "data": []}
+
     
     #===================================================================================
 
