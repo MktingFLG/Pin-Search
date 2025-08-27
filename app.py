@@ -168,10 +168,11 @@ def api_nearby_mini(pin: str, radius: float = Query(5.0, ge=0), limit: int = Que
     return {"pin": normalize_pin(pin), "subject": subject, "nearby": nearby, "tax_bill": tax}
 
 
+# ================== Latest Commercial Sales (Illinois Socrata) ==================
 @app.get("/api/latest-commercial-sales")
 def api_latest_commercial_sales(limit: int = 200):
-    from fetchers import fetch_assessor_profile, fetch_pin_geom_arcgis
     try:
+        # Use the Illinois PTAX dataset
         rows = _socrata_get("it54-y4c6", {
             "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration",
             "$order": "date_recorded DESC",
@@ -186,17 +187,16 @@ def api_latest_commercial_sales(limit: int = 200):
                 continue
             seen.add(pin)
 
-            # assessor profile (class/use)
+            # optional: enrich with assessor profile & map center
             assessor = {}
             try:
-                assessor = fetch_assessor_profile(pin).get("normalized", {})
+                assessor = fetchers.fetch_assessor_profile(pin).get("normalized", {})
             except Exception:
                 pass
 
-            # geocode PIN via ArcGIS (center lat/lon)
             lat, lon = None, None
             try:
-                geom = fetch_pin_geom_arcgis(pin).get("normalized", {})
+                geom = fetchers.fetch_pin_geom_arcgis(pin).get("normalized", {})
                 if geom and "center" in geom:
                     lat = geom["center"].get("lat")
                     lon = geom["center"].get("lon")
@@ -209,8 +209,8 @@ def api_latest_commercial_sales(limit: int = 200):
                 "pin": pin,
                 "address": r.get("full_address"),
                 "sale_price": r.get("line_13_net_consideration"),
-                "class": assessor.get("class"),
-                "use_description": assessor.get("property_use"),
+                "class": assessor.get("PIN Info • Class"),
+                "use_description": assessor.get("Property Use"),
                 "lat": lat,
                 "lon": lon,
             })
@@ -219,6 +219,7 @@ def api_latest_commercial_sales(limit: int = 200):
 
     except Exception as e:
         return {"_status": "error", "error": str(e), "sales": []}
+
 
 
 
