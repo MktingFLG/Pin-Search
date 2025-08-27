@@ -65,6 +65,10 @@
 </main>
 
 <script>
+const API_BASE = "";  // or "/" if deployed at root
+const url = `${API_BASE}/api/pin/${encodeURIComponent(pin)}${fresh ? "?fresh=1" : ""}`;
+
+
 const $ = sel => document.querySelector(sel);
 const el = (tag, props={}, ...kids) => {
   const node=document.createElement(tag); Object.assign(node,props);
@@ -147,25 +151,36 @@ async function loadPin(pin,fresh=false) {
   $("#meta").textContent="Loading…"; $("#sections").innerHTML=""; $("#pinInput").value=pin;
   setTimeout(()=>_map.invalidateSize(),200);
 
-  const url=`/api/pin/${pin}${fresh?"?fresh=1":""}`;
-  const data=await (await fetch(url)).json();
+  const url = `/api/pin/${encodeURIComponent(pin)}${fresh?"?fresh=1":""}`;
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    $("#meta").textContent = `API error: ${resp.status}`;
+    return;
+  }
+  const data = await resp.json();
 
   $("#meta").textContent=`PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
   const sec=data.sections||{};
 
-  // --- Render first: sales, values, profile ---
+  // show first 3 sections
   if(sec.sales) $("#sections").appendChild(renderSection("sales","Sales",sec.sales));
   if(sec.value_summary) $("#sections").appendChild(renderSection("value_summary","Assessment Values",sec.value_summary));
   if(sec.assessor_profile) $("#sections").appendChild(renderSection("assessor_profile","Assessor Profile",sec.assessor_profile));
+  // Nearby (map + table)
+  if (sec.nearby) {
+    $("#sections").appendChild(renderSection("nearby", "Nearby Properties", sec.nearby));
+    renderNearbyOnMap(sec.nearby, sec.sales);
+  }
 
-  // --- Render rest later ---
+  // defer the rest
   setTimeout(()=>{
     Object.entries(sec).forEach(([k,v])=>{
       if(["sales","value_summary","assessor_profile"].includes(k)) return;
       $("#sections").appendChild(renderSection(k,k.replace(/_/g," "),v));
     });
-  },100); // defer a bit
+  },100);
 }
+
 
 // --- Events ---
 $("#frontSearchBtn").addEventListener("click",()=>{
@@ -180,7 +195,68 @@ $("#loadBtn").addEventListener("click",()=>loadPin($("#pinInput").value.trim(),f
 $("#freshBtn").addEventListener("click",()=>loadPin($("#pinInput").value.trim(),true));
 $("#radiusSelect").addEventListener("change",()=>loadPin($("#pinInput").value.trim(),false));
 
+const M2_PER_MI = 1609.344;
+
+const NearbyIcon = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+});
+
+const SubjectIcon = new L.Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+});
+
 initMaps();
+
+function renderNearbyOnMap(nearby, sales) {
+  if (!_map) return;
+  _map.eachLayer((layer) => {
+    if (layer instanceof L.Marker || layer instanceof L.Circle) _map.removeLayer(layer);
+  });
+
+  if (!nearby?.center || nearby.center.lat == null || nearby.center.lon == null) return;
+  const c = [nearby.center.lat, nearby.center.lon];
+  _map.setView(c, 13);
+
+  // radius circle
+  L.circle(c, { radius: (nearby.radius_mi || 5) * M2_PER_MI, fillOpacity: 0.08 }).addTo(_map);
+
+  // Subject marker
+  const subj = nearby.subject || {};
+  const subjPopupHtml = `
+    <div class="text-sm">
+      <div class="font-semibold">${subj.pin_dash || subj.pin || ""}</div>
+      <div>${subj.property_use || ""} ${subj.class ? "(" + subj.class + ")" : ""}</div>
+      ${subj.address ? `<div>${subj.address}</div>` : ""}
+      ${sales?.["Latest Sale Date"] || sales?.["Latest Sale Price"] ? 
+        `<div class="mt-2 p-2 border rounded bg-gray-50">
+          <div class="font-semibold">Latest Sale</div>
+          <div>${sales["Latest Sale Date"] || ""} • ${sales["Latest Sale Price"] || ""}</div>
+        </div>` : ""}
+    </div>`;
+  L.marker(c, { icon: SubjectIcon, title: subj.pin_dash }).addTo(_map).bindPopup(subjPopupHtml).openPopup();
+
+  // Nearby features
+  (nearby.features || []).forEach(f => {
+    if (!f.lat || !f.lon) return;
+    const html = `
+      <div class="text-sm">
+        <div class="font-semibold">${f.pin || ""}</div>
+        <div>${f.property_use || ""} ${f.class ? "(" + f.class + ")" : ""}</div>
+        ${f.address ? `<div>${f.address}</div>` : ""}
+        ${f.distance_mi != null ? `<div>${f.distance_mi} mi away</div>` : ""}
+      </div>`;
+    L.marker([f.lat, f.lon], { icon: NearbyIcon, title: f.pin }).addTo(_map).bindPopup(html);
+  });
+}
+
 </script>
 </body>
 </html>
