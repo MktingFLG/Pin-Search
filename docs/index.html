@@ -4,14 +4,9 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>PIN Tool</title>
-
-  <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Leaflet (map) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <style>
     details > summary::marker { display: none; }
     details > summary::-webkit-details-marker { display: none; }
@@ -25,13 +20,11 @@
     <div id="notice" class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded">
       ⚠️ Assessor update: Township XYZ updated on Sept 1, 2025
     </div>
-
     <div class="flex gap-2 items-center">
       <input id="frontPinInput" type="text" placeholder="Enter PIN (e.g. 33-29-200-014-0000)"
              class="border rounded-lg px-3 py-2 text-sm w-80"/>
       <button id="frontSearchBtn" class="px-3 py-2 rounded-lg border">Search</button>
     </div>
-
     <div class="border rounded-2xl">
       <div class="px-4 py-2 font-medium bg-gray-100 rounded-t-2xl">Latest Commercial Sales</div>
       <div class="px-4 py-3">
@@ -52,10 +45,7 @@
         <button id="backBtn" class="px-3 py-2 rounded-lg border">Back</button>
       </div>
     </div>
-
     <div id="meta" class="text-xs text-gray-500 mb-2"></div>
-
-    <!-- Radius selector -->
     <div class="flex gap-2 items-center mb-2">
       <label for="radiusSelect" class="text-sm">Nearby radius:</label>
       <select id="radiusSelect" class="border rounded px-2 py-1 text-sm">
@@ -64,22 +54,17 @@
         <option value="15">15 miles</option>
       </select>
     </div>
-
-    <!-- Map -->
     <div class="border rounded-2xl mb-4">
       <div class="px-4 py-2 font-medium bg-gray-100 rounded-t-2xl">Map</div>
       <div class="px-4 py-3">
         <div id="map" class="h-96 w-full rounded-xl border"></div>
       </div>
     </div>
-
-    <!-- Sections -->
     <div id="sections" class="space-y-3"></div>
   </div>
 </main>
 
 <script>
-const API_BASE = "";
 const $ = sel => document.querySelector(sel);
 const el = (tag, props={}, ...kids) => {
   const node = document.createElement(tag);
@@ -88,92 +73,130 @@ const el = (tag, props={}, ...kids) => {
   return node;
 };
 
-// Map helpers
-let _map, _frontMap;
-function ensureMap(id) {
-  return L.map(id).setView([41.88,-87.63], 11); // Chicago default
+// --- Render helpers ---
+function renderKeyValues(obj) {
+  const dl = el("dl",{className:"grid grid-cols-2 gap-x-4 gap-y-1"});
+  Object.entries(obj||{}).forEach(([k,v])=>{
+    dl.appendChild(el("dt",{className:"font-semibold"},k));
+    dl.appendChild(el("dd",{className:"text-gray-700"},v??""));
+  });
+  return dl;
 }
+function renderRowsAsTable(rows) {
+  if (!rows || !rows.length) return el("div",{},"No data");
+  const cols = Object.keys(rows[0]||{});
+  const table = el("table",{className:"w-full text-sm border-collapse"});
+  const thead = el("thead");
+  thead.appendChild(el("tr",{},...cols.map(c=>el("th",{className:"text-left border-b px-2 py-1 font-semibold"},c))));
+  table.appendChild(thead);
+  const tbody = el("tbody");
+  rows.forEach(r=>{
+    tbody.appendChild(el("tr",{},...cols.map(c=>el("td",{className:"border-b px-2 py-1"},r[c]??""))));
+  });
+  table.appendChild(tbody);
+  return table;
+}
+const SECTION_RENDERERS = {
+  assessor_profile: renderKeyValues,
+  assessor_values: renderKeyValues,
+  sales: (c)=>{
+    const wrap = el("div",{className:"space-y-2"});
+    if (c?.["Latest Sale Date"] || c?.["Latest Sale Price"]) {
+      wrap.appendChild(renderKeyValues({
+        "Latest Sale Date": c["Latest Sale Date"],
+        "Latest Sale Price": c["Latest Sale Price"],
+      }));
+    }
+    if (Array.isArray(c?.History)) wrap.appendChild(renderRowsAsTable(c.History));
+    return wrap;
+  },
+  nearby: (c)=>renderRowsAsTable(c?.features||[])
+};
+function renderGeneric(content) {
+  if (Array.isArray(content)) return renderRowsAsTable(content);
+  if (content && typeof content==="object") return renderKeyValues(content);
+  return el("div",{},content??"");
+}
+function renderSection(key,title,content) {
+  const details = el("details",{className:"border rounded-xl"});
+  details.appendChild(el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"},title));
+  const body = el("div",{className:"px-4 py-3 text-sm"});
+  const renderer = SECTION_RENDERERS[key]||renderGeneric;
+  body.appendChild(renderer(content));
+  details.appendChild(body);
+  return details;
+}
+
+// --- Maps ---
+let _map,_frontMap;
 function initMaps() {
   if (!_frontMap) {
-    _frontMap = ensureMap("frontMap");
+    _frontMap = L.map("frontMap").setView([41.88,-87.63],11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(_frontMap);
   }
   if (!_map) {
-    _map = ensureMap("map");
+    _map = L.map("map").setView([41.88,-87.63],11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(_map);
   }
 }
 
-// Incremental data loading for results page
-async function loadPin(pin, fresh=false) {
-  $("#meta").textContent = "Loading…";
-  $("#sections").innerHTML = "";
-  $("#pinInput").value = pin;
+// --- Core loading ---
+async function loadPin(pin,fresh=false) {
+  $("#meta").textContent="Loading…"; $("#sections").innerHTML=""; $("#pinInput").value=pin;
+  setTimeout(()=>_map.invalidateSize(),200); // fix Leaflet sizing
 
-  // 1. Load profile (light)
-  try {
-    const profile = await (await fetch(`/assessor/profile?pin=${pin}`)).json();
-    $("#sections").appendChild(renderSection("assessor_profile", "Assessor Profile", profile));
-  } catch {}
+  // Core sections
+  const profile = await (await fetch(`/assessor/profile?pin=${pin}`)).json();
+  $("#sections").appendChild(renderSection("assessor_profile","Assessor Profile",profile));
+  const values = await (await fetch(`/assessor/values?pin=${pin}`)).json();
+  $("#sections").appendChild(renderSection("assessor_values","Assessment Values",values));
+  const sales = await (await fetch(`/sales?pin=${pin}`)).json();
+  $("#sections").appendChild(renderSection("sales","Sales",sales));
 
-  // 2. Load maildetail
-  fetch(`/assessor/maildetail?pin=${pin}`).then(r=>r.json()).then(d=>{
-    $("#sections").appendChild(renderSection("assessor_maildetail","Assessor Mailing Detail",d));
-  });
-
-  // 3. Load nearby (with chosen radius)
-  const radius = $("#radiusSelect").value;
+  // Nearby
+  const radius=$("#radiusSelect").value;
   fetch(`/api/nearby-mini/${pin}?radius=${radius}`).then(r=>r.json()).then(d=>{
-    renderNearby(d);
     $("#sections").appendChild(renderSection("nearby","Nearby Properties",d));
+    if (d?.subject?.lat && d?.subject?.lon) {
+      _map.setView([d.subject.lat,d.subject.lon],13);
+      L.marker([d.subject.lat,d.subject.lon]).addTo(_map).bindPopup(`Subject: ${pin}`).openPopup();
+    }
   });
 
-  // 4. Load heavier ones later
-  fetch(`/delinquent?pin=${pin}`).then(r=>r.json()).then(d=>{
-    $("#sections").appendChild(renderSection("delinquent","Delinquent Taxes",d));
-  });
-  fetch(`/ccao/permits?pin=${pin}`).then(r=>r.json()).then(d=>{
-    $("#sections").appendChild(renderSection("permits_ccao","Permits (CCAO)",d));
-  });
-  fetch(`/ptab/by-pin?pin=${pin}`).then(r=>r.json()).then(d=>{
-    $("#sections").appendChild(renderSection("ptab","PTAB",d));
-  });
+  // Lazy sections
+  addLazySection("Permits (CCAO)",`/ccao/permits?pin=${pin}`,"permits_ccao");
+  addLazySection("Delinquent Taxes",`/delinquent?pin=${pin}`,"delinquent");
+  addLazySection("PTAB",`/ptab/by-pin?pin=${pin}`,"ptab");
 
-  $("#meta").textContent = `PIN ${pin} • Loaded`;
+  $("#meta").textContent=`PIN ${pin} • Core sections loaded`;
+}
+function addLazySection(title,url,key) {
+  const details=el("details",{className:"border rounded-xl"});
+  details.appendChild(el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"},title));
+  const body=el("div",{className:"px-4 py-3 text-sm"},"Click to load…");
+  details.appendChild(body);
+  details.addEventListener("toggle",async()=>{
+    if(details.open && body.textContent==="Click to load…"){
+      const d=await (await fetch(url)).json();
+      body.innerHTML=""; const renderer=SECTION_RENDERERS[key]||renderGeneric;
+      body.appendChild(renderer(d));
+    }
+  });
+  $("#sections").appendChild(details);
 }
 
-// Render helpers
-function renderSection(key, title, content) {
-  const details = el("details", {className:"border rounded-xl"});
-  details.appendChild(el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"}, title));
-  details.appendChild(el("div",{className:"px-4 py-3 text-sm"}, JSON.stringify(content)));
-  return details;
-}
-function renderNearby(data) {
-  _map.setView([data.subject.lat, data.subject.lon], 13);
-  L.marker([data.subject.lat, data.subject.lon]).addTo(_map)
-    .bindPopup(`Subject: ${data.pin}`).openPopup();
-  (data.nearby || []).forEach(f=>{
-    const popup = `${f.pin}<br>${f.class||""} ${f.property_use||""}<br>Sale: ${f.latest_sale_price||""}`;
-    L.marker([f.lat,f.lon]).addTo(_map).bindPopup(popup);
-  });
-}
-
-// Events
-$("#frontSearchBtn").addEventListener("click", ()=>{
-  const pin = $("#frontPinInput").value.trim();
-  if (!pin) return;
-  $("#frontPage").classList.add("hidden");
-  $("#resultsPage").classList.remove("hidden");
+// --- Events ---
+$("#frontSearchBtn").addEventListener("click",()=>{
+  const pin=$("#frontPinInput").value.trim(); if(!pin) return;
+  $("#frontPage").classList.add("hidden"); $("#resultsPage").classList.remove("hidden");
   loadPin(pin);
 });
-$("#backBtn").addEventListener("click", ()=>{
-  $("#resultsPage").classList.add("hidden");
-  $("#frontPage").classList.remove("hidden");
+$("#backBtn").addEventListener("click",()=>{
+  $("#resultsPage").classList.add("hidden"); $("#frontPage").classList.remove("hidden");
 });
-$("#loadBtn").addEventListener("click", ()=>loadPin($("#pinInput").value.trim(),false));
-$("#freshBtn").addEventListener("click", ()=>loadPin($("#pinInput").value.trim(),true));
-$("#radiusSelect").addEventListener("change", ()=>loadPin($("#pinInput").value.trim(),false));
+$("#loadBtn").addEventListener("click",()=>loadPin($("#pinInput").value.trim(),false));
+$("#freshBtn").addEventListener("click",()=>loadPin($("#pinInput").value.trim(),true));
+$("#radiusSelect").addEventListener("change",()=>loadPin($("#pinInput").value.trim(),false));
 
 initMaps();
 </script>
