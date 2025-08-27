@@ -198,8 +198,10 @@ def api_pin_fast(pin: str):
 def api_latest_commercial_sales(limit: int = 200):
     from fetchers import fetch_assessor_profile
     try:
+        # ✅ Pull only fields that exist (note: use "location" instead of latitude/longitude)
         rows = _socrata_get("it54-y4c6", {
-            "$select": "declaration_id,date_recorded,line_1_primary_pin,line_7_property_advertised,line_13_net_consideration,latitude,longitude",
+            "$select": "declaration_id,date_recorded,line_1_primary_pin,"
+                       "line_7_property_advertised,line_13_net_consideration,location",
             "$order": "date_recorded DESC",
             "$limit": str(limit),
         })
@@ -212,11 +214,21 @@ def api_latest_commercial_sales(limit: int = 200):
                 continue
             seen.add(pin)
 
+            # Assessor lookup (class + property_use)
             assessor = {}
             try:
                 assessor = fetch_assessor_profile(pin).get("normalized", {})
             except Exception:
                 pass
+
+            # Extract lat/lon from the nested "location"
+            lat, lon = None, None
+            if r.get("location"):
+                try:
+                    lat = float(r["location"]["latitude"])
+                    lon = float(r["location"]["longitude"])
+                except Exception:
+                    pass
 
             sales.append({
                 "declaration_id": r.get("declaration_id"),
@@ -226,13 +238,15 @@ def api_latest_commercial_sales(limit: int = 200):
                 "sale_price": r.get("line_13_net_consideration"),
                 "class": assessor.get("class"),
                 "use_description": assessor.get("property_use"),
-                "lat": float(r["latitude"]) if r.get("latitude") else None,
-                "lon": float(r["longitude"]) if r.get("longitude") else None,
+                "lat": lat,
+                "lon": lon,
             })
 
         return {"_status": "ok", "sales": sales}
 
     except Exception as e:
         return {"_status": "error", "error": str(e), "sales": []}
+
+
 
 
