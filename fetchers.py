@@ -3166,10 +3166,8 @@ def fetch_ccao_permits_multi(
 
 
 # ================= Delinquent Taxes (GitHub Contents API) ======================
-# fetchers_delinquent.py (drop pandas; pure csv)
-# ================= Delinquent Taxes (GitHub Contents API) ======================
+
 import io, os, re, csv, gzip, requests
-from functools import lru_cache
 
 # 🔧 make sure we always have a session
 _SESSION = requests.Session()
@@ -3179,10 +3177,9 @@ PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-dat
 PASSES_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
 PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")
 
-API_URL = f"https://api.github.com/repos/{PASSES_REPO}/contents/{PASSES_PATH}?ref={PASSES_BRANCH}"
+API_URL = f"https://github.com/{PASSES_REPO}/raw/refs/heads/{PASSES_BRANCH}/{PASSES_PATH}"
 API_HEADERS = {
-    "Authorization": f"Bearer {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.raw",
+    "Authorization": f"Bearer {GITHUB_TOKEN}" if GITHUB_TOKEN else "",
     "User-Agent": "pin-tool/1.0"
 }
 PIN_COL_CANDIDATES = ("pin","PIN","Pin")
@@ -3190,44 +3187,38 @@ PIN_COL_CANDIDATES = ("pin","PIN","Pin")
 def _digits(s: str) -> str:
     return re.sub(r"\D","", s or "")
 
-@lru_cache(maxsize=1)
-def _delinq_index() -> dict[str, dict]:
-    if not GITHUB_TOKEN:
-        raise RuntimeError("GITHUB_TOKEN not set; cannot access private repo.")
-    r = _SESSION.get(API_URL, headers=API_HEADERS, timeout=20)
-    r.raise_for_status()
-
-
-
-    index: dict[str, dict] = {}
-    with gzip.GzipFile(fileobj=io.BytesIO(r.content)) as gz:
-        reader = csv.DictReader(io.TextIOWrapper(gz, encoding="utf-8", newline=""))
-        # Detect pin column
-        header = [h.strip() for h in reader.fieldnames or []]
-        pin_col = next((c for c in PIN_COL_CANDIDATES if c in header), None)
-        if not pin_col:
-            raise RuntimeError(f"'pin' column not found in {PASSES_PATH}")
-
-        # Keep *all* columns so we don't drop fields due to header name drift
-        for row in reader:
-            pin14 = _digits(row.get(pin_col, ""))
-            if len(pin14) != 14:
-                continue
-            # normalize empty strings to None
-            cleaned = {k: (v if (v is not None and str(v).strip() != "") else None) for k, v in row.items()}
-            index[pin14] = cleaned  # last one wins
-
-    return index
-
 def fetch_delinquent(pin: str):
+    """
+    Stream the delinquency master file from GitHub and return only the row
+    for this pin. Avoids loading the whole CSV into memory.
+    """
     try:
         pin14 = _digits(pin)
         if len(pin14) != 14:
             return {"_status": "ok", "data": []}
-        row = _delinq_index().get(pin14)
-        return {"_status": "ok", "data": [(row | {"pin14": pin14})] if row else []}
+
+        # Pull the compressed CSV from GitHub raw
+        with _SESSION.get(API_URL, headers=API_HEADERS, stream=True, timeout=60) as r:
+            r.raise_for_status()
+            buf = io.BytesIO(r.content)
+            with gzip.GzipFile(fileobj=buf) as gz:
+                reader = csv.DictReader(io.TextIOWrapper(gz, encoding="utf-8"))
+                pin_col = next((c for c in PIN_COL_CANDIDATES if c in reader.fieldnames), None)
+                if not pin_col:
+                    return {"_status": "error", "error": "pin column not found", "data": []}
+
+                for row in reader:
+                    if _digits(row.get(pin_col, "")) == pin14:
+                        # normalize empty strings to None
+                        cleaned = {k: (v if (v and str(v).strip()) else None) for k,v in row.items()}
+                        return {"_status": "ok", "data": [cleaned | {"pin14": pin14}]}
+
+        # If we get here, pin not found
+        return {"_status": "ok", "data": []}
+
     except Exception as e:
         return {"_status": "error", "error": f"delinquency fetch failed: {e}", "data": []}
+
 
     
     #===================================================================================
