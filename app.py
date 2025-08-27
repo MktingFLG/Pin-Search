@@ -124,51 +124,6 @@ def delinquent(pin: str):
 async def _to_thread(fn, *a, **kw):
     return await asyncio.to_thread(fn, *a, **kw)
 
-@app.get("/pin/{pin}/bundle")
-async def everything_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top_n_deeds: int = 3):
-    _must_pin(pin)
-    tasks = [
-        _to_thread(fetchers.fetch_assessor_profile, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_values, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_location, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_land, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_residential, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_other_structures, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_commercial_building, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_exemptions, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_maildetail, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_notice_summary, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_appeals_coes, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_permits, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_assessor_hie_additions, pin, jur, taxyr),
-        _to_thread(fetchers.fetch_recorder_bundle, pin, top_n_deeds),
-        _to_thread(fetchers.fetch_ptab_by_pin, pin, []),
-        _to_thread(fetchers.fetch_ccao_permits, pin, None, None),
-        _to_thread(fetchers.fetch_ptax_main, pin),
-        _to_thread(fetchers.fetch_delinquent, pin),
-    ]
-    async def run_in_batches(tasks, batch_size=4):
-        results = []
-        for i in range(0, len(tasks), batch_size):
-            batch = tasks[i:i+batch_size]
-            part = await asyncio.gather(*batch, return_exceptions=True)
-            results.extend(part)
-        return results
-
-    # run in safer batches of 4
-    results = await run_in_batches(tasks, batch_size=4)
-
-    def _norm(x):
-        return {"_status": "error", "_meta": {"error": str(x)}, "normalized": {}} if isinstance(x, Exception) else x
-
-    keys = [
-        "assessor_profile","assessor_values","assessor_location","assessor_land",
-        "assessor_residential","assessor_other_structures","assessor_commercial_building",
-        "assessor_exemptions","assessor_maildetail","assessor_notice_summary",
-        "assessor_appeals_coes","assessor_permits","assessor_hie_additions",
-        "rod_bundle","ptab","ccao_permits","ptax_main","delinquent",
-    ]
-    return {"_status": "ok", "_meta": {"pin": normalize_pin(pin)}, "bundle": {k: _norm(v) for k, v in zip(keys, results)}}
 
 
 # ---------------- UI routes ----------------
@@ -212,17 +167,6 @@ def api_nearby_mini(pin: str, radius: float = Query(5.0, ge=0), limit: int = Que
 
     return {"pin": normalize_pin(pin), "subject": subject, "nearby": nearby, "tax_bill": tax}
 
-
-
-@app.get("/api/pin/{pin}/fast")
-def api_pin_fast(pin: str):
-    from fetchers import fetch_ptax_main, fetch_nearby_candidates
-    _must_pin(pin)
-    return {
-        "pin": normalize_pin(pin),
-        "ptax": fetch_ptax_main(pin),
-        "nearby": fetch_nearby_candidates(pin, radius_mi=5.0, limit=50),
-    }
 
 @app.get("/api/latest-commercial-sales")
 def api_latest_commercial_sales(limit: int = 200):

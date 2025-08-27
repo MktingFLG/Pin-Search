@@ -167,7 +167,7 @@ async function loadLatestCommercialSales() {
         <div class="text-sm">
           <div class="font-semibold">${s.address || ""}</div>
           <div>${s.class || ""} ${s.use_description || ""}</div>
-          <div>${s.sale_date || ""} • ${s.sale_price || ""}</div>
+          <div>${s.date_recorded || s.sale_date || ""} • ${s.sale_price || ""}</div>
         </div>`;
       L.marker([s.lat, s.lon], { icon: NearbyIcon })
         .addTo(_frontMap)

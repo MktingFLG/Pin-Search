@@ -44,5 +44,6 @@ RUN pip install --no-cache-dir /wheels/*
 # Copy app code
 COPY . .
 
-# Default command (Render overrides this with render.yaml anyway)
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "10000"]
+# Default command (will be overridden by render.yaml in prod)
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-10000}"]
+
