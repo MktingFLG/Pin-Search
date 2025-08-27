@@ -35,17 +35,20 @@
   </div>
 
   <!-- RESULTS PAGE -->
-  <div id="resultsPage" class="hidden grid grid-cols-12 gap-6">
-    <!-- Sidebar TOC -->
-    <aside class="col-span-3 hidden md:block">
-      <div class="sticky top-4 bg-white shadow rounded-xl p-4 space-y-3 text-sm">
-        <div class="font-semibold text-gray-700">Sections</div>
-        <ul id="toc" class="space-y-1 text-blue-600 underline cursor-pointer"></ul>
-      </div>
-    </aside>
+<div id="resultsPage" class="hidden grid grid-cols-12 gap-6">
+  <!-- Sidebar -->
+  <aside class="col-span-3 hidden md:block">
+    <div class="sticky top-4 bg-white shadow rounded-xl p-4 space-y-3 text-sm">
+      <div class="font-semibold text-gray-700">Sections</div>
+      <ul id="toc" class="space-y-1 text-blue-600 underline cursor-pointer"></ul>
+    </div>
+  </aside>
 
-    <!-- Main content -->
-    <div class="col-span-12 md:col-span-9 bg-white shadow rounded-2xl p-6 space-y-4">
+  <!-- Main -->
+  <div class="col-span-12 md:col-span-9 space-y-6">
+    
+    <!-- Header -->
+    <div class="bg-white shadow rounded-2xl p-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <h1 class="text-xl md:text-2xl font-semibold">PIN Overview</h1>
         <div class="flex gap-2 items-center">
@@ -55,7 +58,11 @@
           <button id="backBtn" class="px-3 py-2 rounded-lg border">Back</button>
         </div>
       </div>
-      <div id="meta" class="text-xs text-gray-500 mb-2"></div>
+      <div id="meta" class="text-xs text-gray-500 mt-1"></div>
+    </div>
+
+    <!-- Map -->
+    <div class="bg-white shadow rounded-2xl p-6">
       <div class="flex gap-2 items-center mb-2">
         <label for="radiusSelect" class="text-sm">Nearby radius:</label>
         <select id="radiusSelect" class="border rounded px-2 py-1 text-sm">
@@ -64,15 +71,18 @@
           <option value="15">15 miles</option>
         </select>
       </div>
-      <div class="border rounded-2xl mb-4">
-        <div class="px-4 py-2 font-medium bg-gray-100 rounded-t-2xl">Map</div>
-        <div class="px-4 py-3">
-          <div id="map" class="h-96 w-full rounded-xl border"></div>
-        </div>
-      </div>
-      <div id="sections" class="space-y-3"></div>
+      <div id="map" class="h-96 w-full rounded-xl border"></div>
     </div>
+
+    <!-- QUICK SUMMARIES -->
+    <div id="summaries" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+    <!-- EXPANDABLE RAW SECTIONS -->
+    <div id="sections" class="space-y-3"></div>
+
   </div>
+</div>
+
 </main>
 
 <script>
@@ -199,67 +209,76 @@ async function loadLatestCommercialSales() {
   } catch(err){ console.error("Latest sales failed:",err);}
 }
 
-async function loadPin(pin) {
-  $("#meta").textContent = "Loading…";
-  $("#sections").innerHTML = "";
-  $("#pinInput").value = pin;
+function renderSummaryCard(title, content) {
+  return el("div", { className: "bg-white shadow rounded-xl p-4 space-y-1" },
+    el("div", { className: "font-semibold text-gray-800" }, title),
+    el("div", { className: "text-sm text-gray-600" }, content || "No data")
+  );
+}
+
+async function loadPin(pin, fresh=false) {
+  $("#meta").textContent="Loading…";
+  $("#summaries").innerHTML="";
+  $("#sections").innerHTML="";
+  $("#toc").innerHTML="";
+  $("#pinInput").value=pin;
   setTimeout(()=>_map.invalidateSize(),200);
 
-  // 🚀 FAST LOAD
-  const fastResp = await fetch(`/api/pin/${encodeURIComponent(pin)}/fast`);
-  if (fastResp.ok) {
-    const fastData = await fastResp.json();
-    $("#meta").textContent = `PIN ${fastData.pin}`;
+  const resp = await fetch(`/api/pin/${encodeURIComponent(pin)}${fresh?"?fresh=1":""}`);
+  if(!resp.ok){ $("#meta").textContent=`API error: ${resp.status}`; return; }
+  const data=await resp.json();
 
-    if (fastData.ptax) {
-      $("#sections").appendChild(renderSection("ptax", "PTAX (Quick)", fastData.ptax));
-    }
-    if (fastData.nearby) {
-      $("#sections").appendChild(renderSection("nearby", "Nearby Properties", fastData.nearby));
-      renderNearbyOnMap(fastData.nearby, null);
-    }
+  $("#meta").textContent=`PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
+  const sec=data.sections||{};
+
+  // === Map + Nearby ===
+  if (sec.nearby) {
+    renderNearbyOnMap(sec.nearby, sec.sales);
   }
 
-  // 🚀 STUBS for other sections
-  ["assessor_profile","value_summary","permits","delinquent","ptab"].forEach(k=>{
-    $("#sections").appendChild(renderSection(k, k.replace(/_/g," "), null, true, pin));
+  // === Summaries (cards) ===
+  if(sec.ptax && sec.ptax.rows && sec.ptax.rows.length){
+    const r=sec.ptax.rows[0];
+    $("#summaries").appendChild(
+      renderSummaryCard("PTAX", `Latest Sale: ${r.date||""} • $${r.price||""}`)
+    );
+  }
+  if(sec.assessor_profile){
+    $("#summaries").appendChild(
+      renderSummaryCard("Assessor Profile", sec.assessor_profile["PIN Info • Class"] || "")
+    );
+  }
+  if(sec.value_summary && sec.value_summary.length){
+    const v=sec.value_summary[0];
+    $("#summaries").appendChild(
+      renderSummaryCard("Assessor Values", `Land: ${v["Land AV"]||""}, Bldg: ${v["Building AV"]||""}`)
+    );
+  }
+  if(sec.sales){
+    $("#summaries").appendChild(
+      renderSummaryCard("Sales", `${sec.sales["Latest Sale Date"]||""} • $${sec.sales["Latest Sale Price"]||""}`)
+    );
+  }
+
+  // === Expandable raw sections ===
+  Object.entries(sec).forEach(([k,v])=>{
+    $("#sections").appendChild(renderSection(k,k.replace(/_/g," "),v));
+    const li=el("li",{},k.replace(/_/g," "));
+    li.onclick=()=>document.querySelector(`[data-section="${k}"]`)?.scrollIntoView({behavior:"smooth"});
+    $("#toc").appendChild(li);
   });
 }
 
-
-// --- Events ---
-$("#frontSearchBtn").addEventListener("click",()=>{
-  const pin=$("#frontPinInput").value.trim(); if(!pin) return;
-  $("#frontPage").classList.add("hidden"); $("#resultsPage").classList.remove("hidden");
-  loadPin(pin);
-});
-$("#backBtn").addEventListener("click",()=>{
-  $("#resultsPage").classList.add("hidden"); $("#frontPage").classList.remove("hidden");
-});
-$("#loadBtn").addEventListener("click",()=>loadPin($("#pinInput").value.trim(),false));
-$("#freshBtn").addEventListener("click",()=>loadPin($("#pinInput").value.trim(),true));
-$("#radiusSelect").addEventListener("change",()=>loadPin($("#pinInput").value.trim(),false));
-
-initMaps(); loadLatestCommercialSales();
-
-const M2_PER_MI=1609.344;
-function renderNearbyOnMap(nearby,sales){
-  if(!_map) return;
-  _map.eachLayer(l=>{ if(l instanceof L.Marker||l instanceof L.Circle) _map.removeLayer(l); });
-  if(!nearby?.center) return;
-  const c=[nearby.center.lat,nearby.center.lon]; _map.setView(c,13);
-  L.circle(c,{radius:(nearby.radius_mi||5)*M2_PER_MI,fillOpacity:0.08}).addTo(_map);
-  const subj=nearby.subject||{};
-  const subjHtml=`<div class="text-sm"><div class="font-semibold">${subj.pin_dash||""}</div>
-    <div>${subj.class||""} ${subj.property_use||""}</div></div>`;
-  L.marker(c).addTo(_map).bindPopup(subjHtml).openPopup();
-  (nearby.features||[]).forEach(f=>{
-    if(!f.lat||!f.lon) return;
-    const html=`<div class="text-sm"><div class="font-semibold">${f.pin||""}</div>
-      <div>${f.class||""} ${f.property_use||""}</div></div>`;
-    L.marker([f.lat,f.lon]).addTo(_map).bindPopup(html);
-  });
+function renderSection(key,title,content){
+  const details=el("details",{className:"border rounded-xl", "data-section":key});
+  details.appendChild(el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"},title));
+  const body=el("div",{className:"px-4 py-3 text-sm"});
+  const renderer=SECTION_RENDERERS[key]||renderGeneric;
+  body.appendChild(renderer(content));
+  details.appendChild(body);
+  return details;
 }
+
 </script>
 
 </body>
