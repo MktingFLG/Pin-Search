@@ -3177,7 +3177,8 @@ PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-dat
 PASSES_BRANCH = os.getenv("ASSESSOR_PASSES_BRANCH", "main")
 PASSES_PATH   = os.getenv("ASSESSOR_PASSES_PATH", "delinquencies_master.csv.gz")
 
-API_URL = f"https://github.com/{PASSES_REPO}/raw/refs/heads/{PASSES_BRANCH}/{PASSES_PATH}"
+API_URL = f"https://raw.githubusercontent.com/{PASSES_REPO}/{PASSES_BRANCH}/{PASSES_PATH}"
+
 API_HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}" if GITHUB_TOKEN else "",
     "User-Agent": "pin-tool/1.0"
@@ -3188,20 +3189,18 @@ def _digits(s: str) -> str:
     return re.sub(r"\D","", s or "")
 
 def fetch_delinquent(pin: str):
-    """
-    Stream the delinquency master file from GitHub and return only the row
-    for this pin. Avoids loading the whole CSV into memory.
-    """
     try:
         pin14 = _digits(pin)
         if len(pin14) != 14:
             return {"_status": "ok", "data": []}
 
-        # Pull the compressed CSV from GitHub raw
-        with _SESSION.get(API_URL, headers=API_HEADERS, stream=True, timeout=60) as r:
+        if not GITHUB_TOKEN:
+            return {"_status": "error", "error": "GITHUB_TOKEN not set", "data": []}
+
+        with _SESSION.get(API_URL, headers=API_HEADERS, stream=True, timeout=120) as r:
             r.raise_for_status()
-            buf = io.BytesIO(r.content)
-            with gzip.GzipFile(fileobj=buf) as gz:
+            # Wrap the streaming response in a gzip decoder
+            with gzip.GzipFile(fileobj=r.raw) as gz:
                 reader = csv.DictReader(io.TextIOWrapper(gz, encoding="utf-8"))
                 pin_col = next((c for c in PIN_COL_CANDIDATES if c in reader.fieldnames), None)
                 if not pin_col:
@@ -3209,15 +3208,14 @@ def fetch_delinquent(pin: str):
 
                 for row in reader:
                     if _digits(row.get(pin_col, "")) == pin14:
-                        # normalize empty strings to None
-                        cleaned = {k: (v if (v and str(v).strip()) else None) for k,v in row.items()}
+                        cleaned = {k: (v.strip() if v and str(v).strip() else None) for k,v in row.items()}
                         return {"_status": "ok", "data": [cleaned | {"pin14": pin14}]}
 
-        # If we get here, pin not found
         return {"_status": "ok", "data": []}
 
     except Exception as e:
         return {"_status": "error", "error": f"delinquency fetch failed: {e}", "data": []}
+
 
 
     
