@@ -9,15 +9,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Leaflet (map) -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    crossorigin=""
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    crossorigin="">
-  </script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     details > summary::marker { display: none; }
@@ -25,365 +18,164 @@
   </style>
 </head>
 <body class="bg-gray-50">
-  <main class="mx-auto p-4 md:p-6">
-    <div id="app" class="mx-auto bg-white shadow rounded-2xl p-4 md:p-6" style="max-width: 900px;">
-      <!-- Header -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-        <h1 class="text-xl md:text-2xl font-semibold">PIN Overview</h1>
-        <div class="flex gap-2 items-center">
-          <input id="pinInput" type="text" inputmode="numeric" placeholder="Enter PIN (e.g. 33-29-200-014-0000)"
-                 class="border rounded-lg px-3 py-2 text-sm w-64 md:w-80" />
-          <button id="loadBtn"  class="px-3 py-2 rounded-lg border">Load</button>
-          <button id="freshBtn" class="px-3 py-2 rounded-lg border">Load (Fresh)</button>
-          <button id="copyBtn"  class="px-3 py-2 rounded-lg border">Copy link</button>
-        </div>
-      </div>
 
-      <div id="diag" class="text-xs text-gray-500 mb-2 h-4"></div>
-      <div id="meta" class="text-xs text-gray-500 mb-4"></div>
-
-      <!-- Map -->
-      <div class="border rounded-2xl mb-4">
-        <div class="px-4 py-2 font-medium bg-gray-100 rounded-t-2xl">Map</div>
-        <div class="px-4 py-3">
-          <div id="map" class="h-96 w-full rounded-xl border"></div>
-          <div class="text-xs text-gray-500 mt-2">
-            Shows the subject and nearby properties (filtered by class/use).
-          </div>
-        </div>
-      </div>
-
-      <!-- Sections -->
-      <div id="sections" class="space-y-3"></div>
+<main class="mx-auto p-4 md:p-6" style="max-width: 1000px;">
+  <!-- FRONT PAGE -->
+  <div id="frontPage" class="bg-white shadow rounded-2xl p-6 space-y-6">
+    <div id="notice" class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded">
+      ⚠️ Assessor update: Township XYZ updated on Sept 1, 2025
     </div>
-  </main>
 
-  <script>
-    const API_BASE = "";
-    const SECTION_TITLES = {
-      property_info: "Property Information",
-      value_summary: "Value Summary (Raw)",
-      assessor_profile: "Assessor Profile",
-      assessor_maildetail: "Assessor Mailing Detail",
-      assessor_exemptions: "Exemptions",
-      property_location: "Property Location",
-      land: "Land",
-      residential_building: "Residential Building",
-      commercial_building: "Commercial Building",
-      other_structures: "Other Structures",
-      divisions_consolidations: "Divisions & Consolidations",
-      assessor_sales_datalet: "Assessor Sales (Datalet)",
-      sales: "Sales (Parsed)",
-      notice_summary: "Notice Summary",
-      appeals_coes: "Appeals",
-      permits: "Permits",
-      permits_ccao: "Permits (CCAO)",
-      hie_additions: "Home Improvement Exemption Additions",
-      ptab: "PTAB",
-      ptax: "PTAX",
-      recorder_of_deeds: "Recorder of Deeds",
-      delinquent: "Delinquent Taxes",
-      prc: "Assessor Card Link",
-      nearby: "Nearby Properties",
-      links: "External Links",
-      tax_bill: "Tax Bill",
-    };
-    const SECTION_ORDER = [
-      "property_info", "tax_bill", "sales", "permits", "nearby", "links"
-    ];
+    <div class="flex gap-2 items-center">
+      <input id="frontPinInput" type="text" placeholder="Enter PIN (e.g. 33-29-200-014-0000)"
+             class="border rounded-lg px-3 py-2 text-sm w-80"/>
+      <button id="frontSearchBtn" class="px-3 py-2 rounded-lg border">Search</button>
+    </div>
 
-    const $ = sel => document.querySelector(sel);
-    const el = (tag, props = {}, ...kids) => {
-      const node = document.createElement(tag);
-      Object.assign(node, props);
-      kids.flat().forEach(k => {
-        if (k == null) return;
-        node.appendChild(k.nodeType ? k : document.createTextNode(String(k)));
-      });
-      return node;
-    };
+    <div class="border rounded-2xl">
+      <div class="px-4 py-2 font-medium bg-gray-100 rounded-t-2xl">Latest Commercial Sales</div>
+      <div class="px-4 py-3">
+        <div id="frontMap" class="h-96 w-full rounded-xl border"></div>
+        <div class="text-xs text-gray-500 mt-2">Recent commercial property sales across Cook County.</div>
+      </div>
+    </div>
+  </div>
 
-    function renderKeyValues(obj) {
-      const dl = el("dl");
-      Object.entries(obj || {}).forEach(([k, v]) => {
-        dl.appendChild(el("dt", { className: "font-semibold mt-2" }, k));
-        dl.appendChild(el("dd", { className: "text-gray-700" }, v ?? ""));
-      });
-      return dl;
-    }
+  <!-- RESULTS PAGE -->
+  <div id="resultsPage" class="hidden bg-white shadow rounded-2xl p-6 space-y-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <h1 class="text-xl md:text-2xl font-semibold">PIN Overview</h1>
+      <div class="flex gap-2 items-center">
+        <input id="pinInput" type="text" class="border rounded-lg px-3 py-2 text-sm w-80"/>
+        <button id="loadBtn" class="px-3 py-2 rounded-lg border">Reload</button>
+        <button id="freshBtn" class="px-3 py-2 rounded-lg border">Reload (Fresh)</button>
+        <button id="backBtn" class="px-3 py-2 rounded-lg border">Back</button>
+      </div>
+    </div>
 
-    function renderRowsAsTable(rows) {
-      if (!rows || !rows.length) return document.createTextNode("No data");
-      const allCols = new Set();
-      rows.forEach(r => Object.keys(r || {}).forEach(k => allCols.add(k)));
-      const cols = Array.from(allCols);
-      const table = el("table", { className: "w-full text-sm border-collapse" });
-      const thead = el("thead");
-      const thr = el("tr");
-      cols.forEach(c => thr.appendChild(el("th", { className: "text-left border-b px-2 py-1 font-semibold" }, c)));
-      thead.appendChild(thr);
-      table.appendChild(thead);
-      const tbody = el("tbody");
-      rows.forEach(r => {
-        const tr = el("tr");
-        cols.forEach(c => tr.appendChild(el("td", { className: "border-b px-2 py-1 align-top" }, r?.[c] ?? "")));
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-      return table;
-    }
+    <div id="meta" class="text-xs text-gray-500 mb-2"></div>
 
-    // --- Custom renderers ---
-    const SECTION_RENDERERS = {
-      links: (content) => {
-        const box = el("div", { className: "space-y-1" });
-        Object.entries(content || {}).forEach(([label, href]) => {
-          if (!href) return;
-          box.appendChild(el("div", {}, el("a", { href, target: "_blank", rel: "noopener", className: "text-blue-700 underline" }, label)));
-        });
-        return box;
-      },
-      sales: (content) => {
-        const wrap = el("div", { className: "space-y-3" });
-        if (content?.["Latest Sale Date"] || content?.["Latest Sale Price"]) {
-          wrap.appendChild(renderKeyValues({
-            "Latest Sale Date": content["Latest Sale Date"],
-            "Latest Sale Price": content["Latest Sale Price"],
-            "Notes": content["Notes"] ?? ""
-          }));
-        }
-        if (Array.isArray(content?.History)) {
-          wrap.appendChild(el("div", { className: "mt-2" }, renderRowsAsTable(content.History)));
-        }
-        return wrap;
-      },
-      permits: (c) => Array.isArray(c?.rows) ? renderRowsAsTable(c.rows) : renderKeyValues(c || {}),
-      permits_ccao: (c) => Array.isArray(c?.rows) ? renderRowsAsTable(c.rows) : renderKeyValues(c || {}),
-      assessor_sales_datalet: (c) => {
-        const wrap = el("div", { className: "space-y-3" });
-        if (Array.isArray(c?.summary_rows)) {
-          wrap.appendChild(el("div", {}, el("div", { className: "font-semibold mb-2" }, "Summary"), renderRowsAsTable(c.summary_rows)));
-        }
-        if (c?.verbatim) {
-          const details = el("details", { className: "mt-2" },
-            el("summary", { className: "cursor-pointer list-none px-3 py-1 bg-gray-50 inline-block rounded" }, "Raw HTML"));
-          const pre = el("pre", { className: "whitespace-pre-wrap text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border" }, c.verbatim);
-          details.appendChild(pre);
-          wrap.appendChild(details);
-        }
-        return wrap;
-      },
-      nearby: (c) => {
-        const table = renderRowsAsTable(c?.features || []);
-        const theadCells = Array.from(table.querySelectorAll("thead th"));
-        const pinIdx = theadCells.findIndex(th => th.textContent.trim().toLowerCase() === "pin");
-        if (pinIdx >= 0) {
-          table.querySelectorAll("tbody tr").forEach(tr => {
-            const cell = tr.cells[pinIdx];
-            const pinDash = cell?.textContent?.trim();
-            if (!pinDash) return;
-            tr.classList.add("cursor-pointer", "hover:bg-gray-50");
-            tr.addEventListener("click", () => focusMarkerByPin(pinDash));
-          });
-        }
-        return table;
-      },
-      prc: (c) => c?.url ? el("a", { href: c.url, target: "_blank", rel: "noopener", className: "text-blue-700 underline" }, `Open Assessor Card (PIN ${c.pin || ""})`) : document.createTextNode("No link"),
+    <!-- Radius selector -->
+    <div class="flex gap-2 items-center mb-2">
+      <label for="radiusSelect" class="text-sm">Nearby radius:</label>
+      <select id="radiusSelect" class="border rounded px-2 py-1 text-sm">
+        <option value="5">5 miles</option>
+        <option value="10">10 miles</option>
+        <option value="15">15 miles</option>
+      </select>
+    </div>
 
-      // --- Newly patched renderers ---
-      ptax: (c) => {
-        const wrap = el("div", { className: "space-y-2" });
-        if (Array.isArray(c?.rows) && c.rows.length) {
-          wrap.appendChild(renderRowsAsTable(c.rows));
-        } else {
-          wrap.appendChild(el("div", {}, "No PTAX rows"));
-        }
-        if (Array.isArray(c?.associated_pins) && c.associated_pins.length) {
-          wrap.appendChild(el("div", {}, "Associated PINs: " + c.associated_pins.join(", ")));
-        }
-        return wrap;
-      },
-      recorder_of_deeds: (c) => {
-        const wrap = el("div", { className: "space-y-3" });
-        if (Array.isArray(c?.all_deeds) && c.all_deeds.length) {
-          wrap.appendChild(el("div", { className: "font-semibold" }, "All Deeds"));
-          wrap.appendChild(renderRowsAsTable(c.all_deeds));
-        }
-        if (Array.isArray(c?.top_deeds) && c.top_deeds.length) {
-          wrap.appendChild(el("div", { className: "font-semibold" }, "Top Deeds"));
-          wrap.appendChild(renderRowsAsTable(c.top_deeds));
-        }
-        if (c?.latest_deed && Object.keys(c.latest_deed).length) {
-          wrap.appendChild(el("div", { className: "font-semibold" }, "Latest Deed"));
-          wrap.appendChild(renderKeyValues(c.latest_deed));
-        }
-        return wrap;
-      },
-      delinquent: (c) => {
-        if (c?.status !== "ok") return el("div", {}, "No delinquent data");
-        if (Array.isArray(c?.data) && c.data.length) {
-          return renderRowsAsTable(c.data);
-        }
-        return el("div", {}, "No delinquent records.");
-      },
-      appeals_coes: (c) => {
-        const wrap = el("div", { className: "space-y-3" });
-        if (c?.owner_details && Object.keys(c.owner_details).length) {
-          wrap.appendChild(el("div", { className: "font-semibold" }, "Owner Details"));
-          wrap.appendChild(renderKeyValues(c.owner_details));
-        }
-        if (c?.nature_of_appeal && Object.keys(c.nature_of_appeal).length) {
-          wrap.appendChild(el("div", { className: "font-semibold" }, "Nature of Appeal"));
-          wrap.appendChild(renderKeyValues(c.nature_of_appeal));
-        }
-        if (Array.isArray(c?.reason_flags_true) && c.reason_flags_true.length) {
-          wrap.appendChild(el("div", { className: "font-semibold" }, "Reasons"));
-          wrap.appendChild(renderRowsAsTable(c.reason_flags_true));
-        }
-        return wrap;
-      },
-      notice_summary: (c) => {
-        const wrap = el("div", { className: "space-y-3" });
-        if (c?.summary && Object.keys(c.summary).length) {
-          wrap.appendChild(el("div", { className: "font-semibold" }, "Summary"));
-          wrap.appendChild(renderKeyValues(c.summary));
-        }
-        if (Array.isArray(c?.detail_rows) && c.detail_rows.length) {
-          wrap.appendChild(el("div", { className: "font-semibold" }, "Details"));
-          wrap.appendChild(renderRowsAsTable(c.detail_rows));
-        }
-        return wrap;
-      },
-      hie_additions: (c) => {
-        const wrap = el("div", { className: "space-y-3" });
-        if (Array.isArray(c?.rows) && c.rows.length) {
-          wrap.appendChild(renderRowsAsTable(c.rows));
-        }
-        if (c?.verbatim) {
-          const pre = el("pre", { className: "whitespace-pre-wrap text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border" }, c.verbatim);
-          wrap.appendChild(pre);
-        }
-        return wrap;
-      }
-    };
+    <!-- Map -->
+    <div class="border rounded-2xl mb-4">
+      <div class="px-4 py-2 font-medium bg-gray-100 rounded-t-2xl">Map</div>
+      <div class="px-4 py-3">
+        <div id="map" class="h-96 w-full rounded-xl border"></div>
+      </div>
+    </div>
 
-    function renderGeneric(content) {
-      if (Array.isArray(content)) return renderRowsAsTable(content);
-      if (content && typeof content === "object") return renderKeyValues(content);
-      return el("div", {}, content ?? "");
-    }
-    function renderSection(key, title, content) {
-      const details = el("details", { className: "border rounded-xl" });
-      const sum = el("summary", { className: "cursor-pointer list-none px-4 py-2 font-medium bg-gray-100 rounded-t-xl" }, title);
-      const body = el("div", { className: "px-4 py-3 text-sm" });
-      const renderer = SECTION_RENDERERS[key] || renderGeneric;
-      body.appendChild(renderer(content));
-      details.appendChild(sum);
-      details.appendChild(body);
-      return details;
-    }
+    <!-- Sections -->
+    <div id="sections" class="space-y-3"></div>
+  </div>
+</main>
 
-    // Map helpers
-    let _map, _markersLayer, _subjectLayer, _radiusCircle, _pinToLayer;
-    const M2_PER_MI = 1609.344;
-    const NearbyIcon = new L.Icon({ iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png", shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png", iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] });
-    const SubjectIcon = new L.Icon({ iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png", shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png", iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] });
+<script>
+const API_BASE = "";
+const $ = sel => document.querySelector(sel);
+const el = (tag, props={}, ...kids) => {
+  const node = document.createElement(tag);
+  Object.assign(node, props);
+  kids.flat().forEach(k => node.appendChild(k.nodeType ? k : document.createTextNode(String(k))));
+  return node;
+};
 
-    function ensureMap() {
-      if (_map) return;
-      _map = L.map('map');
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(_map);
-      _markersLayer = L.layerGroup().addTo(_map);
-      _subjectLayer = L.layerGroup().addTo(_map);
-      _pinToLayer = new Map();
-    }
+// Map helpers
+let _map, _frontMap;
+function ensureMap(id) {
+  return L.map(id).setView([41.88,-87.63], 11); // Chicago default
+}
+function initMaps() {
+  if (!_frontMap) {
+    _frontMap = ensureMap("frontMap");
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(_frontMap);
+  }
+  if (!_map) {
+    _map = ensureMap("map");
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(_map);
+  }
+}
 
-    function renderMap(nearby, sales) {
-      ensureMap(); _markersLayer.clearLayers(); _subjectLayer.clearLayers(); _pinToLayer.clear();
-      if (_radiusCircle) { _map.removeLayer(_radiusCircle); _radiusCircle = null; }
-      if (!nearby?.center || nearby.center.lat == null || nearby.center.lon == null) return;
-      const c = [nearby.center.lat, nearby.center.lon];
-      _map.setView(c, 13);
-      _radiusCircle = L.circle(c, { radius: (nearby.radius_mi || 5) * M2_PER_MI, fillOpacity: 0.08 }).addTo(_map);
-      const subjPin = nearby.subject?.pin_dash || nearby.subject?.pin || "";
-      const subjUse = nearby.subject?.property_use || "";
-      const subjClass = nearby.subject?.class ? `(${nearby.subject.class})` : "";
-      const subjAddr = (nearby.subject?.address || "").trim();
-      const saleDate = sales?.["Latest Sale Date"] || "";
-      const saleYear = saleDate ? (new Date(saleDate).getFullYear() || (saleDate.match(/\b\d{4}\b/)?.[0])) : "";
-      const saleAmt = sales?.["Latest Sale Price"] || "";
-      const subjPopupHtml = `<div class="text-sm"><div class="font-semibold">${subjPin}</div><div>${subjUse} ${subjClass}</div>${subjAddr ? `<div>${subjAddr}</div>` : ""}${saleYear || saleAmt ? `<div class="mt-2 p-2 border rounded bg-gray-50"><div class="font-semibold">Latest Sale</div><div>${saleYear ? `Year: ${saleYear}` : ""} ${saleAmt ? `• Amount: ${saleAmt}` : ""}</div></div>` : ""}</div>`;
-      const subjMarker = L.marker(c, { icon: SubjectIcon, title: subjPin }).addTo(_subjectLayer).bindPopup(subjPopupHtml).openPopup();
-      if (subjPin) _pinToLayer.set(subjPin, subjMarker);
-      const bounds = [c];
-      (nearby.features || []).forEach(f => {
-        const latlng = [f.lat, f.lon]; bounds.push(latlng);
-        const pin = f.pin || ""; const use = f.property_use || ""; const cls = f.class ? `(${f.class})` : ""; const addr = (f.address || "").trim();
-        const html = `<div class="text-sm"><div class="font-semibold">${pin}</div><div>${use} ${cls}</div>${addr ? `<div>${addr}</div>` : ""}${f.distance_mi != null ? `<div>${f.distance_mi} mi away</div>` : ''}</div>`;
-        const m = L.marker(latlng, { icon: NearbyIcon, title: pin }).addTo(_markersLayer).bindPopup(html);
-        if (pin) _pinToLayer.set(pin, m);
-      });
-      if (bounds.length > 1) _map.fitBounds(L.latLngBounds(bounds).pad(0.2));
-    }
-    function focusMarkerByPin(pinDash) { const layer = _pinToLayer.get(pinDash); if (!layer) return; _map.setView(layer.getLatLng(), Math.max(_map.getZoom(), 15)); layer.openPopup(); }
+// Incremental data loading for results page
+async function loadPin(pin, fresh=false) {
+  $("#meta").textContent = "Loading…";
+  $("#sections").innerHTML = "";
+  $("#pinInput").value = pin;
 
-    async function fetchPin(pin, fresh=false) {
-      const url = `${API_BASE}/api/pin/${encodeURIComponent(pin)}${fresh ? "?fresh=1" : ""}`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`API error: ${r.status}`);
-      return await r.json();
-    }
-    async function load(pin, fresh=false) {
-      if (!pin) return;
-      $("#meta").textContent = "Loading…"; 
-      $("#diag").textContent = ""; 
-      $("#sections").innerHTML = "";
+  // 1. Load profile (light)
+  try {
+    const profile = await (await fetch(`/assessor/profile?pin=${pin}`)).json();
+    $("#sections").appendChild(renderSection("assessor_profile", "Assessor Profile", profile));
+  } catch {}
 
-      // 1. Load basic profile first
-      try {
-        const profile = await (await fetch(`/assessor/profile?pin=${encodeURIComponent(pin)}`)).json();
-        $("#meta").textContent = `PIN ${pin} • Loaded Assessor Profile`;
-        $("#sections").appendChild(renderSection("assessor_profile", "Assessor Profile", profile));
-      } catch (e) {
-        console.error("Profile error", e);
-      }
+  // 2. Load maildetail
+  fetch(`/assessor/maildetail?pin=${pin}`).then(r=>r.json()).then(d=>{
+    $("#sections").appendChild(renderSection("assessor_maildetail","Assessor Mailing Detail",d));
+  });
 
-      // 2. Kick off other requests in parallel
-      const tasks = [
-        fetch(`/assessor/maildetail?pin=${encodeURIComponent(pin)}`).then(r => r.json()).then(d => {
-          $("#sections").appendChild(renderSection("assessor_maildetail", "Assessor Mailing Detail", d));
-        }),
-        fetch(`/delinquent?pin=${encodeURIComponent(pin)}`).then(r => r.json()).then(d => {
-          $("#sections").appendChild(renderSection("delinquent", "Delinquent Taxes", d));
-        }),
-        fetch(`/ccao/permits?pin=${encodeURIComponent(pin)}`).then(r => r.json()).then(d => {
-          $("#sections").appendChild(renderSection("permits_ccao", "Permits (CCAO)", d));
-        }),
-        fetch(`/ptab/by-pin?pin=${encodeURIComponent(pin)}`).then(r => r.json()).then(d => {
-          $("#sections").appendChild(renderSection("ptab", "PTAB", d));
-        }),
-        fetch(`/api/pin/${encodeURIComponent(pin)}/fast`).then(r => r.json()).then(d => {
-          renderMap(d.nearby, d.ptax); // update map fast
-        }),
-      ];
+  // 3. Load nearby (with chosen radius)
+  const radius = $("#radiusSelect").value;
+  fetch(`/api/nearby-mini/${pin}?radius=${radius}`).then(r=>r.json()).then(d=>{
+    renderNearby(d);
+    $("#sections").appendChild(renderSection("nearby","Nearby Properties",d));
+  });
 
-      Promise.allSettled(tasks).then(() => {
-        $("#meta").textContent = `PIN ${pin} • All sections loaded`;
-      });
-    }
+  // 4. Load heavier ones later
+  fetch(`/delinquent?pin=${pin}`).then(r=>r.json()).then(d=>{
+    $("#sections").appendChild(renderSection("delinquent","Delinquent Taxes",d));
+  });
+  fetch(`/ccao/permits?pin=${pin}`).then(r=>r.json()).then(d=>{
+    $("#sections").appendChild(renderSection("permits_ccao","Permits (CCAO)",d));
+  });
+  fetch(`/ptab/by-pin?pin=${pin}`).then(r=>r.json()).then(d=>{
+    $("#sections").appendChild(renderSection("ptab","PTAB",d));
+  });
 
+  $("#meta").textContent = `PIN ${pin} • Loaded`;
+}
 
-    const initialPin = new URLSearchParams(location.search).get("pin") || localStorage.getItem("last_pin") || "";
-    $("#pinInput").value = initialPin; if (initialPin) load(initialPin);
-    $("#loadBtn").addEventListener("click", () => load($("#pinInput").value.trim(), false));
-    $("#freshBtn").addEventListener("click", () => load($("#pinInput").value.trim(), true));
-    $("#pinInput").addEventListener("keydown", (e) => { if (e.key === "Enter") load($("#pinInput").value.trim(), false); });
-    $("#copyBtn").addEventListener("click", async () => {
-      const pin = $("#pinInput").value.trim(); if (!pin) return alert("Enter a PIN first.");
-      const url = `${location.origin}${location.pathname}?pin=${encodeURIComponent(pin)}`;
-      try { await navigator.clipboard.writeText(url); $("#diag").textContent = "Link copied to clipboard."; setTimeout(() => ($("#diag").textContent = ""), 2000); }
-      catch { $("#diag").textContent = url; }
-    });
-  </script>
+// Render helpers
+function renderSection(key, title, content) {
+  const details = el("details", {className:"border rounded-xl"});
+  details.appendChild(el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"}, title));
+  details.appendChild(el("div",{className:"px-4 py-3 text-sm"}, JSON.stringify(content)));
+  return details;
+}
+function renderNearby(data) {
+  _map.setView([data.subject.lat, data.subject.lon], 13);
+  L.marker([data.subject.lat, data.subject.lon]).addTo(_map)
+    .bindPopup(`Subject: ${data.pin}`).openPopup();
+  (data.nearby || []).forEach(f=>{
+    const popup = `${f.pin}<br>${f.class||""} ${f.property_use||""}<br>Sale: ${f.latest_sale_price||""}`;
+    L.marker([f.lat,f.lon]).addTo(_map).bindPopup(popup);
+  });
+}
+
+// Events
+$("#frontSearchBtn").addEventListener("click", ()=>{
+  const pin = $("#frontPinInput").value.trim();
+  if (!pin) return;
+  $("#frontPage").classList.add("hidden");
+  $("#resultsPage").classList.remove("hidden");
+  loadPin(pin);
+});
+$("#backBtn").addEventListener("click", ()=>{
+  $("#resultsPage").classList.add("hidden");
+  $("#frontPage").classList.remove("hidden");
+});
+$("#loadBtn").addEventListener("click", ()=>loadPin($("#pinInput").value.trim(),false));
+$("#freshBtn").addEventListener("click", ()=>loadPin($("#pinInput").value.trim(),true));
+$("#radiusSelect").addEventListener("change", ()=>loadPin($("#pinInput").value.trim(),false));
+
+initMaps();
+</script>
 </body>
 </html>
