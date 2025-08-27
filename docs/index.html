@@ -145,11 +145,10 @@ function renderGeneric(c) {
 }
 
 function renderSection(key,title,content,lazy=false,pin=null) {
-  const details=el("details",{className:"border rounded-xl"});
-  const summary=el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"},title);
-  details.appendChild(summary);
-  const body=el("div",{className:"px-4 py-3 text-sm"});
-  if(lazy && pin){
+  const details = el("details",{className:"border rounded-xl"});
+  details.appendChild(el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"},title));
+  const body = el("div",{className:"px-4 py-3 text-sm"});
+  if (lazy && pin) {
     body.textContent="Click to load…";
     details.addEventListener("toggle",async ()=>{
       if(details.open && body.textContent==="Click to load…"){
@@ -162,7 +161,7 @@ function renderSection(key,title,content,lazy=false,pin=null) {
           const renderer=SECTION_RENDERERS[key]||renderGeneric;
           body.appendChild(renderer(data));
         } catch(err){
-          body.textContent="Failed to load: "+err;
+          body.textContent="Failed: "+err;
         }
       }
     });
@@ -173,6 +172,7 @@ function renderSection(key,title,content,lazy=false,pin=null) {
   details.appendChild(body);
   return details;
 }
+
 
 // --- Maps ---
 let _map,_frontMap;
@@ -199,17 +199,18 @@ async function loadLatestCommercialSales() {
   } catch(err){ console.error("Latest sales failed:",err);}
 }
 
-async function loadPin(pin, fresh=false) {
+async function loadPin(pin) {
   $("#meta").textContent = "Loading…";
   $("#sections").innerHTML = "";
   $("#pinInput").value = pin;
-  setTimeout(() => _map.invalidateSize(), 200);
+  setTimeout(()=>_map.invalidateSize(),200);
 
-  // 🔹 STEP 1: Quick fetch
+  // 🚀 FAST LOAD
   const fastResp = await fetch(`/api/pin/${encodeURIComponent(pin)}/fast`);
   if (fastResp.ok) {
     const fastData = await fastResp.json();
     $("#meta").textContent = `PIN ${fastData.pin}`;
+
     if (fastData.ptax) {
       $("#sections").appendChild(renderSection("ptax", "PTAX (Quick)", fastData.ptax));
     }
@@ -219,23 +220,12 @@ async function loadPin(pin, fresh=false) {
     }
   }
 
-  // 🔹 STEP 2: Fire off the heavy request in background
-  fetch(`/api/pin/${encodeURIComponent(pin)}${fresh ? "?fresh=1" : ""}`)
-    .then(r => r.json())
-    .then(data => {
-      $("#meta").textContent = `PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
-      const sec = data.sections || {};
-
-      // Replace or add detailed sections
-      Object.entries(sec).forEach(([k,v])=>{
-        if (["ptax","nearby"].includes(k)) return; // skip, already loaded
-        $("#sections").appendChild(renderSection(k, k.replace(/_/g," "), v, true, pin));
-      });
-    })
-    .catch(err => {
-      console.error("Full load failed", err);
-    });
+  // 🚀 STUBS for other sections
+  ["assessor_profile","value_summary","permits","delinquent","ptab"].forEach(k=>{
+    $("#sections").appendChild(renderSection(k, k.replace(/_/g," "), null, true, pin));
+  });
 }
+
 
 // --- Events ---
 $("#frontSearchBtn").addEventListener("click",()=>{

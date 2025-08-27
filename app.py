@@ -167,6 +167,18 @@ def api_nearby_mini(pin: str, radius: float = Query(5.0, ge=0), limit: int = Que
 
     return {"pin": normalize_pin(pin), "subject": subject, "nearby": nearby, "tax_bill": tax}
 
+@app.get("/api/pin/{pin}/{section}")
+def api_pin_section(pin: str, section: str):
+    from orchestrator import get_pin_summary
+    _must_pin(pin)
+
+    # only pull that section
+    data = get_pin_summary(pin, fresh=False)
+    sec = (data.get("sections") or {}).get(section)
+    if sec is None:
+        raise HTTPException(status_code=404, detail=f"No such section: {section}")
+    return sec
+
 
 # ================== Latest Commercial Sales (Illinois Socrata) ==================
 @app.get("/api/latest-commercial-sales")

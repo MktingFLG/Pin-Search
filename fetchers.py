@@ -1912,7 +1912,7 @@ def fetch_ptax_main_by_declaration_ids(declaration_ids: list[str], dataset_id: s
     try:
         rows = _socrata_get(dataset_id, {
             "$where": f"declaration_id IN {incl}",
-            "$order": "date_recorded DESC",
+            "$order": "line_4_instrument_date DESC",
             "$limit": "5000",
         })
         return {"_status": "ok", "normalized": {"rows": rows},
@@ -2010,7 +2010,7 @@ def fetch_ptax_main(pin: str, dataset_id: str = "it54-y4c6") -> dict:
     try:
         rows = _socrata_get(dataset_id, {
             "$where": f"line_1_primary_pin='{dashed}'",
-            "$order": "date_recorded DESC",
+            "$order": "line_4_instrument_date DESC",
             "$limit": "2000",
         })
         return {
@@ -2036,7 +2036,7 @@ def fetch_ptax_main_multi(pins: list[str], dataset_id: str = "it54-y4c6") -> dic
     try:
         rows = _socrata_get(dataset_id, {
             "$where": f"line_1_primary_pin IN {incl}",
-            "$order": "date_recorded DESC",
+            "$order": "line_4_instrument_date DESC",
             "$limit": "5000",
         })
         return {"_status": "ok", "normalized": {"rows": rows or []},
@@ -2074,7 +2074,7 @@ def merge_ptax_by_declaration(ptax_main_rows, buyers_rows, sellers_rows, addlpin
     def _pdate(s):
         try: return _dt.fromisoformat((s or "").replace("Z",""))
         except Exception: return _dt.min
-    main_sorted = sorted(ptax_main_rows or [], key=lambda r: _pdate(r.get("date_recorded")), reverse=True)
+    main_sorted = sorted(ptax_main_rows or [], key=lambda r: _pdate(r.get("line_4_instrument_date")), reverse=True)
 
     for r in main_sorted:
         did = r.get("declaration_id")
@@ -2096,7 +2096,7 @@ def merge_ptax_by_declaration(ptax_main_rows, buyers_rows, sellers_rows, addlpin
             except Exception: pass
         return {
             "declaration_id": m.get("declaration_id"),
-            "date_recorded": m.get("date_recorded"),
+            "line_4_instrument_date": m.get("line_4_instrument_date"),
             "primary_pin": primary_pin,
             "purchase_price": m.get("purchase_price"),
             "grantor": m.get("grantor_name"),
@@ -3757,8 +3757,8 @@ def fetch_latest_sales(limit: int = 50):
 
     try:
         r = requests.get(url, headers=headers, params={
-            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration,line_1_county",
-            "$order": "date_recorded DESC",
+            "$select": "declaration_id,line_4_instrument_date,line_1_primary_pin,full_address,line_13_net_consideration,line_1_county",
+            "$order": "line_4_instrument_date DESC",
             "$limit": str(limit),
         }, timeout=15)
         r.raise_for_status()
@@ -3778,7 +3778,7 @@ def fetch_latest_sales(limit: int = 50):
                     pass
             enriched.append({
                 "declaration_id": row.get("declaration_id"),
-                "date_recorded": row.get("date_recorded"),
+                "line_4_instrument_date": row.get("line_4_instrument_date"),
                 "pin": pin,
                 "address": row.get("full_address"),
                 "sale_price": row.get("line_13_net_consideration"),
