@@ -212,20 +212,32 @@ async function loadPin(pin,fresh=false) {
   $("#meta").textContent=`PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
   const sec=data.sections||{};
 
-  // Fast summary sections (immediate)
-  if(sec.property_info) $("#sections").appendChild(renderSection("property_info","Property Info",sec.property_info));
-  if(sec.value_summary) $("#sections").appendChild(renderSection("value_summary","Assessor Values",sec.value_summary));
-  if(sec.sales) $("#sections").appendChild(renderSection("sales","Sales",sec.sales));
-  if(sec.nearby){
+  // 🔹 Show summaries immediately if present
+  if(sec.property_info && Object.keys(sec.property_info).length) {
+    $("#sections").appendChild(renderSection("property_info","Property Info",sec.property_info));
+  }
+  if(sec.value_summary && sec.value_summary.length) {
+    $("#sections").appendChild(renderSection("value_summary","Assessor Values",sec.value_summary));
+  }
+  if(sec.sales && (sec.sales["Latest Sale Date"] || sec.sales.History?.length)) {
+    $("#sections").appendChild(renderSection("sales","Sales",sec.sales));
+  }
+  if(sec.nearby && sec.nearby.center) {
     $("#sections").appendChild(renderSection("nearby","Nearby Properties",sec.nearby));
     renderNearbyOnMap(sec.nearby, sec.sales);
   }
 
-  // Lazy-load sections: only stub now
-  ["ptax","permits","permits_ccao","delinquent","ptab"].forEach(k=>{
+  // 🔹 Everything else goes lazy
+  const lazySections = [
+    "ptax","permits","permits_ccao","delinquent","ptab",
+    "recorder_of_deeds","assessor_exemptions","assessor_maildetail",
+    "tax_bill","hie_additions"
+  ];
+  lazySections.forEach(k=>{
     $("#sections").appendChild(renderSection(k,k.replace(/_/g," "),{},true,pin));
   });
 }
+
 
 // --- Events ---
 $("#frontSearchBtn").addEventListener("click",()=>{
