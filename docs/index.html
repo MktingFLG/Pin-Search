@@ -181,8 +181,7 @@ async function loadLatestCommercialSales() {
   }
 }
 
-// run once when page loads
-loadLatestCommercialSales();
+
 
 
 async function loadPin(pin,fresh=false) {
@@ -266,6 +265,8 @@ const SubjectIcon = new L.Icon({
 });
 
 initMaps();
+// run once when page loads
+loadLatestCommercialSales();
 
 function renderNearbyOnMap(nearby, sales) {
   if (!_map) return;
