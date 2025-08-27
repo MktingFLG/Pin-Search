@@ -199,42 +199,43 @@ async function loadLatestCommercialSales() {
   } catch(err){ console.error("Latest sales failed:",err);}
 }
 
-async function loadPin(pin,fresh=false) {
-  $("#meta").textContent="Loading…";
-  $("#sections").innerHTML="";
-  $("#pinInput").value=pin;
-  setTimeout(()=>_map.invalidateSize(),200);
+async function loadPin(pin, fresh=false) {
+  $("#meta").textContent = "Loading…";
+  $("#sections").innerHTML = "";
+  $("#pinInput").value = pin;
+  setTimeout(() => _map.invalidateSize(), 200);
 
-  const resp = await fetch(`/api/pin/${encodeURIComponent(pin)}${fresh?"?fresh=1":""}`);
-  if(!resp.ok){ $("#meta").textContent=`API error: ${resp.status}`; return; }
-  const data=await resp.json();
-
-  $("#meta").textContent=`PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
-  const sec=data.sections||{};
-
-  // ✅ Immediate summaries
-  if(sec.property_info) {
-    $("#sections").appendChild(renderSection("property_info","Property Info",sec.property_info));
-  }
-  if(sec.value_summary && sec.value_summary.length) {
-    $("#sections").appendChild(renderSection("value_summary","Assessor Values",sec.value_summary));
-  }
-  if(sec.sales) {
-    $("#sections").appendChild(renderSection("sales","Sales",sec.sales));
-  }
-  if(sec.nearby) {
-    $("#sections").appendChild(renderSection("nearby","Nearby Properties",sec.nearby));
-    renderNearbyOnMap(sec.nearby, sec.sales);
+  // 🔹 STEP 1: Quick fetch
+  const fastResp = await fetch(`/api/pin/${encodeURIComponent(pin)}/fast`);
+  if (fastResp.ok) {
+    const fastData = await fastResp.json();
+    $("#meta").textContent = `PIN ${fastData.pin}`;
+    if (fastData.ptax) {
+      $("#sections").appendChild(renderSection("ptax", "PTAX (Quick)", fastData.ptax));
+    }
+    if (fastData.nearby) {
+      $("#sections").appendChild(renderSection("nearby", "Nearby Properties", fastData.nearby));
+      renderNearbyOnMap(fastData.nearby, null);
+    }
   }
 
-  // ✅ Everything else becomes expandable stubs
-  Object.entries(sec).forEach(([k,v])=>{
-    if(["property_info","value_summary","sales","nearby"].includes(k)) return;
-    $("#sections").appendChild(renderSection(k,k.replace(/_/g," "),v));
-  });
+  // 🔹 STEP 2: Fire off the heavy request in background
+  fetch(`/api/pin/${encodeURIComponent(pin)}${fresh ? "?fresh=1" : ""}`)
+    .then(r => r.json())
+    .then(data => {
+      $("#meta").textContent = `PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
+      const sec = data.sections || {};
+
+      // Replace or add detailed sections
+      Object.entries(sec).forEach(([k,v])=>{
+        if (["ptax","nearby"].includes(k)) return; // skip, already loaded
+        $("#sections").appendChild(renderSection(k, k.replace(/_/g," "), v, true, pin));
+      });
+    })
+    .catch(err => {
+      console.error("Full load failed", err);
+    });
 }
-
-
 
 // --- Events ---
 $("#frontSearchBtn").addEventListener("click",()=>{
