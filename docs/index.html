@@ -104,14 +104,22 @@ const SECTION_RENDERERS = {
   sales: (c)=>{
     const wrap=el("div",{className:"space-y-2"});
     if(c?.["Latest Sale Date"]||c?.["Latest Sale Price"]) {
-      wrap.appendChild(renderKeyValues({
-        "Latest Sale Date": c["Latest Sale Date"],
-        "Latest Sale Price": c["Latest Sale Price"],
-      }));
+      // short summary
+      wrap.appendChild(el("div",{className:"font-semibold text-gray-800"},
+        `Latest Sale: ${c["Latest Sale Date"]||""} • ${c["Latest Sale Price"]||""}`));
     }
-    if(Array.isArray(c?.History)) wrap.appendChild(renderRowsAsTable(c.History));
+    if(Array.isArray(c?.History) && c.History.length) {
+      const details=el("details",{className:"border rounded"});
+      details.appendChild(el("summary",{className:"cursor-pointer px-2 py-1 bg-gray-50 font-medium"},
+        "Full Sales History"));
+      const body=el("div",{className:"px-2 py-1 text-sm"});
+      body.appendChild(renderRowsAsTable(c.History));
+      details.appendChild(body);
+      wrap.appendChild(details);
+    }
     return wrap;
   },
+
   permits: (c)=>renderRowsAsTable(c?.rows||[]),
   permits_ccao: (c)=>renderRowsAsTable(c?.rows||[]),
   delinquent: (c)=>renderRowsAsTable(c?.data||[]),
@@ -147,8 +155,40 @@ function initMaps() {
 }
 
 // --- Main loader ---
+
+async function loadLatestCommercialSales() {
+  if (!_frontMap) return;
+  try {
+    const resp = await fetch(`/api/latest-commercial-sales`);
+    if (!resp.ok) throw new Error("API error " + resp.status);
+    const data = await resp.json();
+    if (data._status !== "ok") throw new Error(data.error || "No data");
+
+    (data.sales || []).forEach(s => {
+      if (!s.lat || !s.lon) return;
+      const html = `
+        <div class="text-sm">
+          <div class="font-semibold">${s.address || ""}</div>
+          <div>${s.class || ""} ${s.use_description || ""}</div>
+          <div>${s.sale_date || ""} • ${s.sale_price || ""}</div>
+        </div>`;
+      L.marker([s.lat, s.lon], { icon: NearbyIcon })
+        .addTo(_frontMap)
+        .bindPopup(html);
+    });
+  } catch (err) {
+    console.error("Latest commercial sales load failed:", err);
+  }
+}
+
+// run once when page loads
+loadLatestCommercialSales();
+
+
 async function loadPin(pin,fresh=false) {
-  $("#meta").textContent="Loading…"; $("#sections").innerHTML=""; $("#pinInput").value=pin;
+  $("#meta").textContent="Loading…"; 
+  $("#sections").innerHTML=""; 
+  $("#pinInput").value=pin;
   setTimeout(()=>_map.invalidateSize(),200);
 
   const url = `/api/pin/${encodeURIComponent(pin)}${fresh?"?fresh=1":""}`;
@@ -162,24 +202,36 @@ async function loadPin(pin,fresh=false) {
   $("#meta").textContent=`PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
   const sec=data.sections||{};
 
-  // show first 3 sections
-  if(sec.sales) $("#sections").appendChild(renderSection("sales","Sales",sec.sales));
-  if(sec.value_summary) $("#sections").appendChild(renderSection("value_summary","Assessment Values",sec.value_summary));
-  if(sec.assessor_profile) $("#sections").appendChild(renderSection("assessor_profile","Assessor Profile",sec.assessor_profile));
-  // Nearby (map + table)
+  // --- Step 1: PTAX
+  if(sec.ptax_main) {
+    $("#sections").appendChild(renderSection("ptax","PTAX Data",sec.ptax_main));
+  }
+
+  // --- Step 2: Assessor Profile
+  if(sec.assessor_profile) {
+    $("#sections").appendChild(renderSection("assessor_profile","Assessor Profile",sec.assessor_profile));
+  }
+
+  // --- Step 3: Assessor Values
+  if(sec.assessor_values) {
+    $("#sections").appendChild(renderSection("assessor_values","Assessor Values",sec.assessor_values));
+  }
+
+  // --- Step 4: Map + Nearby
   if (sec.nearby) {
     $("#sections").appendChild(renderSection("nearby", "Nearby Properties", sec.nearby));
     renderNearbyOnMap(sec.nearby, sec.sales);
   }
 
-  // defer the rest
+  // --- Step 5: Defer the rest
   setTimeout(()=>{
     Object.entries(sec).forEach(([k,v])=>{
-      if(["sales","value_summary","assessor_profile"].includes(k)) return;
+      if(["ptax_main","assessor_profile","assessor_values","nearby"].includes(k)) return;
       $("#sections").appendChild(renderSection(k,k.replace(/_/g," "),v));
     });
   },100);
 }
+
 
 
 // --- Events ---
@@ -233,14 +285,15 @@ function renderNearbyOnMap(nearby, sales) {
   const subjPopupHtml = `
     <div class="text-sm">
       <div class="font-semibold">${subj.pin_dash || subj.pin || ""}</div>
-      <div>${subj.property_use || ""} ${subj.class ? "(" + subj.class + ")" : ""}</div>
+      <div>${subj.class || ""} ${subj.property_use || ""}</div>
       ${subj.address ? `<div>${subj.address}</div>` : ""}
-      ${sales?.["Latest Sale Date"] || sales?.["Latest Sale Price"] ? 
+      ${subj.latest_sale_date || subj.latest_sale_price ? 
         `<div class="mt-2 p-2 border rounded bg-gray-50">
           <div class="font-semibold">Latest Sale</div>
-          <div>${sales["Latest Sale Date"] || ""} • ${sales["Latest Sale Price"] || ""}</div>
+          <div>${subj.latest_sale_date || ""} • ${subj.latest_sale_price || ""}</div>
         </div>` : ""}
     </div>`;
+
   L.marker(c, { icon: SubjectIcon, title: subj.pin_dash }).addTo(_map).bindPopup(subjPopupHtml).openPopup();
 
   // Nearby features
@@ -249,10 +302,13 @@ function renderNearbyOnMap(nearby, sales) {
     const html = `
       <div class="text-sm">
         <div class="font-semibold">${f.pin || ""}</div>
-        <div>${f.property_use || ""} ${f.class ? "(" + f.class + ")" : ""}</div>
+        <div>${f.class || ""} ${f.property_use || ""}</div>
         ${f.address ? `<div>${f.address}</div>` : ""}
+        ${f.latest_sale_date || f.latest_sale_price ? 
+          `<div>${f.latest_sale_date || ""} • ${f.latest_sale_price || ""}</div>` : ""}
         ${f.distance_mi != null ? `<div>${f.distance_mi} mi away</div>` : ""}
       </div>`;
+
     L.marker([f.lat, f.lon], { icon: NearbyIcon, title: f.pin }).addTo(_map).bindPopup(html);
   });
 }
