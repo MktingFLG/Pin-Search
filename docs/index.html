@@ -67,61 +67,63 @@
 <script>
 const $ = sel => document.querySelector(sel);
 const el = (tag, props={}, ...kids) => {
-  const node = document.createElement(tag);
-  Object.assign(node, props);
-  kids.flat().forEach(k => node.appendChild(k.nodeType ? k : document.createTextNode(String(k))));
+  const node=document.createElement(tag); Object.assign(node,props);
+  kids.flat().forEach(k=>node.appendChild(k.nodeType?k:document.createTextNode(String(k))));
   return node;
 };
 
 // --- Render helpers ---
 function renderKeyValues(obj) {
-  const dl = el("dl",{className:"grid grid-cols-2 gap-x-4 gap-y-1"});
-  Object.entries(obj||{}).forEach(([k,v])=>{
+  if (!obj || !Object.keys(obj).length) return el("div",{},"No data");
+  const dl=el("dl",{className:"grid grid-cols-2 gap-x-4 gap-y-1"});
+  Object.entries(obj).forEach(([k,v])=>{
     dl.appendChild(el("dt",{className:"font-semibold"},k));
     dl.appendChild(el("dd",{className:"text-gray-700"},v??""));
   });
   return dl;
 }
 function renderRowsAsTable(rows) {
-  if (!rows || !rows.length) return el("div",{},"No data");
-  const cols = Object.keys(rows[0]||{});
-  const table = el("table",{className:"w-full text-sm border-collapse"});
-  const thead = el("thead");
+  if (!rows || !rows.length) return el("div",{},"No rows");
+  const cols=Object.keys(rows[0]||{});
+  const table=el("table",{className:"w-full text-sm border-collapse"});
+  const thead=el("thead");
   thead.appendChild(el("tr",{},...cols.map(c=>el("th",{className:"text-left border-b px-2 py-1 font-semibold"},c))));
   table.appendChild(thead);
-  const tbody = el("tbody");
-  rows.forEach(r=>{
-    tbody.appendChild(el("tr",{},...cols.map(c=>el("td",{className:"border-b px-2 py-1"},r[c]??""))));
-  });
+  const tbody=el("tbody");
+  rows.forEach(r=>tbody.appendChild(el("tr",{},...cols.map(c=>el("td",{className:"border-b px-2 py-1"},r[c]??"")))));
   table.appendChild(tbody);
   return table;
 }
 const SECTION_RENDERERS = {
   assessor_profile: renderKeyValues,
-  assessor_values: renderKeyValues,
+  value_summary: renderRowsAsTable,
   sales: (c)=>{
-    const wrap = el("div",{className:"space-y-2"});
-    if (c?.["Latest Sale Date"] || c?.["Latest Sale Price"]) {
+    const wrap=el("div",{className:"space-y-2"});
+    if(c?.["Latest Sale Date"]||c?.["Latest Sale Price"]) {
       wrap.appendChild(renderKeyValues({
         "Latest Sale Date": c["Latest Sale Date"],
         "Latest Sale Price": c["Latest Sale Price"],
       }));
     }
-    if (Array.isArray(c?.History)) wrap.appendChild(renderRowsAsTable(c.History));
+    if(Array.isArray(c?.History)) wrap.appendChild(renderRowsAsTable(c.History));
     return wrap;
   },
+  permits: (c)=>renderRowsAsTable(c?.rows||[]),
+  permits_ccao: (c)=>renderRowsAsTable(c?.rows||[]),
+  delinquent: (c)=>renderRowsAsTable(c?.data||[]),
+  ptab: (c)=>renderRowsAsTable(c||[]),
   nearby: (c)=>renderRowsAsTable(c?.features||[])
 };
-function renderGeneric(content) {
-  if (Array.isArray(content)) return renderRowsAsTable(content);
-  if (content && typeof content==="object") return renderKeyValues(content);
-  return el("div",{},content??"");
+function renderGeneric(c) {
+  if(Array.isArray(c)) return renderRowsAsTable(c);
+  if(c && typeof c==="object") return renderKeyValues(c);
+  return el("div",{},c??"");
 }
 function renderSection(key,title,content) {
-  const details = el("details",{className:"border rounded-xl"});
+  const details=el("details",{className:"border rounded-xl"});
   details.appendChild(el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"},title));
-  const body = el("div",{className:"px-4 py-3 text-sm"});
-  const renderer = SECTION_RENDERERS[key]||renderGeneric;
+  const body=el("div",{className:"px-4 py-3 text-sm"});
+  const renderer=SECTION_RENDERERS[key]||renderGeneric;
   body.appendChild(renderer(content));
   details.appendChild(body);
   return details;
@@ -130,59 +132,39 @@ function renderSection(key,title,content) {
 // --- Maps ---
 let _map,_frontMap;
 function initMaps() {
-  if (!_frontMap) {
-    _frontMap = L.map("frontMap").setView([41.88,-87.63],11);
+  if(!_frontMap) {
+    _frontMap=L.map("frontMap").setView([41.88,-87.63],11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(_frontMap);
   }
-  if (!_map) {
-    _map = L.map("map").setView([41.88,-87.63],11);
+  if(!_map) {
+    _map=L.map("map").setView([41.88,-87.63],11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(_map);
   }
 }
 
-// --- Core loading ---
+// --- Main loader ---
 async function loadPin(pin,fresh=false) {
   $("#meta").textContent="Loading…"; $("#sections").innerHTML=""; $("#pinInput").value=pin;
-  setTimeout(()=>_map.invalidateSize(),200); // fix Leaflet sizing
+  setTimeout(()=>_map.invalidateSize(),200);
 
-  // Core sections
-  const profile = await (await fetch(`/assessor/profile?pin=${pin}`)).json();
-  $("#sections").appendChild(renderSection("assessor_profile","Assessor Profile",profile));
-  const values = await (await fetch(`/assessor/values?pin=${pin}`)).json();
-  $("#sections").appendChild(renderSection("assessor_values","Assessment Values",values));
-  const sales = await (await fetch(`/sales?pin=${pin}`)).json();
-  $("#sections").appendChild(renderSection("sales","Sales",sales));
+  const url=`/api/pin/${pin}${fresh?"?fresh=1":""}`;
+  const data=await (await fetch(url)).json();
 
-  // Nearby
-  const radius=$("#radiusSelect").value;
-  fetch(`/api/nearby-mini/${pin}?radius=${radius}`).then(r=>r.json()).then(d=>{
-    $("#sections").appendChild(renderSection("nearby","Nearby Properties",d));
-    if (d?.subject?.lat && d?.subject?.lon) {
-      _map.setView([d.subject.lat,d.subject.lon],13);
-      L.marker([d.subject.lat,d.subject.lon]).addTo(_map).bindPopup(`Subject: ${pin}`).openPopup();
-    }
-  });
+  $("#meta").textContent=`PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
+  const sec=data.sections||{};
 
-  // Lazy sections
-  addLazySection("Permits (CCAO)",`/ccao/permits?pin=${pin}`,"permits_ccao");
-  addLazySection("Delinquent Taxes",`/delinquent?pin=${pin}`,"delinquent");
-  addLazySection("PTAB",`/ptab/by-pin?pin=${pin}`,"ptab");
+  // --- Render first: sales, values, profile ---
+  if(sec.sales) $("#sections").appendChild(renderSection("sales","Sales",sec.sales));
+  if(sec.value_summary) $("#sections").appendChild(renderSection("value_summary","Assessment Values",sec.value_summary));
+  if(sec.assessor_profile) $("#sections").appendChild(renderSection("assessor_profile","Assessor Profile",sec.assessor_profile));
 
-  $("#meta").textContent=`PIN ${pin} • Core sections loaded`;
-}
-function addLazySection(title,url,key) {
-  const details=el("details",{className:"border rounded-xl"});
-  details.appendChild(el("summary",{className:"cursor-pointer px-4 py-2 font-medium bg-gray-100 rounded-t-xl"},title));
-  const body=el("div",{className:"px-4 py-3 text-sm"},"Click to load…");
-  details.appendChild(body);
-  details.addEventListener("toggle",async()=>{
-    if(details.open && body.textContent==="Click to load…"){
-      const d=await (await fetch(url)).json();
-      body.innerHTML=""; const renderer=SECTION_RENDERERS[key]||renderGeneric;
-      body.appendChild(renderer(d));
-    }
-  });
-  $("#sections").appendChild(details);
+  // --- Render rest later ---
+  setTimeout(()=>{
+    Object.entries(sec).forEach(([k,v])=>{
+      if(["sales","value_summary","assessor_profile"].includes(k)) return;
+      $("#sections").appendChild(renderSection(k,k.replace(/_/g," "),v));
+    });
+  },100); // defer a bit
 }
 
 // --- Events ---
