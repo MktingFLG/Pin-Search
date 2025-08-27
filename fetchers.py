@@ -3760,7 +3760,8 @@ def fetch_latest_sales(limit: int = 50):
         headers["X-App-Token"] = APP_TOKEN
     try:
         r = requests.get(url, headers=headers, params={
-            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration",
+            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_1_county,line_13_net_consideration",
+            "$where": "line_1_county='COOK'",
             "$order": "date_recorded DESC",
             "$limit": str(limit),
         }, timeout=15)
@@ -3768,6 +3769,7 @@ def fetch_latest_sales(limit: int = 50):
         return {"_status": "ok", "rows": r.json()}
     except Exception as e:
         return {"_status": "error", "error": str(e), "rows": []}
+
 
 
 
