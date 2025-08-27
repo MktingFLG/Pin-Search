@@ -174,11 +174,11 @@ def api_latest_commercial_sales(limit: int = 200):
     from fetchers import fetch_pin_geom_arcgis
     try:
         rows = _socrata_get("it54-y4c6", {
-            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_1_county,line_13_net_consideration",
-            "$where": "line_1_county='COOK'",
+            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration",
             "$order": "date_recorded DESC",
             "$limit": str(limit),
         })
+
 
         sales = []
         seen = set()
