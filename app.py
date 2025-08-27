@@ -196,12 +196,10 @@ def api_pin_fast(pin: str):
 
 @app.get("/api/latest-commercial-sales")
 def api_latest_commercial_sales(limit: int = 200):
-    from fetchers import fetch_assessor_profile
+    from fetchers import fetch_assessor_profile, fetch_pin_geom_arcgis
     try:
-        # ✅ Pull only fields that exist (note: use "location" instead of latitude/longitude)
         rows = _socrata_get("it54-y4c6", {
-            "$select": "declaration_id,date_recorded,line_1_primary_pin,"
-                       "line_7_property_advertised,line_13_net_consideration,location",
+            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration",
             "$order": "date_recorded DESC",
             "$limit": str(limit),
         })
@@ -214,27 +212,28 @@ def api_latest_commercial_sales(limit: int = 200):
                 continue
             seen.add(pin)
 
-            # Assessor lookup (class + property_use)
+            # assessor profile (class/use)
             assessor = {}
             try:
                 assessor = fetch_assessor_profile(pin).get("normalized", {})
             except Exception:
                 pass
 
-            # Extract lat/lon from the nested "location"
+            # geocode PIN via ArcGIS (center lat/lon)
             lat, lon = None, None
-            if r.get("location"):
-                try:
-                    lat = float(r["location"]["latitude"])
-                    lon = float(r["location"]["longitude"])
-                except Exception:
-                    pass
+            try:
+                geom = fetch_pin_geom_arcgis(pin).get("normalized", {})
+                if geom and "center" in geom:
+                    lat = geom["center"].get("lat")
+                    lon = geom["center"].get("lon")
+            except Exception:
+                pass
 
             sales.append({
                 "declaration_id": r.get("declaration_id"),
                 "date_recorded": r.get("date_recorded"),
                 "pin": pin,
-                "address": r.get("line_7_property_advertised"),
+                "address": r.get("full_address"),
                 "sale_price": r.get("line_13_net_consideration"),
                 "class": assessor.get("class"),
                 "use_description": assessor.get("property_use"),
@@ -246,6 +245,9 @@ def api_latest_commercial_sales(limit: int = 200):
 
     except Exception as e:
         return {"_status": "error", "error": str(e), "sales": []}
+
+
+
 
 
 
