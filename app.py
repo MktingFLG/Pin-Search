@@ -19,7 +19,7 @@ except Exception:
 
 from utils import undashed_pin, normalize_pin
 import fetchers   
-from fetchers import _socrata_get
+from fetchers import fetch_latest_sales
 
 
 
@@ -171,54 +171,11 @@ def api_nearby_mini(pin: str, radius: float = Query(5.0, ge=0), limit: int = Que
 # ================== Latest Commercial Sales (Illinois Socrata) ==================
 @app.get("/api/latest-commercial-sales")
 def api_latest_commercial_sales(limit: int = 200):
-    try:
-        # Use the Illinois PTAX dataset
-        rows = _socrata_get("it54-y4c6", {
-            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration",
-            "$order": "date_recorded DESC",
-            "$limit": str(limit),
-        })
+    data = fetch_latest_sales(limit)
+    if data["_status"] != "ok":
+        return data
+    return {"_status": "ok", "sales": data["rows"]}
 
-        sales = []
-        seen = set()
-        for r in rows:
-            pin = r.get("line_1_primary_pin")
-            if not pin or pin in seen:
-                continue
-            seen.add(pin)
-
-            # optional: enrich with assessor profile & map center
-            assessor = {}
-            try:
-                assessor = fetchers.fetch_assessor_profile(pin).get("normalized", {})
-            except Exception:
-                pass
-
-            lat, lon = None, None
-            try:
-                geom = fetchers.fetch_pin_geom_arcgis(pin).get("normalized", {})
-                if geom and "center" in geom:
-                    lat = geom["center"].get("lat")
-                    lon = geom["center"].get("lon")
-            except Exception:
-                pass
-
-            sales.append({
-                "declaration_id": r.get("declaration_id"),
-                "date_recorded": r.get("date_recorded"),
-                "pin": pin,
-                "address": r.get("full_address"),
-                "sale_price": r.get("line_13_net_consideration"),
-                "class": assessor.get("PIN Info • Class"),
-                "use_description": assessor.get("Property Use"),
-                "lat": lat,
-                "lon": lon,
-            })
-
-        return {"_status": "ok", "sales": sales}
-
-    except Exception as e:
-        return {"_status": "error", "error": str(e), "sales": []}
 
 
 

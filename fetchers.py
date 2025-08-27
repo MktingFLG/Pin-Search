@@ -3748,32 +3748,27 @@ def fetch_tax_bill_latest(pin: str) -> dict:
 #===================================================================================================
 
 
-def fetch_latest_commercial_sales(limit: int = 200, dataset_id: str = "it54-y4c6") -> dict:
-    """
-    Fetch most recent commercial PTAX sales.
-    Uses PTAX main dataset (it54-y4c6). Filters out residential.
-    """
+import requests, os
+
+ILLINOIS_BASE = "https://data.illinois.gov/resource"
+APP_TOKEN = os.getenv("ILLINOIS_APP_TOKEN", "")
+
+def fetch_latest_sales(limit: int = 50):
+    url = f"{ILLINOIS_BASE}/it54-y4c6.json"
+    headers = {"User-Agent": "PIN-Tool/1.0"}
+    if APP_TOKEN:
+        headers["X-App-Token"] = APP_TOKEN
     try:
-        rows = _socrata_get(dataset_id, {
-            "$where": "class NOT LIKE '2%'",   # exclude residential (class 2xx)
+        r = requests.get(url, headers=headers, params={
+            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration",
             "$order": "date_recorded DESC",
             "$limit": str(limit),
-        })
-        sales = []
-        for r in rows:
-            sales.append({
-                "pin": r.get("line_1_primary_pin"),
-                "address": r.get("property_location") or "",
-                "class": r.get("class"),
-                "use_description": r.get("property_class_description") or "",
-                "sale_date": r.get("date_recorded"),
-                "sale_price": r.get("purchase_price"),
-                "lat": float(r["latitude"]) if r.get("latitude") else None,
-                "lon": float(r["longitude"]) if r.get("longitude") else None,
-            })
-        return {"_status": "ok", "sales": sales}
+        }, timeout=15)
+        r.raise_for_status()
+        return {"_status": "ok", "rows": r.json()}
     except Exception as e:
-        return {"_status": "error", "error": str(e), "sales": []}
+        return {"_status": "error", "error": str(e), "rows": []}
+
 
 
 
