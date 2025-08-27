@@ -12,17 +12,14 @@
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin="">
   </script>
 
   <style>
-    /* tiny tweaks for <details> */
     details > summary::marker { display: none; }
     details > summary::-webkit-details-marker { display: none; }
   </style>
@@ -42,11 +39,10 @@
         </div>
       </div>
 
-      <!-- Status / diagnostics -->
       <div id="diag" class="text-xs text-gray-500 mb-2 h-4"></div>
       <div id="meta" class="text-xs text-gray-500 mb-4"></div>
 
-      <!-- Map card -->
+      <!-- Map -->
       <div class="border rounded-2xl mb-4">
         <div class="px-4 py-2 font-medium bg-gray-100 rounded-t-2xl">Map</div>
         <div class="px-4 py-3">
@@ -63,13 +59,9 @@
   </main>
 
   <script>
-    // =========================
-    // 1) CONFIG (easy to edit)
-    // =========================
-    const API_BASE = ""; // if API is elsewhere, e.g. "http://127.0.0.1:5000"
+    const API_BASE = "";
     const SECTION_TITLES = {
       property_info: "Property Information",
-      assessed_market_values: "Assessed & Market Values (Latest 3 Years)",
       value_summary: "Value Summary (Raw)",
       assessor_profile: "Assessor Profile",
       assessor_maildetail: "Assessor Mailing Detail",
@@ -96,21 +88,10 @@
       links: "External Links",
       tax_bill: "Tax Bill",
     };
-
-    // Optional: force an order for common sections; others follow.
     const SECTION_ORDER = [
-      "property_info",
-      "tax_bill",
-      "sales",
-      "permits",
-      "nearby",
-      "links",
-      // add any others you want to see near the top...
+      "property_info", "tax_bill", "sales", "permits", "nearby", "links"
     ];
 
-    // =========================
-    // 2) UTILITIES
-    // =========================
     const $ = sel => document.querySelector(sel);
     const el = (tag, props = {}, ...kids) => {
       const node = document.createElement(tag);
@@ -122,46 +103,6 @@
       return node;
     };
 
-    function getParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name) || "";
-    }
-
-    function setParam(name, value) {
-      const url = new URL(window.location.href);
-      if (value) url.searchParams.set(name, value); else url.searchParams.delete(name);
-      history.replaceState(null, "", url.toString());
-    }
-
-    async function fetchPin(pin, fresh=false) {
-      const url = `${API_BASE}/api/pin/${encodeURIComponent(pin)}${fresh ? "?fresh=1" : ""}`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`API error: ${r.status}`);
-      return await r.json();
-    }
-
-    function renderSection(key, title, content) {
-      const details = el("details", { className: "border rounded-xl" });
-      const sum = el("summary", {
-        className: "cursor-pointer list-none px-4 py-2 font-medium bg-gray-100 rounded-t-xl"
-      }, title);
-      const body = el("div", { className: "px-4 py-3 text-sm" });
-
-      try {
-        const renderer = SECTION_RENDERERS[key] || renderGeneric;
-        body.appendChild(renderer(content));
-      } catch (err) {
-        console.error(`Renderer error in section ${key}:`, err);
-        body.appendChild(el("div", { className: "text-red-600" },
-          `⚠️ Failed to render section (${err.message})`));
-      }
-
-      details.appendChild(sum);
-      details.appendChild(body);
-      return details; 
-    }
-
-
     function renderKeyValues(obj) {
       const dl = el("dl");
       Object.entries(obj || {}).forEach(([k, v]) => {
@@ -171,360 +112,251 @@
       return dl;
     }
 
-    // =========================
-    // 3) CUSTOM RENDERERS (plug & play)
-    // =========================
-    // Provide a function per section key when you want a custom view.
+    function renderRowsAsTable(rows) {
+      if (!rows || !rows.length) return document.createTextNode("No data");
+      const allCols = new Set();
+      rows.forEach(r => Object.keys(r || {}).forEach(k => allCols.add(k)));
+      const cols = Array.from(allCols);
+      const table = el("table", { className: "w-full text-sm border-collapse" });
+      const thead = el("thead");
+      const thr = el("tr");
+      cols.forEach(c => thr.appendChild(el("th", { className: "text-left border-b px-2 py-1 font-semibold" }, c)));
+      thead.appendChild(thr);
+      table.appendChild(thead);
+      const tbody = el("tbody");
+      rows.forEach(r => {
+        const tr = el("tr");
+        cols.forEach(c => tr.appendChild(el("td", { className: "border-b px-2 py-1 align-top" }, r?.[c] ?? "")));
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      return table;
+    }
+
+    // --- Custom renderers ---
     const SECTION_RENDERERS = {
-  links: (content) => {
-    const box = el("div", { className: "space-y-1" });
-    Object.entries(content || {}).forEach(([label, href]) => {
-      if (!href) return;
-      box.appendChild(
-        el("div", {},
-          el("a", { href, target: "_blank", rel: "noopener", className: "text-blue-700 underline" }, label)
-        )
-      );
-    });
-    return box;
-  },
+      links: (content) => {
+        const box = el("div", { className: "space-y-1" });
+        Object.entries(content || {}).forEach(([label, href]) => {
+          if (!href) return;
+          box.appendChild(el("div", {}, el("a", { href, target: "_blank", rel: "noopener", className: "text-blue-700 underline" }, label)));
+        });
+        return box;
+      },
+      sales: (content) => {
+        const wrap = el("div", { className: "space-y-3" });
+        if (content?.["Latest Sale Date"] || content?.["Latest Sale Price"]) {
+          wrap.appendChild(renderKeyValues({
+            "Latest Sale Date": content["Latest Sale Date"],
+            "Latest Sale Price": content["Latest Sale Price"],
+            "Notes": content["Notes"] ?? ""
+          }));
+        }
+        if (Array.isArray(content?.History)) {
+          wrap.appendChild(el("div", { className: "mt-2" }, renderRowsAsTable(content.History)));
+        }
+        return wrap;
+      },
+      permits: (c) => Array.isArray(c?.rows) ? renderRowsAsTable(c.rows) : renderKeyValues(c || {}),
+      permits_ccao: (c) => Array.isArray(c?.rows) ? renderRowsAsTable(c.rows) : renderKeyValues(c || {}),
+      assessor_sales_datalet: (c) => {
+        const wrap = el("div", { className: "space-y-3" });
+        if (Array.isArray(c?.summary_rows)) {
+          wrap.appendChild(el("div", {}, el("div", { className: "font-semibold mb-2" }, "Summary"), renderRowsAsTable(c.summary_rows)));
+        }
+        if (c?.verbatim) {
+          const details = el("details", { className: "mt-2" },
+            el("summary", { className: "cursor-pointer list-none px-3 py-1 bg-gray-50 inline-block rounded" }, "Raw HTML"));
+          const pre = el("pre", { className: "whitespace-pre-wrap text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border" }, c.verbatim);
+          details.appendChild(pre);
+          wrap.appendChild(details);
+        }
+        return wrap;
+      },
+      nearby: (c) => {
+        const table = renderRowsAsTable(c?.features || []);
+        const theadCells = Array.from(table.querySelectorAll("thead th"));
+        const pinIdx = theadCells.findIndex(th => th.textContent.trim().toLowerCase() === "pin");
+        if (pinIdx >= 0) {
+          table.querySelectorAll("tbody tr").forEach(tr => {
+            const cell = tr.cells[pinIdx];
+            const pinDash = cell?.textContent?.trim();
+            if (!pinDash) return;
+            tr.classList.add("cursor-pointer", "hover:bg-gray-50");
+            tr.addEventListener("click", () => focusMarkerByPin(pinDash));
+          });
+        }
+        return table;
+      },
+      prc: (c) => c?.url ? el("a", { href: c.url, target: "_blank", rel: "noopener", className: "text-blue-700 underline" }, `Open Assessor Card (PIN ${c.pin || ""})`) : document.createTextNode("No link"),
 
-  sales: (content) => {
-    const wrapper = el("div", { className: "space-y-3" });
-    if (content?.["Latest Sale Date"] || content?.["Latest Sale Price"]) {
-      wrapper.appendChild(renderKeyValues({
-        "Latest Sale Date": content["Latest Sale Date"],
-        "Latest Sale Price": content["Latest Sale Price"],
-        "Notes": content["Notes"] ?? ""
-      }));
-    }
-    if (Array.isArray(content?.History)) {
-      wrapper.appendChild(el("div", { className: "mt-2" }, renderRowsAsTable(content.History)));
-    }
-    return wrapper;
-  },
-
-  permits: (content) => {
-    if (Array.isArray(content?.rows)) return renderRowsAsTable(content.rows);
-    return renderKeyValues(content || {});
-  },
-
-  permits_ccao: (content) => {
-    if (Array.isArray(content?.rows)) return renderRowsAsTable(content.rows);
-    return renderKeyValues(content || {});
-  },
-
-  assessor_sales_datalet: (content) => {
-    const wrap = el("div", { className: "space-y-3" });
-    if (Array.isArray(content?.summary_rows)) {
-      wrap.appendChild(el("div", {}, el("div", { className: "font-semibold mb-2" }, "Summary"), renderRowsAsTable(content.summary_rows)));
-    }
-    if (content?.verbatim) {
-      const details = el("details", { className: "mt-2" },
-        el("summary", { className: "cursor-pointer list-none px-3 py-1 bg-gray-50 inline-block rounded" }, "Raw HTML (verbatim)")
-      );
-      const pre = el("pre", { className: "whitespace-pre-wrap text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border" }, content.verbatim);
-      details.appendChild(pre);
-      wrap.appendChild(details);
-    }
-    return wrap;
-  },
-
-  nearby: (content) => {
-  const table = renderRowsAsTable(content?.features || []);
-  // Attach click-to-focus safely (find 'pin' column by header name)
-  const theadCells = Array.from(table.querySelectorAll("thead th"));
-  const pinIdx = theadCells.findIndex(th => th.textContent.trim().toLowerCase() === "pin");
-
-  if (pinIdx >= 0) {
-    table.querySelectorAll("tbody tr").forEach(tr => {
-      const cell = tr.cells[pinIdx];
-      const pinDash = cell?.textContent?.trim();
-      if (!pinDash) return;
-      tr.classList.add("cursor-pointer", "hover:bg-gray-50");
-      tr.addEventListener("click", () => focusMarkerByPin(pinDash));
-    });
-  }
-
-  return table;
-},
-
-
-
-  prc: (content) => {
-    const url = content?.url;
-    if (!url) return document.createTextNode("No link");
-    return el("a", { href: url, target: "_blank", rel: "noopener", className: "text-blue-700 underline" },
-      `Open Assessor Card (PIN ${content?.pin || ""})`);
-  },
-
-  delinquent: (content) => {
-    if (content?.status === "ok" && Array.isArray(content?.data) && content.data.length === 0) {
-      return el("div", { className: "text-green-700" }, "No delinquent records.");
-    }
-    return renderKeyValues(content || {});
-  },
-
-
-  tax_bill: (content) => {
-    if (!content) return document.createTextNode("No data");
-    const wrap = el("div", { className: "space-y-4" });
-
-    function renderBlock(block, heading) {
-      if (!block) return null;
-      const box = el("div", { className: "border rounded-xl" });
-      box.appendChild(el("div", { className: "px-4 py-2 bg-gray-100 rounded-t-xl font-medium" },
-        heading || (block.label || "Tax Bill")));
-      const body = el("div", { className: "px-4 py-3 text-sm space-y-2" });
-      body.appendChild(renderKeyValues({
-        "Label": block.label,
-        "Total Billed": block.total_billed,
-        "Total Due": block.total_due,
-      }));
-      if (Array.isArray(block.installments) && block.installments.length) {
-        const rows = block.installments.map(i => ({
-          Title: i.title,
-          "Original Billed": i.original_billed,
-          "Due Date": i.due_date,
-          Tax: i.tax,
-          Interest: i.interest,
-          "Current Amount Due": i.current_amount_due,
-        }));
-        body.appendChild(el("div", { className: "mt-2" }, renderRowsAsTable(rows)));
+      // --- Newly patched renderers ---
+      ptax: (c) => {
+        const wrap = el("div", { className: "space-y-2" });
+        if (Array.isArray(c?.rows) && c.rows.length) {
+          wrap.appendChild(renderRowsAsTable(c.rows));
+        } else {
+          wrap.appendChild(el("div", {}, "No PTAX rows"));
+        }
+        if (Array.isArray(c?.associated_pins) && c.associated_pins.length) {
+          wrap.appendChild(el("div", {}, "Associated PINs: " + c.associated_pins.join(", ")));
+        }
+        return wrap;
+      },
+      recorder_of_deeds: (c) => {
+        const wrap = el("div", { className: "space-y-3" });
+        if (Array.isArray(c?.all_deeds) && c.all_deeds.length) {
+          wrap.appendChild(el("div", { className: "font-semibold" }, "All Deeds"));
+          wrap.appendChild(renderRowsAsTable(c.all_deeds));
+        }
+        if (Array.isArray(c?.top_deeds) && c.top_deeds.length) {
+          wrap.appendChild(el("div", { className: "font-semibold" }, "Top Deeds"));
+          wrap.appendChild(renderRowsAsTable(c.top_deeds));
+        }
+        if (c?.latest_deed && Object.keys(c.latest_deed).length) {
+          wrap.appendChild(el("div", { className: "font-semibold" }, "Latest Deed"));
+          wrap.appendChild(renderKeyValues(c.latest_deed));
+        }
+        return wrap;
+      },
+      delinquent: (c) => {
+        if (c?.status !== "ok") return el("div", {}, "No delinquent data");
+        if (Array.isArray(c?.data) && c.data.length) {
+          return renderRowsAsTable(c.data);
+        }
+        return el("div", {}, "No delinquent records.");
+      },
+      appeals_coes: (c) => {
+        const wrap = el("div", { className: "space-y-3" });
+        if (c?.owner_details && Object.keys(c.owner_details).length) {
+          wrap.appendChild(el("div", { className: "font-semibold" }, "Owner Details"));
+          wrap.appendChild(renderKeyValues(c.owner_details));
+        }
+        if (c?.nature_of_appeal && Object.keys(c.nature_of_appeal).length) {
+          wrap.appendChild(el("div", { className: "font-semibold" }, "Nature of Appeal"));
+          wrap.appendChild(renderKeyValues(c.nature_of_appeal));
+        }
+        if (Array.isArray(c?.reason_flags_true) && c.reason_flags_true.length) {
+          wrap.appendChild(el("div", { className: "font-semibold" }, "Reasons"));
+          wrap.appendChild(renderRowsAsTable(c.reason_flags_true));
+        }
+        return wrap;
+      },
+      notice_summary: (c) => {
+        const wrap = el("div", { className: "space-y-3" });
+        if (c?.summary && Object.keys(c.summary).length) {
+          wrap.appendChild(el("div", { className: "font-semibold" }, "Summary"));
+          wrap.appendChild(renderKeyValues(c.summary));
+        }
+        if (Array.isArray(c?.detail_rows) && c.detail_rows.length) {
+          wrap.appendChild(el("div", { className: "font-semibold" }, "Details"));
+          wrap.appendChild(renderRowsAsTable(c.detail_rows));
+        }
+        return wrap;
+      },
+      hie_additions: (c) => {
+        const wrap = el("div", { className: "space-y-3" });
+        if (Array.isArray(c?.rows) && c.rows.length) {
+          wrap.appendChild(renderRowsAsTable(c.rows));
+        }
+        if (c?.verbatim) {
+          const pre = el("pre", { className: "whitespace-pre-wrap text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border" }, c.verbatim);
+          wrap.appendChild(pre);
+        }
+        return wrap;
       }
-      box.appendChild(body);
-      return box;
+    };
+
+    function renderGeneric(content) {
+      if (Array.isArray(content)) return renderRowsAsTable(content);
+      if (content && typeof content === "object") return renderKeyValues(content);
+      return el("div", {}, content ?? "");
+    }
+    function renderSection(key, title, content) {
+      const details = el("details", { className: "border rounded-xl" });
+      const sum = el("summary", { className: "cursor-pointer list-none px-4 py-2 font-medium bg-gray-100 rounded-t-xl" }, title);
+      const body = el("div", { className: "px-4 py-3 text-sm" });
+      const renderer = SECTION_RENDERERS[key] || renderGeneric;
+      body.appendChild(renderer(content));
+      details.appendChild(sum);
+      details.appendChild(body);
+      return details;
     }
 
-    const hasBlocks = !!content.current || !!content.prior;
-    if (!hasBlocks) {
-      wrap.appendChild(el("div", { className: "text-sm text-gray-600" },
-        "No parsed tax bill data yet for this PIN."));
-    }
-
-    if (content.current) wrap.appendChild(renderBlock(content.current, "Current Year"));
-    if (content.prior)   wrap.appendChild(renderBlock(content.prior,   "Prior Year"));
-
-    if (content.overview_url) {
-      wrap.appendChild(el("div", {},
-        el("a", { href: content.overview_url, target: "_blank", rel: "noopener",
-                  className: "text-blue-700 underline" }, "Open Treasurer Overview")));
-    }
-    return wrap;
-  },
-};
-
-// Fallback renderer if no custom one exists
-function renderGeneric(content) {
-  if (Array.isArray(content)) return renderRowsAsTable(content);
-  if (content && typeof content === "object") return renderKeyValues(content);
-  return el("div", {}, content ?? "");
-}
-
-function renderSection(key, title, content) {
-  const details = el("details", { className: "border rounded-xl" });
-  const sum = el("summary", {
-    className: "cursor-pointer list-none px-4 py-2 font-medium bg-gray-100 rounded-t-xl"
-  }, title);
-  const body = el("div", { className: "px-4 py-3 text-sm" });
-
-  const renderer = SECTION_RENDERERS[key] || renderGeneric;
-  body.appendChild(renderer(content));
-
-  details.appendChild(sum);
-  details.appendChild(body);
-  return details;
-}
-
-    // =========================
-    // 4) MAP HELPERS
-    // =========================
-
+    // Map helpers
     let _map, _markersLayer, _subjectLayer, _radiusCircle, _pinToLayer;
     const M2_PER_MI = 1609.344;
-
-    // Colored pointer icons (CDN PNGs)
-    const NearbyIcon = new L.Icon({
-      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
-    });
-
-    // green subject icon
-    const SubjectIcon = new L.Icon({
-      iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-      iconRetinaUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
-    });
-
+    const NearbyIcon = new L.Icon({ iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png", shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png", iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] });
+    const SubjectIcon = new L.Icon({ iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png", shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png", iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34] });
 
     function ensureMap() {
       if (_map) return;
       _map = L.map('map');
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19, attribution: '&copy; OpenStreetMap',
-      }).addTo(_map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(_map);
       _markersLayer = L.layerGroup().addTo(_map);
       _subjectLayer = L.layerGroup().addTo(_map);
       _pinToLayer = new Map();
     }
 
-
     function renderMap(nearby, sales) {
-  ensureMap();
-  _markersLayer.clearLayers();
-  _subjectLayer.clearLayers();
-  _pinToLayer.clear();
-  if (_radiusCircle) { _map.removeLayer(_radiusCircle); _radiusCircle = null; }
+      ensureMap(); _markersLayer.clearLayers(); _subjectLayer.clearLayers(); _pinToLayer.clear();
+      if (_radiusCircle) { _map.removeLayer(_radiusCircle); _radiusCircle = null; }
+      if (!nearby?.center || nearby.center.lat == null || nearby.center.lon == null) return;
+      const c = [nearby.center.lat, nearby.center.lon];
+      _map.setView(c, 13);
+      _radiusCircle = L.circle(c, { radius: (nearby.radius_mi || 5) * M2_PER_MI, fillOpacity: 0.08 }).addTo(_map);
+      const subjPin = nearby.subject?.pin_dash || nearby.subject?.pin || "";
+      const subjUse = nearby.subject?.property_use || "";
+      const subjClass = nearby.subject?.class ? `(${nearby.subject.class})` : "";
+      const subjAddr = (nearby.subject?.address || "").trim();
+      const saleDate = sales?.["Latest Sale Date"] || "";
+      const saleYear = saleDate ? (new Date(saleDate).getFullYear() || (saleDate.match(/\b\d{4}\b/)?.[0])) : "";
+      const saleAmt = sales?.["Latest Sale Price"] || "";
+      const subjPopupHtml = `<div class="text-sm"><div class="font-semibold">${subjPin}</div><div>${subjUse} ${subjClass}</div>${subjAddr ? `<div>${subjAddr}</div>` : ""}${saleYear || saleAmt ? `<div class="mt-2 p-2 border rounded bg-gray-50"><div class="font-semibold">Latest Sale</div><div>${saleYear ? `Year: ${saleYear}` : ""} ${saleAmt ? `• Amount: ${saleAmt}` : ""}</div></div>` : ""}</div>`;
+      const subjMarker = L.marker(c, { icon: SubjectIcon, title: subjPin }).addTo(_subjectLayer).bindPopup(subjPopupHtml).openPopup();
+      if (subjPin) _pinToLayer.set(subjPin, subjMarker);
+      const bounds = [c];
+      (nearby.features || []).forEach(f => {
+        const latlng = [f.lat, f.lon]; bounds.push(latlng);
+        const pin = f.pin || ""; const use = f.property_use || ""; const cls = f.class ? `(${f.class})` : ""; const addr = (f.address || "").trim();
+        const html = `<div class="text-sm"><div class="font-semibold">${pin}</div><div>${use} ${cls}</div>${addr ? `<div>${addr}</div>` : ""}${f.distance_mi != null ? `<div>${f.distance_mi} mi away</div>` : ''}</div>`;
+        const m = L.marker(latlng, { icon: NearbyIcon, title: pin }).addTo(_markersLayer).bindPopup(html);
+        if (pin) _pinToLayer.set(pin, m);
+      });
+      if (bounds.length > 1) _map.fitBounds(L.latLngBounds(bounds).pad(0.2));
+    }
+    function focusMarkerByPin(pinDash) { const layer = _pinToLayer.get(pinDash); if (!layer) return; _map.setView(layer.getLatLng(), Math.max(_map.getZoom(), 15)); layer.openPopup(); }
 
-  if (!nearby?.center || nearby.center.lat == null || nearby.center.lon == null) return;
-
-  const c = [nearby.center.lat, nearby.center.lon];
-  _map.setView(c, 13);
-
-  // Subject ring
-  _radiusCircle = L.circle(c, { radius: (nearby.radius_mi || 5) * M2_PER_MI, fillOpacity: 0.08 })
-    .addTo(_map);
-
-  // Subject popup content
-  const subjPin = nearby.subject?.pin_dash || nearby.subject?.pin || "";
-  const subjUse = nearby.subject?.property_use || "";
-  const subjClass = nearby.subject?.class ? `(${nearby.subject.class})` : "";
-  const subjAddr = (nearby.subject?.address || "").trim(); // supply address in backend if possible
-
-  // derive latest sale from sections.sales (year + amount)
-  const saleDate = sales?.["Latest Sale Date"] || "";  // "MM/DD/YYYY" or similar
-  const saleYear = saleDate ? (new Date(saleDate).getFullYear() || (saleDate.match(/\b\d{4}\b/)?.[0])) : "";
-  const saleAmt = sales?.["Latest Sale Price"] || "";
-
-  const subjPopupHtml = `
-    <div class="text-sm">
-      <div class="font-semibold">${subjPin}</div>
-      <div>${subjUse} ${subjClass}</div>
-      ${subjAddr ? `<div>${subjAddr}</div>` : ""}
-      ${saleYear || saleAmt ? `
-        <div class="mt-2 p-2 border rounded bg-gray-50">
-          <div class="font-semibold">Latest Sale</div>
-          <div>${saleYear ? `Year: ${saleYear}` : ""} ${saleAmt ? `&nbsp;•&nbsp; Amount: ${saleAmt}` : ""}</div>
-        </div>` : ""
-      }
-    </div>
-  `;
-
-  const subjMarker = L.marker(c, { icon: SubjectIcon, title: subjPin })
-    .addTo(_subjectLayer)
-    .bindPopup(subjPopupHtml)
-    .openPopup();
-
-  if (subjPin) _pinToLayer.set(subjPin, subjMarker);
-
-  // Nearby markers (no assessor/treasurer links in popup)
-  const bounds = [c];
-  (nearby.features || []).forEach(f => {
-    const latlng = [f.lat, f.lon];
-    bounds.push(latlng);
-
-    const pin = f.pin || "";
-    const use = f.property_use || "";
-    const cls = f.class ? `(${f.class})` : "";
-    const addr = (f.address || "").trim(); // backend can populate; otherwise it just won't show
-
-    const html = `
-      <div class="text-sm">
-        <div class="font-semibold">${pin}</div>
-        <div>${use} ${cls}</div>
-        ${addr ? `<div>${addr}</div>` : ""}
-        ${f.distance_mi != null ? `<div>${f.distance_mi} mi away</div>` : ''}
-      </div>
-    `;
-
-    const m = L.marker(latlng, { icon: NearbyIcon, title: pin })
-      .addTo(_markersLayer)
-      .bindPopup(html);
-
-    if (pin) _pinToLayer.set(pin, m);
-  });
-
-  if (bounds.length > 1) _map.fitBounds(L.latLngBounds(bounds).pad(0.2));
-}
-
-
-
-function focusMarkerByPin(pinDash) {
-  const layer = _pinToLayer.get(pinDash);
-  if (!layer) return;
-  _map.setView(layer.getLatLng(), Math.max(_map.getZoom(), 15));
-  layer.openPopup();
-}
-
-
-    // =========================
-    // 5) APP LOGIC
-    // =========================
+    async function fetchPin(pin, fresh=false) {
+      const url = `${API_BASE}/api/pin/${encodeURIComponent(pin)}${fresh ? "?fresh=1" : ""}`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`API error: ${r.status}`);
+      return await r.json();
+    }
     async function load(pin, fresh=false) {
       if (!pin) return;
-      $("#meta").textContent = "Loading…";
-      $("#diag").textContent = "";
-      $("#sections").innerHTML = "";
-
+      $("#meta").textContent = "Loading…"; $("#diag").textContent = ""; $("#sections").innerHTML = "";
       try {
-        setParam("pin", pin);
-        localStorage.setItem("last_pin", pin);
-
         const data = await fetchPin(pin, fresh);
         $("#meta").textContent = `PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
-
-        // Map
         renderMap(data.sections?.nearby, data.sections?.sales);
-
-
-
-        // Sections (ordered → then remaining)
         const sections = data.sections || {};
-        const keys = [
-          ...SECTION_ORDER.filter(k => k in sections),
-          ...Object.keys(sections).filter(k => !SECTION_ORDER.includes(k))
-        ];
-
-        keys.forEach(key => {
-          const title = SECTION_TITLES[key] || key;
-          $("#sections").appendChild(renderSection(key, title, sections[key]));
-
-        });
-
-        const first = $("#sections details");
-        if (first) first.open = true;
-      } catch (e) {
-        console.error(e);
-        $("#meta").textContent = "Failed to load data.";
-        $("#diag").textContent = e.message || String(e);
-      }
+        const keys = [...SECTION_ORDER.filter(k => k in sections), ...Object.keys(sections).filter(k => !SECTION_ORDER.includes(k))];
+        keys.forEach(key => $("#sections").appendChild(renderSection(key, SECTION_TITLES[key] || key, sections[key])));
+        const first = $("#sections details"); if (first) first.open = true;
+      } catch (e) { console.error(e); $("#meta").textContent = "Failed to load data."; $("#diag").textContent = e.message || String(e); }
     }
 
-    // Wire UI
-    const initialPin = getParam("pin") || localStorage.getItem("last_pin") || "";
-    $("#pinInput").value = initialPin;
-    if (initialPin) load(initialPin);
-
+    const initialPin = new URLSearchParams(location.search).get("pin") || localStorage.getItem("last_pin") || "";
+    $("#pinInput").value = initialPin; if (initialPin) load(initialPin);
     $("#loadBtn").addEventListener("click", () => load($("#pinInput").value.trim(), false));
     $("#freshBtn").addEventListener("click", () => load($("#pinInput").value.trim(), true));
-    $("#pinInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") load($("#pinInput").value.trim(), false);
-    });
-
+    $("#pinInput").addEventListener("keydown", (e) => { if (e.key === "Enter") load($("#pinInput").value.trim(), false); });
     $("#copyBtn").addEventListener("click", async () => {
-      const pin = $("#pinInput").value.trim();
-      if (!pin) return alert("Enter a PIN first.");
+      const pin = $("#pinInput").value.trim(); if (!pin) return alert("Enter a PIN first.");
       const url = `${location.origin}${location.pathname}?pin=${encodeURIComponent(pin)}`;
-      try {
-        await navigator.clipboard.writeText(url);
-        $("#diag").textContent = "Link copied to clipboard.";
-        setTimeout(() => ($("#diag").textContent = ""), 2000);
-      } catch {
-        $("#diag").textContent = url; // fallback
-      }
+      try { await navigator.clipboard.writeText(url); $("#diag").textContent = "Link copied to clipboard."; setTimeout(() => ($("#diag").textContent = ""), 2000); }
+      catch { $("#diag").textContent = url; }
     });
   </script>
 </body>

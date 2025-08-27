@@ -337,7 +337,6 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "property_location": assr_location.get("normalized", {}),
             "land": assr_land.get("normalized", {}),
             "residential_building": assr_res.get("normalized", {}),
-            "assessed_market_values": _shape_assessed(assr_vals),
             "other_structures": assr_oby.get("normalized", {}),
             "commercial_building": comm_bldg.get("normalized", {}),
             "divisions_consolidations": prop_assoc.get("normalized", {}),
