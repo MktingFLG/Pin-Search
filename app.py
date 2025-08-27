@@ -19,7 +19,7 @@ except Exception:
 
 from utils import undashed_pin, normalize_pin
 import fetchers   
-from fetchers import fetch_latest_sales,_socrata_get
+from fetchers import fetch_latest_sales,_socrata_get,fetch_pin_geom_arcgis
 
 
 
@@ -171,14 +171,12 @@ def api_nearby_mini(pin: str, radius: float = Query(5.0, ge=0), limit: int = Que
 # ================== Latest Commercial Sales (Illinois Socrata) ==================
 @app.get("/api/latest-commercial-sales")
 def api_latest_commercial_sales(limit: int = 200):
-    from fetchers import fetch_pin_geom_arcgis
     try:
         rows = _socrata_get("it54-y4c6", {
-            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration",
+            "$select": "declaration_id,date_recorded,line_1_primary_pin,full_address,line_13_net_consideration,line_1_county",
             "$order": "date_recorded DESC",
             "$limit": str(limit),
         })
-
 
         sales = []
         seen = set()
@@ -188,15 +186,15 @@ def api_latest_commercial_sales(limit: int = 200):
                 continue
             seen.add(pin)
 
-            # default lat/lon
             lat, lon = None, None
-            try:
-                geom = fetch_pin_geom_arcgis(pin).get("normalized", {})
-                if "center" in geom:
-                    lat = geom["center"].get("lat")
-                    lon = geom["center"].get("lon")
-            except Exception:
-                pass
+            if r.get("line_1_county", "").upper() == "COOK":
+                try:
+                    geom = fetch_pin_geom_arcgis(pin).get("normalized", {})
+                    if geom and "center" in geom:
+                        lat = geom["center"].get("lat")
+                        lon = geom["center"].get("lon")
+                except Exception:
+                    pass
 
             sales.append({
                 "declaration_id": r.get("declaration_id"),
@@ -204,6 +202,7 @@ def api_latest_commercial_sales(limit: int = 200):
                 "pin": pin,
                 "address": r.get("full_address"),
                 "sale_price": r.get("line_13_net_consideration"),
+                "county": r.get("line_1_county"),
                 "lat": lat,
                 "lon": lon,
             })
@@ -212,13 +211,3 @@ def api_latest_commercial_sales(limit: int = 200):
 
     except Exception as e:
         return {"_status": "error", "error": str(e), "sales": []}
-
-
-
-
-
-
-
-
-
-
