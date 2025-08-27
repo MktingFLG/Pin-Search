@@ -98,24 +98,43 @@ function renderRowsAsTable(rows) {
 const SECTION_RENDERERS = {
   assessor_profile: renderKeyValues,
   value_summary: renderRowsAsTable,
+  ptax: (c)=>renderRowsAsTable(c?.rows||[]),
+
   sales: (c)=>{
-    const wrap=el("div",{className:"space-y-2"});
-    if(c?.["Latest Sale Date"]||c?.["Latest Sale Price"]) {
-      // short summary
+    const wrap = el("div",{className:"space-y-2"});
+    if(!c) return el("div",{},"No sales data");
+
+    // --- Latest Sale (PTAX or Assessor)
+    const latestDate = c["Latest Sale Date"] || c.date;
+    const latestPrice = c["Latest Sale Price"] || c.price;
+    if(latestDate || latestPrice) {
       wrap.appendChild(el("div",{className:"font-semibold text-gray-800"},
-        `Latest Sale: ${c["Latest Sale Date"]||""} • ${c["Latest Sale Price"]||""}`));
+        `Latest Sale: ${latestDate || ""} • ${latestPrice || ""}`));
     }
-    if(Array.isArray(c?.History) && c.History.length) {
-      const details=el("details",{className:"border rounded"});
-      details.appendChild(el("summary",{className:"cursor-pointer px-2 py-1 bg-gray-50 font-medium"},
-        "Full Sales History"));
-      const body=el("div",{className:"px-2 py-1 text-sm"});
-      body.appendChild(renderRowsAsTable(c.History));
+
+    // --- History (prefer History array, else fallback)
+    let history = [];
+    if (Array.isArray(c.History)) {
+      history = c.History;
+    } else if (Array.isArray(c.history)) {
+      history = c.history;
+    }
+
+    if(history.length) {
+      const details = el("details",{className:"border rounded"});
+      details.appendChild(
+        el("summary",{className:"cursor-pointer px-2 py-1 bg-gray-50 font-medium"},
+          `Full Sales History (${history.length})`)
+      );
+      const body = el("div",{className:"px-2 py-1 text-sm"});
+      body.appendChild(renderRowsAsTable(history));
       details.appendChild(body);
       wrap.appendChild(details);
     }
+
     return wrap;
   },
+
 
   permits: (c)=>renderRowsAsTable(c?.rows||[]),
   permits_ccao: (c)=>renderRowsAsTable(c?.rows||[]),
@@ -178,9 +197,6 @@ async function loadLatestCommercialSales() {
   }
 }
 
-
-
-
 async function loadPin(pin,fresh=false) {
   $("#meta").textContent="Loading…"; 
   $("#sections").innerHTML=""; 
@@ -199,8 +215,8 @@ async function loadPin(pin,fresh=false) {
   const sec=data.sections||{};
 
   // --- Step 1: PTAX
-  if(sec.ptax_main) {
-    $("#sections").appendChild(renderSection("ptax","PTAX Data",sec.ptax_main));
+  if(sec.ptax) {
+    $("#sections").appendChild(renderSection("ptax","PTAX Data",sec.ptax));
   }
 
   // --- Step 2: Assessor Profile
@@ -209,8 +225,8 @@ async function loadPin(pin,fresh=false) {
   }
 
   // --- Step 3: Assessor Values
-  if(sec.assessor_values) {
-    $("#sections").appendChild(renderSection("assessor_values","Assessor Values",sec.assessor_values));
+  if(sec.value_summary) {
+    $("#sections").appendChild(renderSection("value_summary","Assessor Values",sec.value_summary));
   }
 
   // --- Step 4: Map + Nearby
@@ -222,11 +238,12 @@ async function loadPin(pin,fresh=false) {
   // --- Step 5: Defer the rest
   setTimeout(()=>{
     Object.entries(sec).forEach(([k,v])=>{
-      if(["ptax_main","assessor_profile","assessor_values","nearby"].includes(k)) return;
+      if(["ptax","assessor_profile","value_summary","nearby"].includes(k)) return;
       $("#sections").appendChild(renderSection(k,k.replace(/_/g," "),v));
     });
   },100);
 }
+
 
 
 
