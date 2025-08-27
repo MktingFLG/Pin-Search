@@ -99,19 +99,15 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     ck = _cache_key(pin_raw)
     now = datetime.utcnow()
 
-        # Try cache
+    # Try cache
     if not fresh and ck in _CACHE:
         entry = _CACHE[ck]
-        # Still return cached if *all* sources are within TTL; otherwise partial revalidate below
         if all(now - entry["stamps"].get(k, now) <= TTL[k] for k in TTL):
             return entry["data"]
 
-    # load previous if any (for partial reuse)
     prev = _CACHE.get(ck, {"data": {}, "stamps": {}})
 
-        # --- Revalidate each source (LAZY + GATED) ---
-
-
+    # --- Fetch sources (lazy + gated) ---
     print("➡️ PERMITS", flush=True)
     permits = _fetch_if("PERMITS", "fetch_permits", pin_raw, force=fresh or _expired(prev, "PERMITS", now))
 
@@ -181,7 +177,7 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
 
     print("➡️ NEARBY", flush=True)
     try:
-        nearby = _fetch_if("NEARBY", "fetch_nearby_candidates", pin_raw)
+        nearby = _fetch_if("NEARBY", "fetch_nearby_candidates", pin_raw, radius_mi=5.0, limit=100)
         print("✅ NEARBY done", flush=True)
     except Exception as e:
         print(f"❌ NEARBY failed: {e}", flush=True)
@@ -196,9 +192,6 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
         tax_bill = {}            
 
     
-
-
-
     # --- Revalidate each source (LAZY + GATED) ---
 
     permits     = _fetch_if("PERMITS",           "fetch_permits",           pin_raw, force=fresh or _expired(prev, "PERMITS", now))

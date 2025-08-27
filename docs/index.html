@@ -335,17 +335,43 @@
     }
     async function load(pin, fresh=false) {
       if (!pin) return;
-      $("#meta").textContent = "Loading…"; $("#diag").textContent = ""; $("#sections").innerHTML = "";
+      $("#meta").textContent = "Loading…"; 
+      $("#diag").textContent = ""; 
+      $("#sections").innerHTML = "";
+
+      // 1. Load basic profile first
       try {
-        const data = await fetchPin(pin, fresh);
-        $("#meta").textContent = `PIN ${data.pin} • Generated ${new Date(data.generated_at).toLocaleString()}`;
-        renderMap(data.sections?.nearby, data.sections?.sales);
-        const sections = data.sections || {};
-        const keys = [...SECTION_ORDER.filter(k => k in sections), ...Object.keys(sections).filter(k => !SECTION_ORDER.includes(k))];
-        keys.forEach(key => $("#sections").appendChild(renderSection(key, SECTION_TITLES[key] || key, sections[key])));
-        const first = $("#sections details"); if (first) first.open = true;
-      } catch (e) { console.error(e); $("#meta").textContent = "Failed to load data."; $("#diag").textContent = e.message || String(e); }
+        const profile = await (await fetch(`/assessor/profile?pin=${encodeURIComponent(pin)}`)).json();
+        $("#meta").textContent = `PIN ${pin} • Loaded Assessor Profile`;
+        $("#sections").appendChild(renderSection("assessor_profile", "Assessor Profile", profile));
+      } catch (e) {
+        console.error("Profile error", e);
+      }
+
+      // 2. Kick off other requests in parallel
+      const tasks = [
+        fetch(`/assessor/maildetail?pin=${encodeURIComponent(pin)}`).then(r => r.json()).then(d => {
+          $("#sections").appendChild(renderSection("assessor_maildetail", "Assessor Mailing Detail", d));
+        }),
+        fetch(`/delinquent?pin=${encodeURIComponent(pin)}`).then(r => r.json()).then(d => {
+          $("#sections").appendChild(renderSection("delinquent", "Delinquent Taxes", d));
+        }),
+        fetch(`/ccao/permits?pin=${encodeURIComponent(pin)}`).then(r => r.json()).then(d => {
+          $("#sections").appendChild(renderSection("permits_ccao", "Permits (CCAO)", d));
+        }),
+        fetch(`/ptab/by-pin?pin=${encodeURIComponent(pin)}`).then(r => r.json()).then(d => {
+          $("#sections").appendChild(renderSection("ptab", "PTAB", d));
+        }),
+        fetch(`/api/pin/${encodeURIComponent(pin)}/fast`).then(r => r.json()).then(d => {
+          renderMap(d.nearby, d.ptax); // update map fast
+        }),
+      ];
+
+      Promise.allSettled(tasks).then(() => {
+        $("#meta").textContent = `PIN ${pin} • All sections loaded`;
+      });
     }
+
 
     const initialPin = new URLSearchParams(location.search).get("pin") || localStorage.getItem("last_pin") || "";
     $("#pinInput").value = initialPin; if (initialPin) load(initialPin);
