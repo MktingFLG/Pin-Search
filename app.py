@@ -43,18 +43,44 @@ def _must_pin(pin: str) -> str:
     return p14
 
 
-# ---------------- API used by the frontend ----------------
-@app.get("/pin/{pin}/summary")
-def pin_summary(pin: str, fresh: bool = False):
-    from orchestrator import get_pin_summary   # ✅ lazy import
+# ---------------- PIN summary (explicit) ----------------
+@app.get("/api/pin/{pin}/summary")
+def api_pin_summary(pin: str, fresh: bool = False):
+    from orchestrator import get_pin_summary
     _must_pin(pin)
     return get_pin_summary(pin, fresh=fresh)
 
+# ---------------- PIN main summary ----------------
 @app.get("/api/pin/{pin}")
 def api_pin(pin: str, fresh: bool = False):
-    from orchestrator import get_pin_summary   # ✅ lazy import
+    from orchestrator import get_pin_summary
     _must_pin(pin)
-    return get_pin_summary(pin, fresh=fresh)
+    data = get_pin_summary(pin, fresh=fresh)
+
+    # Ensure `sales` exists if frontend expects it
+    if "sales" not in data.get("sections", {}):
+        data["sections"]["sales"] = []
+    return data
+
+# ---------------- PIN bundle (big parallel fetch) ----------------
+@app.get("/api/pin/{pin}/bundle")
+async def api_pin_bundle(pin: str, jur: str = "016", taxyr: str = "2025", top_n_deeds: int = 3):
+    _must_pin(pin)
+    # your async batching logic here (unchanged)
+    ...
+    return {"_status": "ok", "bundle": {...}}
+
+
+# ---------------- Fast/lightweight version ----------------
+@app.get("/api/pin/{pin}/fast")
+def api_pin_fast(pin: str):
+    from fetchers import fetch_ptax_main, fetch_nearby_candidates
+    _must_pin(pin)
+    return {
+        "pin": normalize_pin(pin),
+        "ptax": fetch_ptax_main(pin),
+        "nearby": fetch_nearby_candidates(pin, radius_mi=5.0, limit=50),
+    }
 
 
 # ---------------- Assessor & other source endpoints (unchanged) ----------------
