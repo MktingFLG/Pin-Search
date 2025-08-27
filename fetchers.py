@@ -3193,6 +3193,10 @@ def fetch_ccao_permits_multi(
 # fetchers_delinquent.py (drop pandas; pure csv)
 import io, os, re, csv, gzip, requests
 from functools import lru_cache
+import requests
+
+_SESSION = requests.Session()
+
 
 GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "").strip()
 PASSES_REPO   = os.getenv("ASSESSOR_PASSES_REPO", "MktingFLG/assessor-passes-data")
