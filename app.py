@@ -18,7 +18,9 @@ except Exception:
     pass
 
 from utils import undashed_pin, normalize_pin
-import fetchers   # ✅ keep this one (needed in many endpoints)
+import fetchers   
+from fetchers import _socrata_get
+
 
 
 # ---------------- App & middleware ----------------
@@ -194,6 +196,43 @@ def api_pin_fast(pin: str):
 
 @app.get("/api/latest-commercial-sales")
 def api_latest_commercial_sales(limit: int = 200):
-    from fetchers import fetch_latest_commercial_sales
-    return fetch_latest_commercial_sales(limit=limit)
+    from fetchers import fetch_assessor_profile
+    try:
+        rows = _socrata_get("it54-y4c6", {
+            "$select": "declaration_id,date_recorded,line_1_primary_pin,line_7_property_advertised,line_13_net_consideration,latitude,longitude",
+            "$order": "date_recorded DESC",
+            "$limit": str(limit),
+        })
+
+        sales = []
+        seen = set()
+        for r in rows:
+            pin = r.get("line_1_primary_pin")
+            if not pin or pin in seen:
+                continue
+            seen.add(pin)
+
+            assessor = {}
+            try:
+                assessor = fetch_assessor_profile(pin).get("normalized", {})
+            except Exception:
+                pass
+
+            sales.append({
+                "declaration_id": r.get("declaration_id"),
+                "date_recorded": r.get("date_recorded"),
+                "pin": pin,
+                "address": r.get("line_7_property_advertised"),
+                "sale_price": r.get("line_13_net_consideration"),
+                "class": assessor.get("class"),
+                "use_description": assessor.get("property_use"),
+                "lat": float(r["latitude"]) if r.get("latitude") else None,
+                "lon": float(r["longitude"]) if r.get("longitude") else None,
+            })
+
+        return {"_status": "ok", "sales": sales}
+
+    except Exception as e:
+        return {"_status": "error", "error": str(e), "sales": []}
+
 
