@@ -3766,6 +3766,9 @@ def fetch_latest_sales(limit: int = 50):
 
         enriched = []
         for row in rows:
+            # Only include rows with a sale date
+            if not row.get("line_4_instrument_date"):
+                continue
             pin = row.get("line_1_primary_pin")
             lat = lon = None
             if row.get("line_1_county", "").upper() == "COOK" and pin:
@@ -3786,6 +3789,10 @@ def fetch_latest_sales(limit: int = 50):
                 "lat": lat,
                 "lon": lon,
             })
+        # Sort by date descending and take top 50
+        enriched.sort(key=lambda x: x["line_4_instrument_date"], reverse=True)
+        result = enriched[:50]
+
 
         return {"_status": "ok", "rows": enriched}
 
