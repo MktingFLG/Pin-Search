@@ -3792,6 +3792,12 @@ def fetch_latest_sales(limit: int = 50):
         # Sort by date descending and take top 50
         enriched.sort(key=lambda x: x["line_4_instrument_date"], reverse=True)
         result = enriched[:50]
+        # After r.json():
+        print(rows)  # or use logging
+
+        # After enrichment/filtering logic, log how many made it:
+        print(f"Filtered (with date): {len(enriched)}")
+
 
 
         return {"_status": "ok", "rows": enriched}
