@@ -100,10 +100,33 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
     now = datetime.utcnow()
 
     # Try cache
-    if not fresh and ck in _CACHE:
-        entry = _CACHE[ck]
-        if all(now - entry["stamps"].get(k, now) <= TTL[k] for k in TTL):
-            return entry["data"]
+    if not fresh:
+        ptax_main = _fetch_if("PTAX_MAIN", "fetch_ptax_main_multi", [pin_raw]) or {}
+        nearby = _fetch_if("NEARBY", "fetch_nearby_candidates", pin_raw, radius_mi=5.0, limit=50) or {}
+
+        # Extract latest sale from PTAX
+        ptax_rows = (ptax_main.get("normalized", {}) or {}).get("rows", [])
+        sale_summary = None
+        if ptax_rows:
+            r0 = ptax_rows[0]
+            if r0.get("date_recorded") and r0.get("step_4_seller_name") and r0.get("step_4_buyer_name"):
+                sale_summary = f"Sold by {r0['step_4_seller_name']} to {r0['step_4_buyer_name']} on {r0['date_recorded']}"
+    
+        return {
+            "pin": pin_dash,
+            "generated_at": now.isoformat() + "Z",
+            "sections": {
+                "ptax": ptax_main.get("normalized", {}),
+                "nearby": nearby.get("normalized", {}),
+            },
+            "summaries": {
+                "sales": sale_summary
+            },
+            "source_status": {
+                "PTAX_MAIN": ptax_main.get("_status", "ok"),
+                "NEARBY": nearby.get("_status", "ok"),
+            },
+        }
 
     prev = _CACHE.get(ck, {"data": {}, "stamps": {}})
 
@@ -345,6 +368,35 @@ def get_pin_summary(pin: str, fresh: bool = False) -> Dict[str, Any]:
             "nearby": (nearby or {}).get("normalized", {}),
             "tax_bill": (tax_bill or {}).get("normalized", {}),
         },
+        "summaries": _summarize_sections({
+            "property_info": _shape_property_info(assr_maildetail, assr_profile),
+            "assessor_profile": assr_profile.get("normalized", {}),
+            "assessor_maildetail": assr_maildetail.get("normalized", {}),
+            "assessor_exemptions": assr_exempt.get("normalized", {}),
+            "value_summary": (assr_vals.get("normalized", {}) or {}).get("value_summary_raw", []),
+            "property_location": assr_location.get("normalized", {}),
+            "land": assr_land.get("normalized", {}),
+            "residential_building": assr_res.get("normalized", {}),
+            "other_structures": assr_oby.get("normalized", {}),
+            "commercial_building": comm_bldg.get("normalized", {}),
+            "divisions_consolidations": prop_assoc.get("normalized", {}),
+            "assessor_sales_datalet": assr_sales_dalet.get("normalized", {}),
+            "sales": _shape_sales(assr_sales_dalet.get("normalized", {})),
+            "notice_summary": notice_sum.get("normalized", {}),
+            "appeals_coes": appeals.get("normalized", {}),
+            "permits": _shape_permits(permits),
+            "hie_additions": assr_hie.get("normalized", {}),
+            "ptax": {"rows": ptax_summary_rows},
+            "recorder_of_deeds": (rod or {}).get("normalized", {}),
+            "ptab": ptab_rows,
+            "permits_ccao": (permits_ccao or {}).get("normalized", {}),
+            "links": _shape_links(pin_raw, prc),
+            "delinquent": delinquent,
+            "prc": (prc or {}).get("normalized", {}),
+            "nearby": (nearby or {}).get("normalized", {}),
+            "tax_bill": (tax_bill or {}).get("normalized", {}),
+        }),
+
 
 
 
@@ -428,9 +480,11 @@ def _compute_derived(bor, cv, sales) -> Dict[str, Any]:
         pass
     return out
 
-def _shape_property_info(bor, cv, mail_src, assr_profile):
+def _shape_property_info(assr_maildetail, assr_profile):
+    """Show only Assessor Profile + Maildetail (basic info)."""
     prof = (assr_profile or {}).get("normalized", {})
-    mail_norm = (mail_src or {}).get("normalized", {})
+    mail_norm = (assr_maildetail or {}).get("normalized", {})
+
     taxpayer = mail_norm.get("Taxpayer Name")
     mailing = None
     if mail_norm:
@@ -441,26 +495,17 @@ def _shape_property_info(bor, cv, mail_src, assr_profile):
             mail_norm.get("Mailing Zip"),
         ]
         mailing = ", ".join([p for p in parts if p])
+
     return {
-        "Class": bor.get("class"),
         "Class (Assessor Profile)": prof.get("PIN Info • Class"),
-        "Property Use": cv.get("property_use"),
-        "Address": (
-            cv.get("address")
-            or bor.get("address")
-            or prof.get("PIN Info • Property Address")
-            or prof.get("Address (header)")
-        ),
-        "Building SqFt": cv.get("building_sqft"),
-        "Land SqFt": cv.get("land_sqft"),
-        "Investment Rating": cv.get("investment_rating"),
-        "Age": cv.get("age"),
+        "Address": prof.get("PIN Info • Property Address") or prof.get("Address (header)"),
         "Town Name": prof.get("PIN Info • Town Name"),
         "Neighborhood": prof.get("PIN Info • Neighborhood") or prof.get("Neighborhood (header)"),
         "Tax District": prof.get("PIN Info • Tax District"),
         "Taxpayer Name": taxpayer,
         "Mailing Address": mailing,
     }
+
 
 
 
@@ -478,7 +523,8 @@ def _shape_assessed(assr_vals):
 
 
 
-def _shape_sales(sales, cv, assr_sales_norm=None):
+def _shape_sales(sales, cv=None, assr_sales_norm=None):
+
     """
     Prefer your external sales dataset. If it's empty, fall back to the
     Assessor Sales datalet (summary_rows + details).
@@ -556,4 +602,84 @@ def _shape_links(pin_raw, prc=None):
         "CookViewer": f"https://maps.cookcountyil.gov/cookviewer/?search={pin_raw}",
         "PRC": prc_url,
     }
+
+def _summarize_sections(sections: dict) -> dict:
+    """Return short human-friendly summaries for quick view."""
+    out = {}
+
+    # Property Info
+    pinfo = sections.get("property_info") or {}
+    if pinfo.get("Class (Assessor Profile)") or pinfo.get("Address"):
+        out["property_info"] = f"{pinfo.get('Class (Assessor Profile)','?')} at {pinfo.get('Address','')}".strip()
+
+    # Assessed Values
+    vals = sections.get("value_summary") or []
+    if isinstance(vals, list) and len(vals) >= 2:
+        try:
+            latest, prev = vals[0], vals[1]
+            assr_delta = (
+                (float(latest.get("assessor_total",0)) - float(prev.get("assessor_total",0)))
+                / max(float(prev.get("assessor_total",1)),1) * 100
+            )
+            bor_delta = (
+                (float(latest.get("bor_total",0)) - float(prev.get("bor_total",0)))
+                / max(float(prev.get("bor_total",1)),1) * 100
+            )
+            out["assessed_values"] = f"Assessor: {assr_delta:+.1f}% vs last year, BOR: {bor_delta:+.1f}%"
+        except Exception:
+            pass
+
+    # Sales (external or Assessor datalet)
+    sales = sections.get("sales") or {}
+    if isinstance(sales, dict):
+        if sales.get("Latest Sale Date") and sales.get("Latest Sale Price"):
+            out["sales"] = f"Sold on {sales['Latest Sale Date']} for ${sales['Latest Sale Price']}"
+    elif isinstance(sales, list) and sales:
+        r0 = sales[0]
+        if r0.get("date_recorded") and r0.get("step_4_seller_name") and r0.get("step_4_buyer_name"):
+            out["sales"] = f"Sold by {r0['step_4_seller_name']} to {r0['step_4_buyer_name']} on {r0['date_recorded']}"
+
+    # PTAX
+    ptax = sections.get("ptax") or {}
+    rows = ptax.get("rows") if isinstance(ptax, dict) else []
+    if rows:
+        r0 = rows[0]
+        if r0.get("date_recorded") and r0.get("step_4_seller_name") and r0.get("step_4_buyer_name"):
+            out["ptax"] = f"PTAX deed {r0.get('document_number','?')} • {r0['step_4_seller_name']} → {r0['step_4_buyer_name']} ({r0['date_recorded']})"
+
+    # Permits
+    permits = sections.get("permits") or {}
+    rows = permits.get("rows") if isinstance(permits, dict) else []
+    if rows:
+        r0 = rows[0]
+        if r0.get("permit_type") and r0.get("year"):
+            out["permits"] = f"Latest permit: {r0['permit_type']} ({r0['year']})"
+
+    permits_ccao = sections.get("permits_ccao") or {}
+    rows = permits_ccao.get("rows") if isinstance(permits_ccao, dict) else []
+    if rows and "permits" not in out:
+        r0 = rows[0]
+        if r0.get("permit_type") and r0.get("year"):
+            out["permits"] = f"CCAO permit: {r0['permit_type']} ({r0['year']})"
+
+    # PTAB
+    ptab = sections.get("ptab") or []
+    if isinstance(ptab, list) and ptab:
+        out["ptab"] = f"{len(ptab)} PTAB cases, latest {ptab[0].get('status','pending')}"
+
+    # Tax Bill
+    tax = sections.get("tax_bill") or {}
+    if isinstance(tax, dict) and tax.get("total_due"):
+        out["tax_bill"] = f"Latest bill total due: ${tax['total_due']}"
+
+    # Recorder of Deeds
+    rod = sections.get("recorder_of_deeds") or {}
+    if isinstance(rod, dict) and rod.get("deeds"):
+        d0 = rod["deeds"][0]
+        out["recorder_of_deeds"] = f"Deed {d0.get('doc')} on {d0.get('date')} • {len(rod.get('associated_pins',[]))} PINs"
+
+    return out
+
+
+
 

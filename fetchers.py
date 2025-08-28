@@ -1090,20 +1090,9 @@ def fetch_assessor_residential(pin: str, jur: str = "016", taxyr: str = "2025", 
 # --- Assessor Other Structures (OBY) ---
 def fetch_assessor_other_structures(pin: str, jur: str = "016", taxyr: str = "2025", force: bool = False) -> dict:
     """
-    Pull 'Other Structures' (mode=oby) and return verbatim content.
-    Returns:
-      {
-        "normalized": {
-            "verbatim": "<exact text or HTML snippet>",
-            "rows": [ {...} ]  # if a data table exists; else []
-        },
-        "raw": {"html_path": "...", "html_size_bytes": N},
-        "_status": "ok"|"empty"|"error",
-        "_meta": {...}
-      }
+    Pull 'Other Structures' (mode=oby).
+    Returns normalized rows only (verbatim/html removed).
     """
-    
-
     t0 = time.time()
     pin14_und = undashed_pin(pin)
 
@@ -1132,53 +1121,26 @@ def fetch_assessor_other_structures(pin: str, jur: str = "016", taxyr: str = "20
         html_path.write_text(html, encoding="utf-8")
 
         soup = BeautifulSoup(html, "lxml")
-
-        # Grab the main 'holder' content (verbatim)
         holder = soup.find("div", class_="holder")
-        all_tables = _harvest_tables(holder)
-        
-        verbatim_html = holder.decode() if holder else ""
-        verbatim_text = holder.get_text(" ", strip=True) if holder else ""
 
-        # Try to parse a data table if present (many parcels will show a grid)
         rows = []
-        # Common table label sometimes used: 'Other Buildings' or similar
-        candidate_tables = []
-        for t in (holder.find_all("table") if holder else []):
-            hdr = (t.get("id") or "").lower()
-            if "other" in hdr or "building" in hdr or "structures" in hdr:
-                candidate_tables.append(t)
+        if holder:
+            candidate_tables = [t for t in holder.find_all("table") if t.find("tr") and t.find("td")]
+            if candidate_tables:
+                tbl = candidate_tables[0]
+                if "-- No Data --" not in tbl.get_text():
+                    trs = tbl.find_all("tr")
+                    headers = [td.get_text(" ", strip=True) for td in trs[0].find_all("td")]
+                    for tr in trs[1:]:
+                        tds = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
+                        if any(tds):
+                            row = {headers[i] if i < len(headers) else f"Col{i+1}": v for i, v in enumerate(tds)}
+                            rows.append(row)
 
-        # Fallback: pick the first grid-like table with a header row
-        if not candidate_tables and holder:
-            candidate_tables = [
-                t for t in holder.find_all("table")
-                if t.find("tr") and t.find("td")
-            ]
-
-        # Parse the first meaningful data table, if it’s not the “-- No Data --” stub
-        if candidate_tables:
-            tbl = candidate_tables[0]
-            if "-- No Data --" not in tbl.get_text():
-                # build header
-                trs = tbl.find_all("tr")
-                headers = [td.get_text(" ", strip=True) for td in trs[0].find_all("td")]
-                for tr in trs[1:]:
-                    tds = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
-                    if any(x for x in tds):
-                        row = {headers[i] if i < len(headers) else f"Col{i+1}": v for i, v in enumerate(tds)}
-                        rows.append(row)
-
-        status = "empty" if ("-- No Data --" in verbatim_text and not rows) else "ok"
-
-        normalized = {
-            "verbatim": verbatim_html or verbatim_text or "",
-            "rows": rows,
-            "__all_tables": all_tables,   # <-- include it here
-        }
+        status = "empty" if not rows else "ok"
 
         return {
-            "normalized": normalized,
+            "normalized": {"rows": rows},
             "raw": {"html_path": str(html_path), "html_size_bytes": len(html)},
             "_status": status,
             "_meta": {**meta, "duration_ms": int((time.time() - t0) * 1000)},
@@ -1186,29 +1148,19 @@ def fetch_assessor_other_structures(pin: str, jur: str = "016", taxyr: str = "20
 
     except Exception as e:
         return {
-            "normalized": {"verbatim": "", "rows": []},
+            "normalized": {"rows": []},
             "raw": {},
             "_status": "error",
             "_meta": {**meta, "error": str(e)},
         }
 
+
 # --- Assessor Commercial Building (mode=commercial_bldg_cc) ---
 def fetch_assessor_commercial_building(pin: str, jur: str = "016", taxyr: str = "2025", force: bool = False) -> dict:
     """
-    Pull 'Commercial Building' and return verbatim HTML/text.
-    Returns:
-      {
-        "normalized": {
-            "verbatim": "<exact HTML or plain text>",
-            "rows": [ {...} ]  # parsed grid if present; else []
-        },
-        "raw": {"html_path": "...", "html_size_bytes": N},
-        "_status": "ok"|"empty"|"error",
-        "_meta": {...}
-      }
+    Pull 'Commercial Building'.
+    Returns normalized rows only (verbatim/html removed).
     """
-
-
     t0 = time.time()
     pin14_und = undashed_pin(pin)
 
@@ -1238,28 +1190,24 @@ def fetch_assessor_commercial_building(pin: str, jur: str = "016", taxyr: str = 
         soup = BeautifulSoup(html, "lxml")
         holder = soup.find("div", class_="holder")
 
-        verbatim_html = holder.decode() if holder else ""
-        verbatim_text = holder.get_text(" ", strip=True) if holder else ""
-
         rows = []
         if holder:
-            # Look for the first grid-like table (if any)
             candidate_tables = [t for t in holder.find_all("table") if t.find("tr")]
             if candidate_tables:
                 tbl = candidate_tables[0]
                 if "-- No Data --" not in tbl.get_text():
                     trs = tbl.find_all("tr")
-                    headers = [td.get_text(" ", strip=True) for td in trs[0].find_all(("td","th"))]
+                    headers = [td.get_text(" ", strip=True) for td in trs[0].find_all(("td", "th"))]
                     for tr in trs[1:]:
                         tds = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
                         if any(tds):
                             rows.append({headers[i] if i < len(headers) else f"Col{i+1}": v
                                          for i, v in enumerate(tds)})
 
-        status = "empty" if ("-- No Data --" in (verbatim_text or verbatim_html)) and not rows else "ok"
+        status = "empty" if not rows else "ok"
 
         return {
-            "normalized": {"verbatim": verbatim_html or verbatim_text or "", "rows": rows},
+            "normalized": {"rows": rows},
             "raw": {"html_path": str(html_path), "html_size_bytes": len(html)},
             "_status": status,
             "_meta": {**meta, "duration_ms": int((time.time() - t0) * 1000)},
@@ -1267,30 +1215,19 @@ def fetch_assessor_commercial_building(pin: str, jur: str = "016", taxyr: str = 
 
     except Exception as e:
         return {
-            "normalized": {"verbatim": "", "rows": []},
+            "normalized": {"rows": []},
             "raw": {},
             "_status": "error",
             "_meta": {**meta, "error": str(e)},
         }
 
+
 # --- Assessor Divisions & Consolidations (mode=prop_association) ---
 def fetch_assessor_prop_association(pin: str, jur: str = "016", taxyr: str = "2025", force: bool = False) -> dict:
     """
-    Pull 'Divisions & Consolidations' and return verbatim HTML/text.
-
-    Returns:
-      {
-        "normalized": {
-            "verbatim": "<exact HTML or plain text>",
-            "rows": [ {...} ]  # parsed grid if present; else []
-        },
-        "raw": {"html_path": "...", "html_size_bytes": N},
-        "_status": "ok"|"empty"|"error",
-        "_meta": {...}
-      }
+    Pull 'Divisions & Consolidations'.
+    Returns normalized rows only (verbatim/html removed).
     """
-
-
     t0 = time.time()
     pin14 = undashed_pin(pin)
 
@@ -1320,27 +1257,22 @@ def fetch_assessor_prop_association(pin: str, jur: str = "016", taxyr: str = "20
         soup = BeautifulSoup(html, "lxml")
         holder = soup.find("div", class_="holder")
 
-        verbatim_html = holder.decode() if holder else ""
-        verbatim_text = holder.get_text(" ", strip=True) if holder else ""
-
         rows = []
         if holder:
             tables = [t for t in holder.find_all("table") if t.find("tr")]
             if tables:
-                tbl_text = tables[0].get_text(" ", strip=True)
-                if "-- No Data --" not in tbl_text:
-                    trs = tables[0].find_all("tr")
-                    headers = [td.get_text(" ", strip=True) for td in trs[0].find_all(("td","th"))]
-                    for tr in trs[1:]:
-                        tds = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
-                        if any(tds):
-                            rows.append({headers[i] if i < len(headers) else f"Col{i+1}": v
-                                         for i, v in enumerate(tds)})
+                trs = tables[0].find_all("tr")
+                headers = [td.get_text(" ", strip=True) for td in trs[0].find_all(("td", "th"))]
+                for tr in trs[1:]:
+                    tds = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
+                    if any(tds):
+                        rows.append({headers[i] if i < len(headers) else f"Col{i+1}": v
+                                     for i, v in enumerate(tds)})
 
-        status = "empty" if ("-- No Data --" in (verbatim_text or verbatim_html)) and not rows else "ok"
+        status = "empty" if not rows else "ok"
 
         return {
-            "normalized": {"verbatim": verbatim_html or verbatim_text or "", "rows": rows},
+            "normalized": {"rows": rows},
             "raw": {"html_path": str(html_path), "html_size_bytes": len(html)},
             "_status": status,
             "_meta": {**meta, "duration_ms": int((time.time() - t0) * 1000)},
@@ -1348,11 +1280,12 @@ def fetch_assessor_prop_association(pin: str, jur: str = "016", taxyr: str = "20
 
     except Exception as e:
         return {
-            "normalized": {"verbatim": "", "rows": []},
+            "normalized": {"rows": []},
             "raw": {},
             "_status": "error",
             "_meta": {**meta, "error": str(e)},
         }
+
     
 # --- Assessor Sales (mode=sales) ---
 def fetch_assessor_sales_datalet(pin: str, jur: str = "016", taxyr: str = "2025", force: bool = False) -> dict:
@@ -1405,12 +1338,12 @@ def fetch_assessor_sales_datalet(pin: str, jur: str = "016", taxyr: str = "2025"
         holder = soup.find("div", class_="holder")
 
         # Build verbatim from the two blocks (fall back to holder if needed)
-        verbatim_parts = []
-        if div_summary: verbatim_parts.append(div_summary.decode())
-        if div_details: verbatim_parts.append(div_details.decode())
-        if not verbatim_parts and holder:
-            verbatim_parts.append(holder.decode())
-        verbatim_html = "\n".join(verbatim_parts)
+        #verbatim_parts = []
+        #if div_summary: verbatim_parts.append(div_summary.decode())
+        #if div_details: verbatim_parts.append(div_details.decode())
+        #if not verbatim_parts and holder:
+         #   verbatim_parts.append(holder.decode())
+        #verbatim_html = "\n".join(verbatim_parts)
 
         # Detect 'No Data'
         page_text = (holder.get_text(" ", strip=True) if holder else soup.get_text(" ", strip=True)).upper()
@@ -1454,7 +1387,7 @@ def fetch_assessor_sales_datalet(pin: str, jur: str = "016", taxyr: str = "2025"
 
         return {
             "normalized": {
-                "verbatim": verbatim_html,
+                #"verbatim": verbatim_html,
                 "summary_rows": summary_rows,
                 "details": details,
             },
@@ -1838,7 +1771,7 @@ def fetch_assessor_hie_additions(pin: str, jur: str = "016", taxyr: str = "2025"
 
         soup = BeautifulSoup(html, "lxml")
         holder = soup.find("div", class_="holder")
-        verbatim = holder.decode() if holder else ""
+        #verbatim = holder.decode() if holder else ""
 
         # try to find a likely table
         rows = []
@@ -1869,7 +1802,7 @@ def fetch_assessor_hie_additions(pin: str, jur: str = "016", taxyr: str = "2025"
         page_text = soup.get_text(" ", strip=True).upper()
         status = "empty" if ("-- NO DATA --" in page_text and not rows) else "ok"
         return {
-            "normalized": {"rows": rows, "verbatim": verbatim},
+            "normalized": {"rows": rows,},
             "raw": {"html_path": str(html_path), "html_size_bytes": len(html)},
             "_status": status,
             "_meta": {**meta, "duration_ms": int((time.time()-t0)*1000)},
