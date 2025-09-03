@@ -614,20 +614,30 @@ def _summarize_sections(sections: dict) -> dict:
 
     # Assessed Values
     vals = sections.get("value_summary") or []
-    if isinstance(vals, list) and len(vals) >= 2:
-        try:
-            latest, prev = vals[0], vals[1]
-            assr_delta = (
-                (float(latest.get("assessor_total",0)) - float(prev.get("assessor_total",0)))
-                / max(float(prev.get("assessor_total",1)),1) * 100
-            )
-            bor_delta = (
-                (float(latest.get("bor_total",0)) - float(prev.get("bor_total",0)))
-                / max(float(prev.get("bor_total",1)),1) * 100
-            )
-            out["assessed_values"] = f"Assessor: {assr_delta:+.1f}% vs last year, BOR: {bor_delta:+.1f}%"
-        except Exception:
-            pass
+    if isinstance(vals, list) and vals:
+        # Group by year
+        yearly = {}
+        for r in vals:
+            try:
+                year = int(r.get("Year", 0))
+            except Exception:
+                continue
+            total_av = r.get("Total AV") or ""
+            total_num = float(re.sub(r"[^0-9.]", "", total_av)) if total_av else 0
+            proc = (r.get("Process Name") or "").upper()
+            # Prefer BORVALUE if available, else CCAOFINAL
+            if year not in yearly or proc.startswith("BOR"):
+                yearly[year] = {"year": year, "proc": proc, "total": total_num}
+
+        # Compare latest vs previous year
+        years_sorted = sorted(yearly.keys(), reverse=True)
+        if len(years_sorted) >= 2:
+            y_latest, y_prev = years_sorted[0], years_sorted[1]
+            latest = yearly[y_latest]["total"]
+            prev = yearly[y_prev]["total"]
+            delta = ((latest - prev) / prev * 100) if prev else 0.0
+            out["assessed_values"] = f"AV {y_latest}: {latest:,.0f} ({delta:+.1f}% vs {y_prev})"
+
 
     # Sales (external or Assessor datalet)
     sales = sections.get("sales") or {}
