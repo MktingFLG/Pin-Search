@@ -3,7 +3,10 @@
 Thin adapters for each data source.
 Replace stubs with your actual BOR, CV, Sales, Assessor scraping, and Permits functions.
 """
+"I have added some new line"
 
+
+"The fetcher is supposed to pull all the data from teh varios sources"
 
 import time
 from datetime import datetime
@@ -1752,6 +1755,8 @@ def fetch_permits(pin: str, jur: str = "016", taxyr: str = "2025", force: bool =
             "_status": "error",
             "_meta": {**meta, "error": str(e)},
         }
+    
+
 
 def fetch_assessor_hie_additions(pin: str, jur: str = "016", taxyr: str = "2025", force: bool = False) -> dict:
     """

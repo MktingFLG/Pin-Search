@@ -612,6 +612,7 @@ def _summarize_sections(sections: dict) -> dict:
     if pinfo.get("Class (Assessor Profile)") or pinfo.get("Address"):
         out["property_info"] = f"{pinfo.get('Class (Assessor Profile)','?')} at {pinfo.get('Address','')}".strip()
 
+    import re
     # Assessed Values
     vals = sections.get("value_summary") or []
     if isinstance(vals, list) and vals:
